@@ -78,7 +78,7 @@ async function api(req,res,p){
   if(x=/^\/api\/lectures\/(\w+)\/(live|close|open)$/.exec(p)){const L=db.lectures.find(l=>l.id===x[1]);if(!L)return err(res,'مش موجودة',404);
     if(x[2]==='live'){if(m!=='GET')return err(res,'Method Not Allowed',405);
       const a=db.att.filter(a=>a.l===L.id).map(a=>({name:byId[a.s]?.name||'طالبة محذوفة',t:a.t}));
-      return json(res,{title:L.title,open:!L.closed,token:mkToken(L.id),secondsLeft:(SLOT-Date.now()%SLOT)/1000,attendees:a,total:students.length})}
+      return json(res,{title:L.title,lecturerName:L.lecturerName||'',courseName:L.courseName||'',open:!L.closed,token:mkToken(L.id),secondsLeft:(SLOT-Date.now()%SLOT)/1000,attendees:a,total:students.length})}
     if(m!=='POST')return err(res,'Method Not Allowed',405);
     L.closed=x[2]==='close';save();return json(res,{ok:true})}
   if(m==='POST'&&p==='/api/devices/reset'){const b=await body(req);delete db.devices[b.studentId];save();return json(res,{ok:true})}
