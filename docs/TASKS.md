@@ -87,5 +87,11 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] SA-16 — Build superadmin UI limited to lecturer creation and course assignments (minimal names/codes, never student/attendance info). Build lecturer UI limited to assigned courses.
 - [ ] SA-17 — Validate live Neon connection/migrations, course provisioning policy, create initial superadmin via private one-time bootstrap, and import students securely after backup. No real records inserted yet.
 - [ ] SA-18 — Implement lecturer self-service password change and session invalidation after change.
-- [ ] SA-19 — Decide who creates the original course catalog; admin is NOT authorized to create a course under current narrow policy.
+- [x] SA-19 — Owner confirmed: superadmin types course name, creates a catalog entry, and then assigns it to a lecturer. Previous no-course-create policy superseded (D-020).
 - Remaining SA-03/SA-04/SA-05/SA-06 are **PARTIAL ONLY**. Bootstrap script is not run; functions are NOT exposed by an authenticated API; the running server does not enforce roles. GitHub Actions unit/integration tests verify only new code and existing legacy routes; they are not a live security assessment.
+
+## Course creation implementation — 2026-10-19
+- [x] SA-20 — Add narrowly scoped `course.create` permission for superadmin, lecturer forbidden; no report/student/lecture access granted.
+- [x] SA-21 — Add `createCourse(pool,principal,{name})` to `lib/admin-management.js`: validated course name, authenticated creator ID, parameterized INSERT and audit event in one transaction; create then assign tested with synthetic IDs. **Not attached to HTTP endpoints yet.**
+- [ ] SA-22 — Connect course creation/assignment to new DB-backed authenticated admin API, plus UI name input, course selector and lecturer selector; tests must block lecturers and unauthenticated callers. Depends on SA-15 and SA-16.
+- [ ] SA-23 — Decide whether identical course names are allowed across academic terms and whether a course code/semester should be required. No unrequested uniqueness assumption in current code.
