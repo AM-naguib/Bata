@@ -5,7 +5,7 @@ Student attendance application based on rotating QR codes + browser geolocation.
 This is a **Node.js web server**, not a GitHub Pages static site. GitHub is public for the application's SOURCE CODE, not for actual student roster or attendance data.
 
 ## Current status
-**Audit in progress. Not safe for real student attendance until priority security findings are resolved.**
+**Audit in progress. Not safe for real student attendance until priority security findings are resolved.**\n\n**Source staging is incomplete:** `public/student.html` has not been uploaded successfully; until it is added, the student home page `/` does not work. Do not deploy this branch.
 
 - App server: `server.js`
 - Student page: `/`
