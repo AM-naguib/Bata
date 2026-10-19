@@ -70,7 +70,16 @@ function fakeDatabase(bossHash){
   if(sql.startsWith('SELECT c.id,c.name,c.code FROM lecturer_courses')){
    return {rows:assignments.filter(a=>a.lecturerId===p[0]&&!a.removed).map(a=>courses.find(c=>c.id===a.courseId))};
   }
-  if(sql.startsWith('INSERT INTO audit_events(')){audit.push({sql,parameters:p});return {rows:[]};}
+  if(sql.startsWith('INSERT INTO audit_events(')){
+   if(sql.includes("'account.password.change'")){
+    // PostgreSQL error 42P08: one $1 parameter cannot simultaneously resolve
+    // actor_id UUID and target_id TEXT. Enforce the actual two-parameter contract.
+    assert.match(sql, /VALUES\\(\\$1,'account\\.password\\.change','app_user',\\$2\\)/);
+    assert.equal(p.length,2);
+    assert.equal(p[0],p[1]);
+   }
+   audit.push({sql,parameters:p});return {rows:[]};
+  }
   throw Error('Unexpected SQL: '+sql);
  };
  return {users,courses,assignments,audit,pool:{query,connect:async()=>({query,release:()=>{}})}};
@@ -146,6 +155,7 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   assert.equal((await request('/api/v2/lecturer/courses',{cookie:docCookie})).status,403,'must first change temp password');
   const changed=await request('/api/v2/password',{method:'POST',cookie:docCookie,json:{currentPassword:newLecturer.body.initialPassword,newPassword:'another-strong-secret-password'}});
   assert.equal(changed.status,200);
+  assert.ok(data.audit.some(a=>a.sql.includes('account.password.change')),'password change audit must succeed');
   assert.equal((await request('/api/v2/me',{cookie:docCookie})).status,401,'old session invalid after password change');
   const docReLogin=await request('/api/v2/login',{method:'POST',json:{email:'doctor@example.test',password:'another-strong-secret-password'}});
   assert.equal(docReLogin.status,200);
