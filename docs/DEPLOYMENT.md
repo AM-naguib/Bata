@@ -68,3 +68,15 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Added `render.yaml` at repository root. It configures a free Frankfurt Node service on `feature/superadmin-accounts-courses`, checks `/healthz`, and keeps `ROSTER_ENABLED=1` / `ATTENDANCE_ENABLED=0`. `DATABASE_URL` and `PUBLIC_ORIGIN` are **private** Render environment values, not included in blueprint.
 - Render lists one available workspace `ahmed's workspace`, but workspace ownership has not been explicitly confirmed by user. Render tool explicitly refuses auto-selection; no service has been created or deployed yet. After user's choice, obtain connection URL privately, configure HTTPS origin, create Free web service, verify health and login. No live URL exists yet.
 - Do NOT enable public check-in until real mobile/GPS security, backups and operational readiness are verified. No lecturer accounts/assignments exist yet, so the 172 students are intentionally not visible to the superadmin.
+
+
+## ACTUAL RENDER DEPLOYMENT SUCCEEDED — 2026-10-19 (newest status)
+- Owner instructed us to perform deployment; Render account workspace previously confirmed: `ahmed's workspace` (`tea-dbar37cs728c739bm0ug`).
+- Old Render service `Bata` (`srv-dbb1d2bbc2fs73d68900`, `https://bata-yil7.onrender.com`) was incorrectly configured as **Go/main** and was left unchanged to avoid destructive edits. **Do NOT use the old URL.**
+- New Render Free service created via the connected Render API: `bata-attendify-node` (`srv-dbb1ehtg1s2s73dtkc1g`), Node runtime, Frankfurt region, branch `feature/superadmin-accounts-courses`, `npm install` build, `npm start` command, autoDeploy **off**.
+- **LIVE HTTPS app URL: https://bata-attendify-node.onrender.com/portal** (service dashboard: `https://dashboard.render.com/web/srv-dbb1ehtg1s2s73dtkc1g`).
+- Private Neon `DATABASE_URL` was transferred directly from the Neon connector into Render environment variables without logging/publishing its value. `NODE_ENV=production`, `PUBLIC_ORIGIN=https://bata-attendify-node.onrender.com`, `ROSTER_ENABLED=1`, `ATTENDANCE_ENABLED=0`.
+- Render deploy `dep-dbb1estm14bs73cpb2s0` reported status **live**, successful npm build and `server-v2.js` listening on port 10000.
+- Independent public-HTTPS smoke test in GitHub Actions **success**: `https://github.com/AM-naguib/Bata/actions/runs/39258848867`, `/healthz` gave `{"status":"ok"}` proving active Neon DB connection; `/portal` served login form; anonymous `/api/v2/me` and lecturer roster returned 401; `/api/v2/attendance/checkin` and legacy `/api/report` returned 404.
+- Admin can sign in with the already-provided temporary credentials and should change password immediately through the portal. No doctor accounts or assignments have been created yet, so students are not visible to superadmin.
+- **NOT FINISHED:** actual sign-in/password-change user journey has not been smoke tested with private credentials, no lecturer account has been created or assigned to the first course, no real mobile QR testing, no XLSX or backups/restore. Staff portal is live; real student attendance rollout remains disabled until confirmed safe.
