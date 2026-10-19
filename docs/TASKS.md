@@ -136,10 +136,20 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [x] AT-04 — PostgreSQL check-in with FOR UPDATE lecture lock, active course roster validation, GPS accuracy/distance checks, duplicate detection, and privacy-preserving per-lecture device HMAC; regression tests.
 - [x] AT-05 — Non-destructive migration `db/002_attendance_device_guard.sql` applied to empty Neon DB; confirmed `schema_versions=2` and unique index exists, no students/accounts/attendance imported.
 - [x] AT-06 — Create gated `ATTENDANCE_ENABLED=1` API router and close unsafe HTTP rejection path; CI passing.
-- [ ] AT-07 — Lecturer-only add/remove enrolled student UI and API, with audit trail and historical attendance preservation. This is the **next prerequisite** for real classes.
+- [x] AT-07 (code/CI) — Lecturer-only per-course roster list/add/soft-remove and audit trail, with PostgreSQL transactions and historical attendance preserved. **Actual production/Neon import and browser tests remain pending.**
 - [ ] AT-08 — Real-Neon integration tests using synthetic accounts and students only, backups and restore, security review of spoofing/device recovery; no live student deployment yet.
 - [ ] AT-09 — Course-specific Excel XLSX and attendance reports, with no admin access.
 - [ ] AT-10 — Real browser/mobile GPS check, HTTPS hosting, resilient free-tier operation; keep public rollout blocked.
 - [ ] AT-11 — Confirm course/absence calculation policy; QR attendance records alone do not compute course absence grades.
 - **Run**: GitHub Actions [#39238772639](https://github.com/AM-naguib/Bata/actions/runs/39238772639) passed HTTP+unit regression after fixes. SQL migration applied separately; course rosters still empty.
 - **Important**: v2 attendance endpoints are OFF by default. Missing private QR/device secrets prevent starting an enabled attendance server. Do NOT treat tested code as launched website.
+
+## Private course enrollment — 2026-10-19
+- [x] RO-01 — `lib/course-roster.js`: validate roll and full name, enforce active lecturer assignment with locked DB row, list/enroll/soft-remove per course. Reject cross-course and superadmin access. Re-enrollment restores previous link, never deletes historical attendance.
+- [x] RO-02 — `lib/roster-routes.js`: v2 HTTP list/add/remove endpoints with `ROSTER_ENABLED=1` (independent of `ATTENDANCE_ENABLED`). Frontend lecturer portal has course selector and student list/add/remove controls; no admin access.
+- [x] RO-03 — `scripts/import-roster.js`: private JSON roster file, default dry-run, explicit `--apply`, verified assigned lecturer, one transaction and rollback-on-any-conflict, count-only stdout. Synthetic tests passed.
+- [x] RO-04 — Original private ZIP inspected locally: 172 ID+name entries, 0 duplicate roll numbers, 0 missing names/IDs. Actual names and roll numbers never committed.
+- [x] RO-05 — GitHub Actions [#39242649707](https://github.com/AM-naguib/Bata/actions/runs/39242649707) passed after roster UI/API/import tests.
+- [ ] RO-06 — **REAL IMPORT BLOCKED**: Neon still has 0 accounts/courses/assignments, so the 172 students cannot be enrolled into an assigned course without inventing mapping. Create first private superadmin, lecturer, course and assignment; confirm which course(s) the original roster belongs to, then dry-run and apply in private runtime.
+- [ ] RO-07 — Browser UX tests, actual Neon SQL integration with synthetic users, lecturer permissions, backup/restore and safe public deployment.
+- [ ] RO-08 — Native Excel XLSX per-course reports and exam eligibility/absence policy; still pending.
