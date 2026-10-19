@@ -30,13 +30,15 @@ th{background:#e8f1ef;position:sticky;top:0}.bad{background:#fee2e2;color:#991b1
 
 <div id="app" style="display:none">
 <div class="card"><h2>محاضرة جديدة</h2>
-<input id="title" placeholder="اسم المحاضرة (مثلاً: المحاضرة 3)">
+<label for="doctorName">اسم الدكتور</label> <input id="doctorName" maxlength="80" placeholder="اسم الدكتور"><br>
+<label for="courseName">اسم المقرر</label> <input id="courseName" maxlength="80" placeholder="اسم المقرر"><br>
+<label for="title">اسم المحاضرة</label> <input id="title" maxlength="80" placeholder="مثلاً: المحاضرة الثالثة">
 <input id="rad" type="number" value="100" style="width:90px" title="النطاق بالمتر"> متر<br>
 <button class="alt" id="loc">📍 استخدم موقعي الحالي كمكان القاعة</button> <span id="locs">لسه ما اتحددش</span><br>
 <button id="start">ابدأ المحاضرة</button></div>
 <div class="card"><h2>المحاضرات</h2><div id="ls"></div></div>
-<div class="card"><h2>تقرير الحضور والغياب <a class="btn" href="/api/report.csv">⬇ تحميل Excel (CSV)</a></h2>
-<div class="scroll"><table id="rep"></table></div></div>
+<div class="card"><h2>تقرير الحضور والغياب <a class="btn" href="/api/report.csv">⬇ حفظ كشف CSV (يفتح في Excel)</a></h2>
+<p style="color:#64748b;font-size:13px">النسب الحالية محسوبة إجمالًا لكل المحاضرات؛ لسه ما اتعملش فصل الغياب حسب المقرر.</p><div class="scroll"><table id="rep"></table></div></div>
 </div></main>
 
 <div id="proj"><h1 id="pt"></h1><canvas id="qr"></canvas>
@@ -54,10 +56,10 @@ $('#pw').onkeydown=e=>e.key==='Enter'&&$('#lg').click();
 $('#out').onclick=async()=>{try{await api('/api/logout',{})}finally{gate(false)}};
 $('#loc').onclick=()=>{$('#locs').textContent='بنحدد...';navigator.geolocation.getCurrentPosition(p=>{pos=p.coords;$('#locs').textContent='✅ تم (دقة '+Math.round(p.coords.accuracy)+' م)'},()=>$('#locs').textContent='❌ فعّل الموقع',{enableHighAccuracy:true,timeout:15000})};
 $('#start').onclick=async()=>{if(!pos)return alert('حدد موقع القاعة الأول');
- const d=await api('/api/lectures',{title:$('#title').value,lat:pos.latitude,lng:pos.longitude,radius:$('#rad').value});
+ const d=await api('/api/lectures',{title:$('#title').value,lecturerName:$('#doctorName').value,courseName:$('#courseName').value,lat:pos.latitude,lng:pos.longitude,radius:$('#rad').value});
  if(!d.ok)return alert(d.error);$('#title').value='';await load();show(d.id)};
 async function load(){const L=await api('/api/lectures');
- $('#ls').innerHTML=L.map(l=>`<div class="row"><span><b>${esc(l.title)}</b> · ${esc(l.date)} · حضور: ${l.count} ${l.closed?'🔒':'🟢'}</span>
+ $('#ls').innerHTML=L.map(l=>`<div class="row"><span><b>${esc(l.title)}</b> · مقرر: ${esc(l.courseName||'غير محدد')} · دكتور: ${esc(l.lecturerName||'غير محدد')} · ${esc(l.date)} · حضور: ${l.count} ${l.closed?'🔒':'🟢'}</span>
  <span><button onclick="show('${l.id}')">عرض QR</button><button class="alt" onclick="tog('${l.id}',${l.closed})">${l.closed?'فتح':'قفل'}</button></span></div>`).join('')||'مفيش محاضرات';
  const R=await api('/api/report');
  $('#rep').innerHTML='<tr><th>رقم الجلوس</th><th>الاسم</th><th>حضور</th><th>غياب</th><th>نسبة الغياب</th></tr>'+
@@ -69,7 +71,7 @@ function draw(text){const q=qrcode(0,'M');q.addData(text);q.make();const n=q.get
  c.width=c.height=(n+2*m)*k;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#000';
  for(let r=0;r<n;r++)for(let i=0;i<n;i++)if(q.isDark(r,i))x.fillRect((i+m)*k,(r+m)*k,k,k)}
 async function tick(){if(!cur)return;try{const d=await api('/api/lectures/'+cur+'/live');if(!cur)return;
- $('#pt').textContent=d.title+(d.open?'':' (مقفولة)');
+ $('#pt').textContent=[d.courseName,d.title,d.lecturerName].filter(Boolean).join(' | ')+(d.open?'':' (مقفولة)');
  if(d.open&&d.token!==last){last=d.token;draw(location.origin+'/?t='+d.token)}
  $('#sec').textContent=Math.ceil(d.secondsLeft);$('#cnt').textContent='سجّل حضوره: '+d.attendees.length+' / '+d.total}catch(e){}}
 setInterval(tick,1000);
