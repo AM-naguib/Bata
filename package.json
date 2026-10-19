@@ -5,12 +5,13 @@
     "start": "node server-v2.js",
     "test": "node --test test/*.test.js",
     "bootstrap:superadmin": "node scripts/bootstrap-superadmin.js",
-    "test:syntax": "node --check server-v2.js && node --check lib/http-app.js && node --check public/app-v2.js"
+    "test:syntax": "node --check server-v2.js && node --check lib/http-app.js && node --check lib/attendance-v2.js && node --check lib/attendance-routes.js && node --check public/app-v2.js && node --check public/checkin.js"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
-    "pg": "8.23.1"
+    "pg": "8.23.1",
+    "qrcode": "1.5.4"
   }
 }
