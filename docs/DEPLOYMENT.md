@@ -10,7 +10,7 @@ The repository is **Public by owner's request (2026-10-19)**. GitHub Pages serve
 - `data.json` holds attendance/device records; keep it on persistent private storage with verified backups, not in a git checkout or ephemeral filesystem.
 - `.gitignore` only prevents future accidental additions. Before every commit/release verify `students.json`, `data.json`, `.env`, and student names do not appear in the diff/history.
 
-## Temporary local smoke test (synthetic roster ONLY)
+**INCOMPLETE SOURCE:** public/student.html is not yet in the GitHub review branch; the `/` path will not work until its upload is resolved.\n\n## Temporary local smoke test (synthetic roster ONLY)
 1. `cp students.example.json students.json` or use a separate synthetic roster.
 2. Set `DOCTOR_PASSWORD` to a *non-default strong password*. Never use the source-code fallback `1234`.
 3. `npm start` (Node.js 18+); visit `http://localhost:3000` for student UI, `/doctor` for lecturer.
