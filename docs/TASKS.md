@@ -120,3 +120,11 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [x] ST-04 — Add `lib/student-identity.js` shared validation and `lib/student-enrollment.js` for active per-course Neon enrolled-student lookup, returns only internal student ID. Tested on synthetic records.
 - [ ] ST-05 — **BLOCKER:** Wire the validated pair into a full *v2* QR attendance POST backed by Neon, including course lecture validation, geofence, anti-replay, and lecturer-only reports. Current v2 server has no student attendance route; the legacy server code is not exposed by default `npm start`.
 - [ ] ST-06 — Browser E2E test editing both fields and preserving full names; privacy review and safeguards against name/roll-number impersonation. No stronger student credential should be added without owner decision.
+
+
+## Verified student form correction — 2026-10-19
+- User requires **both roll number and typed full name** (no student PIN). Implementation and ownership documented in D-022 and ST-01..ST-06.
+- Code: `public/student.html`, `server.js`, `lib/student-identity.js`, `lib/student-enrollment.js`; tests `test/student-identity.test.js`, `test/student-enrollment.test.js`, extended `test/guardrails.test.js`.
+- Regression initially identified comparing Postgres student internal UUID instead of roll_number; fixed in commit `651aa31`.
+- GitHub Actions [run #39218694375](https://github.com/AM-naguib/Bata/actions/runs/39218694375) **succeeded** after fix. Tests verify correct name+roll accepted, missing/wrong entries rejected, mismatch before device binding, and course enrollment constraints.
+- Not a live app yet: `npm start` serves v2 account portal only; student check-in endpoint for v2 is an open task. No real records published or uploaded.
