@@ -60,3 +60,9 @@ Current state: **Admin portal preview implementation only; no live website.**
 - Lecturer routes under `/api/v2/lecturer/lectures` create/list/live/close, and `/api/v2/attendance/checkin` handles signed QR + name/seat + GPS. Native phone camera opens `/checkin?t=...`.
 - Generated QR changes every 30 seconds; PostgreSQL protects lecture close vs concurrent check-in and unique hashed device usage per lecture.
 - Both route sets remain OFF by default. Requires safe configured env values, real enrolled student records (not present yet) and further safety tests. See `docs/ATTENDANCE_V2.md`.
+
+## Lecturer-controlled roster (2026-10-19)
+- `/portal` now has a lecturer-only per-course roster panel to add and soft-remove enrolled students while preserving historic attendance.
+- When `ROSTER_ENABLED=1`, GET/POST `/api/v2/lecturer/courses/{courseUUID}/students` and POST `.../students/remove` are available only to authorized lecturers. The superadmin cannot call them, even via a direct API request. This flag is independent of public QR check-in.
+- Real student import tool: `npm run import:students` (private dry-run), `npm run import:students -- --apply` (private atomic import after lecturer/course setup). Details `docs/PRIVATE_ROSTER_IMPORT.md`.
+- **No live Neon import yet**: database empty of accounts/courses/assignments, and source-to-course mapping not confirmed.
