@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>حاضر | بوابة الإدارة</title><link rel="stylesheet" href="/app-v2.css">
+<script src="/app-v2.js" defer></script></head>
+<body>
+<header><div class="brand">حاضر <small>Attendify</small></div><div id="identity"></div></header>
+<main>
+<section id="loginBox" class="card">
+<h1>تسجيل الدخول</h1><p class="muted">للدكتور أو الأدمن الرئيسي</p>
+<form id="loginForm">
+<label for="email">البريد الإلكتروني</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required>
+<button>دخول</button></form>
+</section>
+<section id="portalBox" hidden>
+<div class="row heading"><h1 id="welcome"></h1><button id="logoutButton" class="secondary">تسجيل الخروج</button></div>
+<section id="changePasswordCard" class="card">
+<h2>تغيير كلمة المرور</h2>
+<form id="changePasswordForm">
+<label for="currentPassword">كلمة المرور الحالية</label><input id="currentPassword" type="password" autocomplete="current-password" required>
+<label for="newPassword">كلمة المرور الجديدة (12 حرفًا على الأقل)</label>
+<input id="newPassword" type="password" autocomplete="new-password" minlength="12" required>
+<button>تغيير كلمة المرور</button></form>
+</section>
+<section id="adminControls" hidden>
+<div class="grid">
+<div class="card"><h2>إنشاء دكتور</h2><form id="lecturerForm">
+<label for="lecturerName">اسم الدكتور</label><input id="lecturerName" maxlength="120" required>
+<label for="lecturerEmail">البريد الإلكتروني للدكتور</label><input id="lecturerEmail" type="email" maxlength="254" required>
+<button>إنشاء حساب دكتور</button></form>
+<p class="muted">هيظهر باسورد مؤقت مرة واحدة؛ سلّمه للدكتور بشكل آمن.</p></div>
+<div class="card"><h2>إنشاء مقرر</h2><form id="courseForm">
+<label for="courseName">اسم المقرر</label><input id="courseName" maxlength="150" required placeholder="مثلاً: الكيمياء العضوية">
+<button>إنشاء المقرر</button></form></div>
+</div>
+<div class="card"><h2>تعيين مقرر لدكتور</h2><form id="assignForm" class="inline">
+<label for="lecturerSelect">الدكتور</label><select id="lecturerSelect" required></select>
+<label for="courseSelect">المقرر</label><select id="courseSelect" required></select>
+<button>تعيين المقرر</button></form></div>
+<div class="grid"><div class="card"><h2>حسابات الدكاترة</h2><ul id="lecturerList"></ul></div>
+<div class="card"><h2>المقررات</h2><ul id="courseList"></ul></div></div>
+<div class="card"><h2>التكليفات الحالية</h2><ul id="assignmentList"></ul></div>
+</section>
+<section id="lecturerControls" class="card" hidden>
+<h2>مقرراتي</h2><ul id="myCourses"></ul>
+<p class="muted">إدارة الطلاب والمحاضرات والحضور هتتفعّل بعد نقل بياناتها وتأمين الصلاحيات لكل مقرر. الأدمن مش بيشوفها.</p>
+</section>
+</section>
+<section class="card notice" id="temporaryPasswordCard" hidden>
+<h2>كلمة المرور المؤقتة للدكتور</h2><p id="tempPassword" class="secret"></p>
+<p>انسخ كلمة المرور واحفظها في مكان آمن. مش هتظهر تاني بعد إغلاق الرسالة.</p>
+<button id="dismissSecret" type="button">تم، إخفاء كلمة المرور</button>
+</section>
+<p id="flash" role="status" aria-live="polite"></p>
+</main></body></html>
