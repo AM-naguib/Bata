@@ -47,3 +47,7 @@ npm run import:students -- --apply
 
 ## Remaining limitations
 No production service exists yet. The `ROSTER_ENABLED` / `ATTENDANCE_ENABLED` flags are OFF unless explicitly enabled. Actual Neon import has not been performed and cannot be bound to a course while Neon holds zero real courses. Native Excel XLSX export, attendance reports, robust anti-impersonation measures, backups, end-to-end browser testing and launch remain pending.
+
+
+## Owner's initial allocation decision (2026-10-19)
+The first real import should enroll **all 172 students in ONE explicitly selected course** only. Do not automatically add these students to other courses. When a lecturer subsequently has another assigned course, the lecturer can add matching pre-existing students to that course using roll number + full name; `students` is global, while `enrollments` is per course. The superadmin has **no** permission to read names, bulk-import students or redistribute student enrollments. Superadmin creates the first course and assigns it to a lecturer, who then authorizes the private import. The real course name and lecturer identity remain unprovided; don't invent them.
