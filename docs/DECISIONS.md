@@ -108,3 +108,12 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Never provide an unauthenticated public ID-to-name lookup or publish the 172 real names/IDs in GitHub.
 - This pair is personally known information, NOT secure proof of physical identity. Additional anti-impersonation mechanisms have not been approved; no new student PIN requirement.
 - Implementation: legacy `server.js` and `public/student.html` updated on feature branch; `lib/student-enrollment.js` supports future course-scoped v2 lookups. **V2 check-in and actual class attendance are NOT deployed or implemented yet.**
+
+## D-023 — V2 attendance integration boundary (2026-10-19)
+- User instructed to proceed with the next implementation step, connecting QR and attendance to Neon-backed v2.
+- Honour D-022: student enters full name AND seat/roll number only, no PIN/password. Students can edit both locally.
+- Each QR is tied to a specific lecturer course and lecture; lecturer APIs require active course assignment. Main admin still cannot view student/attendance data.
+- GPS and browser device identifiers are NOT reliable proof against deliberate spoofing, so the implementation must not be described as fraud-proof.
+- Check-in enabled only explicitly with two separate strong secrets via private env, default OFF pending roster imports, permissions audit and operational testing.
+- Migration 002 is additive and was applied on a database with zero student and attendance records; no real data moved.
+- Keep rollout blocked until course roster management, backups, browser/mobile and live Neon tests are complete.
