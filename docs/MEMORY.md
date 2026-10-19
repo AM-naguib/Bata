@@ -125,3 +125,7 @@ User requested to continue by implementing lecturer-managed per-course student a
 - Neon project `wandering-mode-56487150` still holds **zero** accounts, courses, assignments, students, enrollments and attendance; can't import into a nonexistent course. No personal records migrated or published.
 - CI verified successful: [run #39242649707](https://github.com/AM-naguib/Bata/actions/runs/39242649707). Feature branch only, not merged/deployed.
 - Remaining: create first superadmin privately, create lecturer/course, choose which course(s) original students belong to, then run private import; verify safely and arrange backup.
+
+
+## Owner confirms one-course initial student allocation — 2026-10-19
+The 172 student name/roll pairs from the private source ZIP are to be imported into **ONE course first**. Future courses can enroll the same underlying student records without duplicating the person. **Do not make the superadmin a student manager**: admin only creates courses/lecturer accounts and assigns courses to lecturers; lecturer handles enrolling students in their assigned courses. Existing addStudent/importRoster routines already reuse the existing student row via roll_number conflict handling and create a separate enrollment per course. No first course/lecturer/superadmin exists yet (last verified), so the actual private 172-person import must wait for owner-selected course/lecturer provisioning. No student PII goes to public GitHub.
