@@ -14,6 +14,7 @@
   <div class="site-header__inner">
     <a class="brand" href="/" aria-label="حاضر — الصفحة الرئيسية"><span class="brand__mark" aria-hidden="true">ح</span><span>حاضر <small>ATTENDIFY</small></span></a>
     <div class="header-links">
+      <a href="/" class="header-link">البوابات الثلاث</a>
       <a href="/student" class="header-link">بوابة الطالبة</a>
       <span id="identity" class="identity" aria-live="polite"></span>
     </div>
@@ -21,10 +22,30 @@
 </header>
 <main class="shell">
   <section id="loginBox" class="login-layout">
+    <nav class="gateway-switcher" aria-label="البوابات الثلاث">
+      <a href="/admin" class="gateway-card" data-gateway="superadmin">
+        <span class="gateway-card__number">01</span>
+        <span class="gateway-card__symbol" aria-hidden="true">♙</span>
+        <span class="gateway-card__content"><strong>بوابة الأدمن</strong><small>حسابات الدكاترة والمقررات والتكليفات</small></span>
+        <span class="gateway-card__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a href="/lecturer" class="gateway-card" data-gateway="lecturer">
+        <span class="gateway-card__number">02</span>
+        <span class="gateway-card__symbol" aria-hidden="true">▦</span>
+        <span class="gateway-card__content"><strong>بوابة الدكتور</strong><small>المقررات وكشف الطالبات والمحاضرات</small></span>
+        <span class="gateway-card__arrow" aria-hidden="true">↗</span>
+      </a>
+      <a href="/student" class="gateway-card gateway-card--student" data-gateway="student">
+        <span class="gateway-card__number">03</span>
+        <span class="gateway-card__symbol" aria-hidden="true">▣</span>
+        <span class="gateway-card__content"><strong>بوابة الطالبة</strong><small>إرشادات تسجيل الحضور عبر QR دون حساب</small></span>
+        <span class="gateway-card__arrow" aria-hidden="true">↗</span>
+      </a>
+    </nav>
     <div class="login-intro">
-      <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> نظام إدارة المقررات</span>
-      <h1>كل محاضرة،<br><em>في مكانها الصح.</em></h1>
-      <p>منصة واحدة لتنظيم المقررات وتكليف الدكاترة وإدارة كشوف الطالبات — بصلاحيات واضحة لكل دور.</p>
+      <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> <span id="entryEyebrow">نظام إدارة المقررات</span></span>
+      <h1><span id="entryTitle">كل محاضرة،</span><br><em id="entryEmphasis">في مكانها الصح.</em></h1>
+      <p id="entryDescription">منصة واحدة لتنظيم المقررات وتكليف الدكاترة وإدارة كشوف الطالبات — بصلاحيات واضحة لكل دور.</p>
       <div class="feature-stack">
         <div class="feature"><span class="feature__icon" aria-hidden="true">✓</span><span><strong>مساحة مستقلة لكل دور</strong><small>الأدمن للمقررات والحسابات، والدكتور لإدارة طالباته.</small></span></div>
         <div class="feature"><span class="feature__icon" aria-hidden="true">◈</span><span><strong>بيانات منظمة وآمنة</strong><small>الكشوف والحضور مرتبطان بالمقرر المخصص فقط.</small></span></div>
