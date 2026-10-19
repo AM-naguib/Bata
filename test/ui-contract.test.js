@@ -22,6 +22,11 @@ test('responsive RTL staff portal keeps every JS-dependent element reachable',()
   assert.ok(html.includes('id="'+field+'"'),'Missing separate gate title: '+field);
  assert.match(js,/function showEntryGate\(/,'staff routes should show dedicated admin/lecturer copy');
  assert.match(js,/server_error/i,'backend failures must be translated for the user');
+ assert.match(js,/lecturers\/password\/reset/,'admin UI must call the scoped reset endpoint');
+ assert.match(js,/إعادة تعيين الباسورد/,'lecturer list must have reset action');
+ assert.match(js,/hideTemporaryPassword\(\)/,'admin must be able to dismiss the one-time secret');
+ assert.ok(html.includes('id="tempPasswordHeading"'),'one-time password notice should identify the selected doctor');
+ assert.doesNotMatch(html,/value="[^"]*temporaryPassword"/,'never embed temporary password in page source');
  assert.ok(css.includes('@media(max-width:580px)'),'mobile layout breakpoint');
  assert.ok(css.includes('[hidden]{display:none!important}'),'hidden sections must stay concealed');
  assert.doesNotMatch(js,/\.innerHTML\s*=/,'dynamic academic records must use safe DOM APIs');
