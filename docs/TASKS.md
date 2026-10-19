@@ -238,3 +238,15 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [x] AC-06 — Verified Neon `app_users.updated_at` column exists; manually deployed Render `dep-dbb3p18n74is73bg2em0` **LIVE** from app commit `bcf762126514e12d0f79a076d8493fb0d7a1080c`.
 - [ ] AC-07 — Owner uses /admin → حسابات الدكاترة → إعادة تعيين الباسورد for one selected lecturer, privately delivers one-time password, confirms logged-out lecturer can sign in and change password. Do not trigger any actual account reset in automated smoke test.
 - [ ] AC-08 — Confirm first lecturer has active assignment to provisional course and can view private student roster; keep QR attendance disabled until required E2E tests.
+
+
+## Attendance report + Excel implementation (2026-10-19)
+- [x] RP-01 — Implement role-authenticated report query for ONLY the assigned course, current roster, closed non-archived lectures and attendance. Exclude lectures before the student's enrolled_at; avoid false absence for open/past lectures.
+- [x] RP-02 — Implement native genuine XLSX generator with 3 Arabic sheets, UTF-8 names, leading-zero IDs, numeric attendance percentage and XML escaping (no external dependency).
+- [x] RP-03 — Add read-only `GET /api/v2/lecturer/courses/:id/report` and `.../report.xlsx` with same verified lecturer login and DB assignment, no-store cache, binary attachment. Independent of `ATTENDANCE_ENABLED` flag.
+- [x] RP-04 — Add lecturer-only Reports & Excel tab with course picker, filtered student stats, lecture totals, pagination and XLSX download.
+- [x] RP-05 — Add automated tests (no-lecture reports, late-enrollment semantics, other-doctor/admin rejection, real HTTP/Excel ZIP structure, HTML DOM contract). Include new modules in npm test:syntax and live smoke for anonymous report 401.
+- [ ] RP-06 — Confirm all CI tests and Render LIVE deployment of code, then authenticated E2E browser check with real lecturer. No real attendance records exist yet.
+- [ ] RP-07 — Academic owner approves absence denominator and whether removed/reinstated students and cancellations should appear in historic reports. Current behavior documented in D-033.
+- [ ] LT-01 — Build lecturer lecture archive/restore and corrections/audit separate from reporting. Must not enable public attendance before end-to-end safety checks.
+- [ ] OPS-01 — Secure backups / restoration drills and actual mobile GPS/QR tests before using attendance with real students.
