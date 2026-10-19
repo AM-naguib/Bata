@@ -15,8 +15,9 @@ button.secondary{background:#e2e8e7;color:#10201e}
 </style></head>
 <body><main class="card">
 <h1>حاضر</h1><p class="subtitle">Scan. In. Done.</p>
-<label for="sid">رقم الجلوس</label><input id="sid" inputmode="numeric" autocomplete="off" placeholder="اكتبي رقم الجلوس">
-<button id="edit" class="secondary" type="button">✏️ تعديل / تغيير رقم الجلوس المحفوظ</button>
+<label for="sid">رقم الجلوس</label><input id="sid" inputmode="numeric" autocomplete="off" placeholder="اكتبي رقم الجلوس" maxlength="64">
+<label for="studentName">اسم الطالبة بالكامل</label><input id="studentName" autocomplete="name" placeholder="اكتبي الاسم زي كشف المقرر" maxlength="200">
+<button id="edit" class="secondary" type="button">✏️ تعديل رقم الجلوس أو الاسم</button>
 <div id="name" aria-live="polite"></div>
 <button id="go" type="button" hidden>✅ تأكيد الحضور</button>
 <button id="scan" class="secondary" type="button">📷 امسحي QR المحاضرة</button>
@@ -24,33 +25,37 @@ button.secondary{background:#e2e8e7;color:#10201e}
 <p class="subtitle">تغيير الرقم هنا لا يلغي حضورًا اتسجّل بالفعل. في الحالة دي راجعي الدكتور.</p>
 </main><script>
 const el=id=>document.getElementById(id);
-const deviceKey='attendifyDeviceId',rollKey='sid';
+const deviceKey='attendifyDeviceId',rollKey='sid',nameKey='studentFullName';
 let token=new URLSearchParams(location.search).get('t'),scanner=null;
 let device=localStorage.getItem(deviceKey);
 if(!device){device=crypto.randomUUID();localStorage.setItem(deviceKey,device)}
 el('sid').value=localStorage.getItem(rollKey)||'';
+el('studentName').value=localStorage.getItem(nameKey)||'';
 el('go').hidden=!token;
 const info=(text,cls='')=>{el('msg').textContent=text;el('msg').className=cls};
 const clearName=()=>{el('name').style.display='none';el('name').textContent=''};
-el('sid').addEventListener('input',()=>{clearName();info('')});
+for(const field of ['sid','studentName'])el(field).addEventListener('input',()=>{clearName();info('')});
 el('edit').addEventListener('click',()=>{
- localStorage.removeItem(rollKey);el('sid').value='';clearName();info('اكتبي رقم الجلوس الصحيح ثم امسحي الكود من جديد');
+ localStorage.removeItem(rollKey);localStorage.removeItem(nameKey);
+ el('sid').value='';el('studentName').value='';clearName();
+ info('اكتبي رقم الجلوس والاسم الصحيحين، وبعدها امسحي الكود من جديد');
  el('sid').focus();
 });
 async function submit(){
- const id=el('sid').value.trim();
+ const id=el('sid').value.trim(),studentName=el('studentName').value.trim().replace(/\s+/gu,' ');
  if(!id)return info('اكتبي رقم الجلوس الأول','error');
+ if(!studentName)return info('اكتبي اسم الطالبة بالكامل','error');
  if(!token)return info('امسحي QR المحاضرة الأول','error');
  if(!navigator.geolocation)return info('المتصفح لا يدعم تحديد الموقع','error');
  info('بنحدد موقعك...');
  navigator.geolocation.getCurrentPosition(async ({coords})=>{
   try{
    const response=await fetch('/api/attend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-     token,studentId:id,deviceId:device,lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy
+     token,studentId:id,studentName,deviceId:device,lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy
    })});
    const data=await response.json();
    if(!data.ok)return info(data.error||'تعذر تسجيل الحضور','error');
-   localStorage.setItem(rollKey,id);
+   localStorage.setItem(rollKey,id);localStorage.setItem(nameKey,studentName);
    if(typeof data.studentName==='string'){el('name').textContent='اسم الطالبة: '+data.studentName;el('name').style.display='block'}
    info(data.message||'تم تسجيل الحضور','ok');history.replaceState({},'','/');
   }catch{info('مشكلة في الاتصال، حاولي تاني','error')}
@@ -58,7 +63,7 @@ async function submit(){
 }
 el('go').addEventListener('click',submit);
 el('scan').addEventListener('click',async()=>{
- if(!el('sid').value.trim())return info('اكتبي رقم الجلوس الأول','error');
+ if(!el('sid').value.trim()||!el('studentName').value.trim())return info('اكتبي رقم الجلوس واسم الطالبة بالكامل الأول','error');
  if(scanner)return;
  if(typeof Html5Qrcode!=='function')return info('خدمة الكاميرا غير متاحة حاليًا','error');
  try{

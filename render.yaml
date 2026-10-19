@@ -1,0 +1,25 @@
+# Render Free blueprint for the private staff portal.
+# IMPORTANT: This file does not deploy by itself or select a Render workspace.
+# Keep credentials out of GitHub; fill sync:false secrets in Render securely.
+services:
+  - type: web
+    name: bata-attendify
+    runtime: node
+    plan: free
+    region: frankfurt
+    repo: https://github.com/AM-naguib/Bata
+    branch: feature/superadmin-accounts-courses
+    buildCommand: npm install --ignore-scripts --no-audit --no-fund
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: PUBLIC_ORIGIN
+        sync: false
+      - key: ROSTER_ENABLED
+        value: "1"
+      - key: ATTENDANCE_ENABLED
+        value: "0"

@@ -42,3 +42,79 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - GitHub CI now runs the synthetic test suite; inspect Actions results before relying on branch changes.
 - **Do not deploy**: no Neon integration, remaining identity fraud & CSRF risks, multi-account authorization, and no private data import path. Student page now restored on feature branch.
 - The Render + Neon ChatGPT apps were installed, but provisioning actions were not exposed to the assistant in this session. No service was created.
+
+
+## Current deployment target — admin portal v2 (2026-10-19)
+- The branch `feature/superadmin-accounts-courses` now defaults to `node server-v2.js`. Requires a private `DATABASE_URL`; production mode additionally requires HTTPS `PUBLIC_ORIGIN`.
+- The v2 portal intentionally has no student attendance endpoints yet. It is **not suitable for live student use**. Do not connect a public class QR until course-scoped attendance and backup are implemented.
+- Actual Neon Free database schema exists and is empty; the existing student JSON data has not been uploaded.
+- Render free workspace has not been selected or provisioned. Never put connection strings, student records or admin secrets into a public repository.
+- Detailed setup, routes and blockers: [Portal v2](PORTAL_V2.md).
+
+## Current QR implementation limitation — 2026-10-19
+- V2 has implemented gated lecturer lecture + student QR attendance but production feature flag is OFF. The real Neon DB has migration 002 / hashed-device unique index, and **zero student or attendance rows**.
+- Never deploy live until lecturers can manage private per-course rosters, backup and recover attendance, and the platform passes mobile/GPS and HTTP security tests. Private QR/device keys and HTTPS origin required to enable.
+- Legacy `server.js` stays offline. See ATTENDANCE_V2.md for routes and risks.
+
+## Private roster launch gate — 2026-10-19
+- Roster management is implemented, independently gated by `ROSTER_ENABLED=1`, with no QR student check-in activated by default.
+- The real 172-record roster was validated **locally** and not published. Neon remains empty of accounts/courses/rosters. No import occurred.
+- Before using the roster: bootstrap a real superadmin in a private trusted environment, create a lecturer and course, assign it, obtain consent/mapping for this private roster, then run the private JSON import with backup and dry-run. See `PRIVATE_ROSTER_IMPORT.md`.
+
+
+## Render hosting preparation and imported real student data — 2026-10-19
+- The private Neon database now contains **172 real student records, assigned solely to the first provisional course**. A private, atomic one-time import was verified against the source checksum. This corrects any older statement saying Neon has no students.
+- Public GitHub contains **no names, seat numbers, passwords or connection strings** from the imported source. Course enrollment is visible only to an authorized lecturer through v2.
+- Added `render.yaml` at repository root. It configures a free Frankfurt Node service on `feature/superadmin-accounts-courses`, checks `/healthz`, and keeps `ROSTER_ENABLED=1` / `ATTENDANCE_ENABLED=0`. `DATABASE_URL` and `PUBLIC_ORIGIN` are **private** Render environment values, not included in blueprint.
+- Render lists one available workspace `ahmed's workspace`, but workspace ownership has not been explicitly confirmed by user. Render tool explicitly refuses auto-selection; no service has been created or deployed yet. After user's choice, obtain connection URL privately, configure HTTPS origin, create Free web service, verify health and login. No live URL exists yet.
+- Do NOT enable public check-in until real mobile/GPS security, backups and operational readiness are verified. No lecturer accounts/assignments exist yet, so the 172 students are intentionally not visible to the superadmin.
+
+
+## ACTUAL RENDER DEPLOYMENT SUCCEEDED — 2026-10-19 (newest status)
+- Owner instructed us to perform deployment; Render account workspace previously confirmed: `ahmed's workspace` (`tea-dbar37cs728c739bm0ug`).
+- Old Render service `Bata` (`srv-dbb1d2bbc2fs73d68900`, `https://bata-yil7.onrender.com`) was incorrectly configured as **Go/main** and was left unchanged to avoid destructive edits. **Do NOT use the old URL.**
+- New Render Free service created via the connected Render API: `bata-attendify-node` (`srv-dbb1ehtg1s2s73dtkc1g`), Node runtime, Frankfurt region, branch `feature/superadmin-accounts-courses`, `npm install` build, `npm start` command, autoDeploy **off**.
+- **LIVE HTTPS app URL: https://bata-attendify-node.onrender.com/portal** (service dashboard: `https://dashboard.render.com/web/srv-dbb1ehtg1s2s73dtkc1g`).
+- Private Neon `DATABASE_URL` was transferred directly from the Neon connector into Render environment variables without logging/publishing its value. `NODE_ENV=production`, `PUBLIC_ORIGIN=https://bata-attendify-node.onrender.com`, `ROSTER_ENABLED=1`, `ATTENDANCE_ENABLED=0`.
+- Render deploy `dep-dbb1estm14bs73cpb2s0` reported status **live**, successful npm build and `server-v2.js` listening on port 10000.
+- Independent public-HTTPS smoke test in GitHub Actions **success**: `https://github.com/AM-naguib/Bata/actions/runs/39258848867`, `/healthz` gave `{"status":"ok"}` proving active Neon DB connection; `/portal` served login form; anonymous `/api/v2/me` and lecturer roster returned 401; `/api/v2/attendance/checkin` and legacy `/api/report` returned 404.
+- Admin can sign in with the already-provided temporary credentials and should change password immediately through the portal. No doctor accounts or assignments have been created yet, so students are not visible to superadmin.
+- **NOT FINISHED:** actual sign-in/password-change user journey has not been smoke tested with private credentials, no lecturer account has been created or assigned to the first course, no real mobile QR testing, no XLSX or backups/restore. Staff portal is live; real student attendance rollout remains disabled until confirmed safe.
+
+
+## Latest LIVE UI update (2026-10-19)
+- The existing correct FREE Node service `srv-dbb1ehtg1s2s73dtkc1g` is still canonical. Latest manual deployment `dep-dbb1v4ijnfac739j6r4g` of feature commit `72a96ed7fa606b03197c2b4fd92c7e8c0f363d9b` returned **LIVE**.
+- New public routes confirmed by independent external HTTPS smoke test [#39263443594](https://github.com/AM-naguib/Bata/actions/runs/39263443594): `/` home page with links to role dashboards; `/admin` staff admin entry; `/lecturer` staff lecturer entry; `/student` informational student QR guide. Existing `/portal` shared staff login works.
+- Smoke also validated Neon `/healthz`, anonymous API rejection and that /checkin and old academic report endpoints return 404. ATTENDANCE_ENABLED remains **0**, ROSTER_ENABLED **1**; no new lecturer permissions or real student data published.
+- Self-hosted CSS/JS, no external libraries/CDNs; UI tests validate markup JS bindings and no CSP-violating inline styles. CI security [#39263443641](https://github.com/AM-naguib/Bata/actions/runs/39263443641) success.
+- IMPORTANT Render autoDeploy is OFF. UI code commits after deployment do not go live automatically; trigger a deploy manually after future code changes and re-run external smoke.
+- Real credentialed login/new lecturer course roster/mobile QR not independently verified yet. First lecturer and course assignment still required; previously imported 172 students remain intact and private.
+
+
+## Render live 42P08 password fix and separated entry (2026-10-19)
+- Production app log confirmed SQLSTATE 42P08 in password-change audit (same bind parameter UUID/TEXT). Fixed `lib/http-app.js` to use two separate typed placeholders; DB password/audit transaction previously rolled back on this error.
+- New three role gateway selector with separate /admin /lecturer login copy, public /student guidance, mobile card layout.
+- Render live deployment `dep-dbb29vu7bikc73bfnst0` reports **LIVE** on https://bata-attendify-node.onrender.com. App commit `3078ff438515177835eef2bf732a2e1b836c596a`.
+- Public HTTPS smoke [#39266948714](https://github.com/AM-naguib/Bata/actions/runs/39266948714) succeeded: three role gates, /healthz Neon ok, protected password POST 401, role pages, check-in still 404. Security CI [#39266948676](https://github.com/AM-naguib/Bata/actions/runs/39266948676) succeeded including password audit binding regression.
+- Actual credentialed browser password change **not yet verified** after deployment. User should retry with unchanged current password because failed transaction rolled back. Keep `ATTENDANCE_ENABLED=0`.
+
+
+## LIVE RELEASE: superadmin lecturer password reset — 2026-10-19
+- Latest application release LIVE at `https://bata-attendify-node.onrender.com/admin`, Render deploy `dep-dbb3p18n74is73bg2em0` built app commit `bcf762126514e12d0f79a076d8493fb0d7a1080c`. Changes: superadmin-only reset API and per-lecturer UI action, one-time temporary password display, forced change, target-session revocation and audit. No target user data or passwords modified by deployment itself.
+- CI https://github.com/AM-naguib/Bata/actions/runs/39270935273 passed security/API/transaction/UI tests, and actual Neon schema checked `app_users.updated_at`.
+- Live smoke updated to verify deployed UI script contains new endpoint and unauthenticated POST is rejected with 401 without mutating accounts. Keep Render autoDeploy OFF; commit after release may contain only docs and smoke workflow, not live app code.
+- Data access unchanged: superadmin cannot view student roster/attendance, public QR attendance still disabled (`ATTENDANCE_ENABLED=0`), 172 students stay in Neon private first course.
+
+
+## Latest release: reporting and Excel 2026-10-19 — LIVE, CI PASS
+- New Render deployment `dep-dbb4f1rncjis73dei5lg` was confirmed **LIVE** for app commit `d4001556066b0acc9c555f281ec07fcd45d3f029`. Canonical app https://bata-attendify-node.onrender.com/lecturer.
+- Lecturer-only report JSON and three-sheet real Excel .xlsx GET routes are live independent of QR attendance flag; authorization checks active course assignment in Neon. `ATTENDANCE_ENABLED=0` and student `/checkin` still disabled.
+- Security CI https://github.com/AM-naguib/Bata/actions/runs/39287349093 **success**, external HTTPS smoke https://github.com/AM-naguib/Bata/actions/runs/39287349090 **success**, including unauthenticated report and XLSX endpoint 401. A synthetic test syntax error in a previously failing run was repaired with test-only commit `ce2f1033cba5693f4431b5af96d300a72220a036`, with both tests passing afterward. No authenticated real lecturer Excel download/browser open has yet been run.
+
+
+## Live release: lecture maintenance + correction audit — 2026-10-19
+- Additive Neon schema v3 applied to main DB: `attendance_corrections` table; 172 students preserved, 0 lectures, 0 corrections and 0 attendances. No existing academic data changed.
+- Canonical Render Free Node service https://bata-attendify-node.onrender.com/lecturer, new live deploy `dep-dbb4rf49v7es73a78c4g`, app SHA `0b549499c8fc4b591af48870b9d00b22249513f7`. Closed lecture reversible archive/restore, status corrections with reason and audit, report Excel overlay; QR remains OFF and no production check-in created.
+- GitHub security tests PASS https://github.com/AM-naguib/Bata/actions/runs/39291403895; **post-deployment** live HTTPS smoke PASS https://github.com/AM-naguib/Bata/actions/runs/39291403822 verified archive/correct endpoints reject unauthenticated access and UI is live.
+- Internal Neon no-compute recovery branch created and ready: `br-blue-frost-akgrnlty` (name `backup-pre-attendance-2026-10-19`). Production remains `br-polished-rice-ak97392e`; Render DATABASE_URL NOT changed. See `docs/BACKUP_RECOVERY.md` for safe restoration steps and limits. This is not an offsite backup.
+- Pending: user acceptance with a real lecturer/temporary test lecture, encrypted offsite dump and restoration drill, actual mobile GPS/QR assessment, privacy/sign-off before ATTENDANCE_ENABLED=1.

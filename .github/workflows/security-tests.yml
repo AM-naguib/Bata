@@ -14,4 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: npm test
+      - name: Install dependencies (verified npm package manifest)
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check portal JavaScript syntax
+        run: npm run test:syntax
+      - name: Run API and security regression tests
+        run: npm test

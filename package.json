@@ -2,10 +2,17 @@
   "name": "attendify",
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js",
-    "test": "node --test test/*.test.js"
+    "start": "node server-v2.js",
+    "test": "node --test test/*.test.js",
+    "bootstrap:superadmin": "node scripts/bootstrap-superadmin.js",
+    "test:syntax": "node --check server-v2.js && node --check lib/http-app.js && node --check lib/attendance-v2.js && node --check lib/lecture-maintenance.js && node --check lib/attendance-reports.js && node --check lib/report-excel.js && node --check lib/attendance-routes.js && node --check public/app-v2.js && node --check public/checkin.js && node --check lib/course-roster.js && node --check lib/roster-routes.js && node --check scripts/import-roster.js",
+    "import:students": "node scripts/import-roster.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "pg": "8.23.1",
+    "qrcode": "1.5.4"
   }
 }

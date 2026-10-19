@@ -1,5 +1,6 @@
 // Attendify - حاضر | بدون أي مكتبات: node server.js
 const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const {normalizeSeatNumber,validStudentIdentity}=require('./lib/student-identity');
 const PORT=process.env.PORT||3000, PASS=process.env.DOCTOR_PASSWORD;
 if(typeof PASS!=='string'||PASS.length<12)throw Error('DOCTOR_PASSWORD must be set to a secret of at least 12 characters');
 const SECRET=crypto.randomBytes(16).toString('hex');
@@ -53,7 +54,8 @@ async function api(req,res,p){
     const b=await body(req),L=db.lectures.find(x=>x.id===String(b.token||'').split('.')[0]);
     if(!L||!valid(b.token))return err(res,'الـ QR قديم أو غير صالح، امسحي الكود الحالي على الشاشة');
     if(L.closed||L.deletedAt)return err(res,'المحاضرة اتقفلت أو اتحذفت');
-    const s=byId[String(b.studentId||'').trim()];if(!s)return err(res,'رقم الجلوس غير موجود');
+    const s=byId[normalizeSeatNumber(b.studentId)];
+    if(!validStudentIdentity(b,s))return err(res,'رقم الجلوس والاسم غير متطابقين مع بيانات المقرر',400);
     const dev=String(b.deviceId||'').slice(0,64);if(!dev)return err(res,'جهاز غير معروف');
     if(db.devices[s.id]&&db.devices[s.id]!==dev)return err(res,'رقم الجلوس ده مسجل على موبايل تاني، كلّمي الدكتور');
     if(db.att.some(a=>a.l===L.id&&a.dev===dev&&a.s!==s.id))return err(res,'الموبايل ده سجّل حضور لطالبة تانية في المحاضرة دي');

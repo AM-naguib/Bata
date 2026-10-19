@@ -40,3 +40,9 @@ Multi-doctor permissions and per-course rosters require persistent schema change
 - Lecturer name and course title captured per lecture and shown in reports/CSV and live view (just free-text metadata, no authenticated lecturer association).
 - Reversible deletion of mistaken empty lectures, attendance-bearing lectures protected from deletion.
 - Student page restored to new feature branch. PR #2 is Draft and should not be deployed/merged until core architectural work is complete.
+
+## Confirmed follow-up: admin course creation (2026-10-19)
+Before assigning a lecturer, the main superadmin enters a course name and creates it. This is the **only newly authorized course management operation** for superadmin; no lecture/student/attendance access. Implemented in permissions and administrative DB functions, awaiting secured HTTP/UI integration.
+
+## Confirmed identity inputs (2026-10-19)
+Owner corrected repeated misunderstandings: student types **seat/roll number AND full name** (both required). They are editable/correctable. No extra PIN or secret code. Use the pair to validate course enrollment server-side before attendance. Do not expose public lookup of names from roll IDs. The pending plan for password-based student authentication is NOT approved.

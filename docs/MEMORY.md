@@ -55,3 +55,162 @@ User asked for student name + editable roll number; lecturer deletion of acciden
 - Empty-lecture soft delete/restore available to logged-in lecturer. If any attendance recorded, delete returns 409 to protect the history. Deleted lectures excluded from reports and cannot accept QR attendance; restoration leaves closed.
 - Existing CSV exports continue; not native XLSX yet. Single shared lecturer password and single global student roster remain; no multi-account/course access controls.
 - 3 GitHub Actions integration tests successful in run #39210678172 (PR #2). Browser e2e, privacy audit and production load remain pending. Not deployed.
+
+## October 19 2026 — owner-approved account model
+User chose **one superadmin**, who creates lecturer accounts and assigns courses. No self-registration. Separate `feature/superadmin-accounts-courses` branch with `db/001_initial.sql` and `docs/SUPERADMIN.md`. Neon Free project `bata-attendify` ID `wandering-mode-56487150` created, database `attendify` holds 10 new EMPTY tables, verified. No student data, user accounts, passwords or sessions inserted. Existing Node app not yet migrated; continue tracking SA-03..SA-10. Render workspace discovered but no workspace selected/production service created. Do not assume site is live or that role security is working.
+
+
+## Role restriction development — 2026-10-19
+Owner explicitly limited superadmin to **creating lecturer accounts and distributing/revoking lecturer-course assignments ONLY**. It cannot view or edit student rosters, attendance, reports, lectures or absences. It cannot inherit lecturer privileges; exceptions limited to personal account self-service. Course catalog creation and cross-role password reset have not been authorized.
+- `lib/permissions.js`: deny-by-default action authorization; lecturer course operations require server-side verified active membership, not client flags.
+- `lib/passwords.js`: salted scrypt password hashes with unique random salts and fixed format, no plaintext.
+- `lib/admin-management.js`: backend data-access module for admin-only lecturer creation with one-time random temporary password, minimal identity/course catalog lists, course assignment/revocation and audit events. **NOT wired to HTTP or existing server.**
+- `scripts/bootstrap-superadmin.js`: one-time private-env provisioning program. **NOT executed**, no superadmin credentials ever entered or created.
+- New permission, bootstrap, account-management and password tests passed in GitHub Actions #39213860392.
+- `package.json` pins pg v8.23.1 for future Neon connection. Database schema exists but `server.js` still uses local JSON and shared DOCTOR_PASSWORD, so there is **NO actual live multi-user security yet**.
+- Render not provisioned/deployed. Do not tell user the site is live, that admin UI works, or that permission policy protects the current server.
+
+## Owner decision update — course creation (2026-10-19)
+**Superadmin creates the course by typing its name first, then assigns it to a lecturer.** This replaces the previous explicit prohibition on course creation, but does **not** permit superadmin to see or edit enrolled students, lectures, attendance, reports or course content, or to rename/delete a course.
+- `lib/permissions.js` now allows superadmin action `course.create`, denies it to lecturer.
+- `lib/admin-management.js` implements isolated `createCourse` DB transaction (validated name + created_by principal + audit event) and existing `assignCourse` follows.
+- No schema mutation needed: Neon `courses` table already supports name, created_by, and assignment rows. No real student or course records were inserted into Neon.
+- No login/API/UI integration yet: DO NOT call course creation live or claim website deployed. Tests and GitHub Actions status must be verified.
+
+## Verified course-creation regression — 2026-10-19
+- GitHub Actions run [#39215894790](https://github.com/AM-naguib/Bata/actions/runs/39215894790) completed **successfully** on this feature branch (CI run 39).
+- The tests exercise administrator-only course insertion, validation, rollback, audit log and create-then-assign workflow using synthetic data; existing security regression suite also passed. This is **not** a test of a live admin UI or production role-based HTTP endpoints.
+
+
+## Admin portal v2 progress — 2026-10-19
+- New working code on `feature/superadmin-accounts-courses`: `server-v2.js`, `lib/http-app.js`, `public/portal.html`, `public/app-v2.js`, `public/app-v2.css`, `test/http-portal.test.js`.
+- Default `npm start` points to v2 (DB-backed admin portal) to prevent accidental serving of insecure old academic APIs. Legacy `server.js` remains in source history but is not started by npm.
+- Real account API + web UI: log in/logout, admin lecturer create, course create, assignment grant/revoke, lecturer assigned-course list; password change revokes all sessions, mandatory for newly created doctor; cookie secure with Origin validation for mutations.
+- New HTTP integration tests exercise cross-role restrictions, lecturer setup and account lifecycle. GitHub Actions run #39217213315 succeeded with `pg` npm install, JavaScript syntax validation, and security suite.
+- Read-only Neon query confirmed project `wandering-mode-56487150`, DB `attendify`: 0 accounts, 0 courses, 0 students, 0 lecturer-course assignments. No real data migrated.
+- Outstanding: *every* real student/lecture/QR/check-in/report API requires v2 course-scoped implementation and backfill. No website deploy. No private admin credentials, no Render workspace confirmation. Use docs/PORTAL_V2.md for current truth; prior dated notes concern older branch stages.
+
+## Important owner correction: student identification — 2026-10-19
+The student enters **roll number AND full name**, both editable. The user does NOT want a secret student code. Do not ask again about roll-number-only vs PIN; the decision is final unless user changes it.
+- Updated `public/student.html`: both input boxes; reset clears locally cached ID/name; they are stored only after successful check-in.
+- Updated old `server.js` attendance: checks the pair before device binding. This old server is **not** default production entry.
+- `lib/student-identity.js`: normalize name (NFC/whitespace), exact ID match including leading zeros, no guessing spelling; require both values.
+- `lib/student-enrollment.js`: future v2 Neon lookup requires the student be actively enrolled in that course; returns internal ID only, no public names/IDs enumeration endpoint. It has tests but is NOT connected to a working v2 attendance handler yet.
+- User's requirement matches a record, it cannot prove a student's physical identity. GPS/device spoofing remains an open security concern.
+
+
+## Verified student form correction — 2026-10-19
+- User requires **both roll number and typed full name** (no student PIN). Implementation and ownership documented in D-022 and ST-01..ST-06.
+- Code: `public/student.html`, `server.js`, `lib/student-identity.js`, `lib/student-enrollment.js`; tests `test/student-identity.test.js`, `test/student-enrollment.test.js`, extended `test/guardrails.test.js`.
+- Regression initially identified comparing Postgres student internal UUID instead of roll_number; fixed in commit `651aa31`.
+- GitHub Actions [run #39218694375](https://github.com/AM-naguib/Bata/actions/runs/39218694375) **succeeded** after fix. Tests verify correct name+roll accepted, missing/wrong entries rejected, mismatch before device binding, and course enrollment constraints.
+- Not a live app yet: `npm start` serves v2 account portal only; student check-in endpoint for v2 is an open task. No real records published or uploaded.
+
+## Latest implementation: v2 QR attendance (2026-10-19)
+- Owner's identity input stays **seat/roll number + full typed student name**, no PIN. New `public/checkin.html` and `public/checkin.js` handle the phone camera QR URL and let students edit cached values before trying again.
+- `lib/attendance-v2.js`: HMAC QR 30-second tokens, lecturer assignment checks, closed lectures, GPS validation, Neon course enrollment + name/roll match, transactionally locked check-in, per-lecture HMAC device fingerprint and duplicate protection.
+- `lib/attendance-routes.js` mounted in `lib/http-app.js` only when `ATTENDANCE_ENABLED=1`. `qrcode@1.5.4` produces server-side QR images with a self-hosted student check-in URL.
+- Lecturer portal added lecture creation with GPS center, rotating QR, closed state and attendance count (not roster).
+- `db/002_attendance_device_guard.sql` applied to the real EMPTY Neon Free project: version=2, unique device index present, 0 student/account/attendance rows.
+- GitHub Actions #39238772639 succeeded. Prior failing HTTP test caught an unhandled rejection; fixed by `return await attendanceRouter(...)` so unauthorized operations yield HTTP errors.
+- Enabled attendance requires private `ATTENDANCE_QR_SECRET` and `ATTENDANCE_DEVICE_KEY` and HTTPS `PUBLIC_ORIGIN`. Config remains private; only variable names in `.env.example`.
+- **Outstanding**: per-course roster management/import and real database integration tests, genuine browser testing, report/Excel, backups and secure deploy. Website is NOT live and first admin account is NOT created. Features are on branch, not merged to main.
+
+## Course roster manager + private import — 2026-10-19
+User requested to continue by implementing lecturer-managed per-course student add/remove and *privately and safely* importing the original student roster into Neon. Implemented code; **real import NOT executed** due to missing real lecturer/course mapping.
+- `lib/course-roster.js`: authenticated lecturer-only course listing, roster insert/reinstate and soft remove. Assignment checked inside SQL transaction with row lock; historical attendance untouched. Global student roll numbers reused across courses; conflicting names are rejected rather than overwritten.
+- `lib/roster-routes.js`: `GET/POST /api/v2/lecturer/courses/:courseUUID/students` and `POST .../students/remove`; independent `ROSTER_ENABLED=1` flag. `public/portal.html` + `public/app-v2.js` now show lecturer-only course roster select/entry/list/remove UI.
+- `scripts/import-roster.js`: default private JSON dry-run, `--apply` for atomic DB insertion into an **existing assigned course** under active lecturer ID. No student details logged. See `docs/PRIVATE_ROSTER_IMPORT.md`.
+- Locally inspected user-uploaded `attendify.zip`, its `attendify/students.json`: exactly **172** entries, JSON keys `id` and `name`, no duplicates/missing fields. Did NOT copy names or ID values to GitHub nor to a public URL.
+- Neon project `wandering-mode-56487150` still holds **zero** accounts, courses, assignments, students, enrollments and attendance; can't import into a nonexistent course. No personal records migrated or published.
+- CI verified successful: [run #39242649707](https://github.com/AM-naguib/Bata/actions/runs/39242649707). Feature branch only, not merged/deployed.
+- Remaining: create first superadmin privately, create lecturer/course, choose which course(s) original students belong to, then run private import; verify safely and arrange backup.
+
+
+## Owner confirms one-course initial student allocation — 2026-10-19
+The 172 student name/roll pairs from the private source ZIP are to be imported into **ONE course first**. Future courses can enroll the same underlying student records without duplicating the person. **Do not make the superadmin a student manager**: admin only creates courses/lecturer accounts and assigns courses to lecturers; lecturer handles enrolling students in their assigned courses. Existing addStudent/importRoster routines already reuse the existing student row via roll_number conflict handling and create a separate enrollment per course. No first course/lecturer/superadmin exists yet (last verified), so the actual private 172-person import must wait for owner-selected course/lecturer provisioning. No student PII goes to public GitHub.
+
+
+## Initial course placeholder — user decision 2026-10-19
+User explicitly allowed **any initial course name and editing it later**. Chosen Arabic placeholder: **المقرر الأول (مؤقت)**. Added `course.rename` permission for superadmin (only course catalog metadata), `lib/admin-management.js` transactional `renameCourse`, `POST /api/v2/courses/rename` role/origin-protected API, and UI rename form. Course IDs remain stable so assignments/rosters/lectures/attendance do not change. This *supersedes* prior prohibition on superadmin course rename; academic data restrictions remain.
+**Important distinction:** name is prefilled in the creation form on the GitHub feature branch, but the course itself has NOT been created in Neon because the required first superadmin account does not exist. No accounts or student records are created or published; no production website deployment.
+
+
+## First live database initialization — 2026-10-19
+User explicitly authorized creating the admin account and giving them a temporary password, and later changing it. A random high-entropy credential was generated and stored in the existing Neon Free `bata-attendify` project using the exact salted `scrypt:v1:32768` hash format expected by `lib/passwords.js`; **never put the plaintext, salted hash, or login identifier in GitHub**. The credentials were provided to the owner in the chat. The account login identifier is a placeholder and NOT a real mailbox for recovery.
+- Inserted one `superadmin` and the existing agreed course label `المقرر الأول (مؤقت)` in one atomic PostgreSQL statement, plus `superadmin.bootstrap` / `course.create` audit events. Verified: 1 superadmin, 1 course, 2 setup audit records, salted hash stored.
+- Database still has 0 students, 0 lecturer assignments and no imported 172-person roster. Do not invent lecturer account details or allocate students outside the one course.
+- The feature branch `feature/superadmin-accounts-courses` contains the admin UI and course-rename code; website NOT deployed. User can change their password from the real portal after a working HTTPS service is deployed. No email/password recovery service yet.
+
+
+## Owner-authorized actual 172-student import — completed 2026-10-19
+- User directly requested to begin HTTPS deployment and ADD the original students. Current Neon Free project `wandering-mode-56487150` DB `attendify`, course UUID `a5b8e718-4bbb-458c-a39a-20afea54cbf7` (`المقرر الأول (مؤقت)`) now has **172 real students and 172 active enrollments**. Exact roster checksum matched the private uploaded ZIP after normalization; zero duplicates, zero enrollments in other courses, zero attendance. Import used an atomic private SQL block with count validations, no PII in GitHub. One audit event `enrollment.owner_initial_import` with actor null marks this exceptional one-time owner-requested setup.
+- Only 1 superadmin exists; **0 lecturers and 0 lecturer assignments**. The admin's temporary password previously shown to user was verified locally to match the stored salted scrypt hash. Never print/repost this credential or its hash in GitHub, and user should change it after sign-in.
+- Deployment preparation: added `render.yaml` for free Frankfurt Node hosting, PRIVATE env vars DATABASE_URL and PUBLIC_ORIGIN, ROSTER_ENABLED=1 and ATTENDANCE_ENABLED=0 for initial staff-only portal.
+- Render connector lists one workspace `ahmed's workspace`. **DO NOT create service there until user confirms**; Render explicitly requires owner selection, and no workspace has been selected yet. No HTTPS Render service deployed yet; cannot claim working URL.
+- The superadmin cannot access student names/enrollments through site APIs; the import was a one-time owner-directed Neon maintenance operation. Initial lecturer must be created/assigned via admin portal once hosted. QR still off pending security test and rollout approval.
+
+
+## ACTUAL STAGING/STAFF WEB PORTAL LIVE — 2026-10-19
+Owner directly asked assistant to fix Render deployment. Render connector cannot change original service runtime/branch via available actions. We left the original faulty Go/main service `Bata` (`srv-dbb1d2bbc2fs73d68900`) unchanged and created a **new Render Free Node service**:
+- ID: `srv-dbb1ehtg1s2s73dtkc1g`, name `bata-attendify-node`, dashboard `https://dashboard.render.com/web/srv-dbb1ehtg1s2s73dtkc1g`, live URL `https://bata-attendify-node.onrender.com/portal`.
+- Workspace `ahmed's workspace`; branch `feature/superadmin-accounts-courses`; Frankfurt, Node runtime, build `npm install`, start `npm start`, auto deploy OFF.
+- Transferred private DATABASE_URL directly from installed Neon connector to installed Render connector without exposing it to user logs/GitHub. `PUBLIC_ORIGIN=https://bata-attendify-node.onrender.com`, NODE_ENV=production, ROSTER_ENABLED=1, ATTENDANCE_ENABLED=0.
+- Render deployment `dep-dbb1estm14bs73cpb2s0` LIVE. External GitHub Actions smoke test `39258848867` succeeded for actual HTTPS /healthz=Neon OK, /portal login form, protected API unauth rejects, no legacy/student QR endpoints.
+- Original private 172 students remain in Neon ONE provisional course. Exactly one superadmin account previously created; no lecturer accounts/assignments yet. Admin must use already-given password to sign in and change password; don't repeat/hash/publish secrets.
+- Website NOW ONLINE for protected staff login/roster management; public QR attendance OFF. Explicitly distinguish this from prior dated 'not deployed' summaries.
+- Remaining: credentialed user login, doctor creation and assignment, backups, browser E2E/geo, attendance reports/XLSX. Keep PR #3 draft as unmerged development branch, even though deployed staging.
+
+
+## ROLE-BASED RESPONSIVE UI REDESIGN — LIVE ON RENDER, 2026-10-19
+- User expressly asked to finish the missing pages and significantly improve UI. Implemented an all-new self-hosted Arabic RTL responsive design system (mobile-first with side navigation on desktop), no external fonts or CDNs.
+- Added a safe public landing page `/` with distinct links to `/admin`, `/lecturer`, `/student`; staff views remain protected by existing PostgreSQL session roles. The shared staff portal HTML serves /admin and /lecturer but client displays separate role navigation, forms and dashboard panels based on the authenticated role; server permissions remain deny-by-default, no superadmin academic data.
+- Admin: separate overview counts for lecturers, courses and assignments (NEVER counts students), account creation with transient one-time password, course creation/rename, assignment grant/revoke. The temporary course already exists; UI no longer prepopulates create form to avoid duplicates.
+- Lecturer: separate overview, course-owned roster with name/seat-number search and **20 rows per page**, add and soft-remove from only assigned course, optional lectures/QR area (kept disabled on live). Query results and lists rendered via safe DOM text APIs.
+- Student: public `/student` is informational, shows the 3-step QR attendance process and explicitly states feature currently disabled; public `/checkin` remains 404, check-in API unavailable until approved. `public/checkin.html` visually modernized for future enabling but not served currently.
+- Added `test/ui-contract.test.js` checking every portal JS ID in HTML, RTL roles/panels, no innerHTML, mobile CSS, no CSP-blocked inline styles, student guide collecting no personal data. Expanded `test/http-portal.test.js` for / /admin /lecturer /student and disabled QR. All security regression suites passed.
+- Deployed commit `72a96ed7fa606b03197c2b4fd92c7e8c0f363d9b` manually (autoDeploy off) to the **same new Render FREE Node service** `srv-dbb1ehtg1s2s73dtkc1g` with deploy `dep-dbb1v4ijnfac739j6r4g`, **LIVE**. Separate GitHub Actions live HTTPS smoke test `39263443594` passed, verifying public homepage, both staff dashboards, student guide, protected APIs/Neon health/QR disabled. Latest security CI `39263443641` successful. No real browser E2E with credentialed user, phone or GPS performed; do not claim that.
+- Canonical live pages: `https://bata-attendify-node.onrender.com/`, `/admin`, `/lecturer`, `/student`. Legacy `/portal` still works. No lecturer created or assigned by us, existing 172 real student records are intact in first Neon course. Need owner to sign in with previously issued credentials, change password, create lecturer and assign course. Do not enable attendance until real end-to-end tests.
+
+
+## LIVE BUG FIX: 42P08 password change + visibly separated three gateways (2026-10-19)
+- User provided a screenshot from authenticated lecturer security panel: submitting password-change form shows SERVER_ERROR, and user complained gates are not divided into three distinct entry points.
+- Diagnosed actual production Render **app log at 2026-10-19T14:00:48Z**: `Portal request failed 42P08` (PostgreSQL ambiguous parameter typing). Root cause in `lib/http-app.js` password change audit: reused `$1` as both UUID `actor_id` and TEXT `target_id`, causing PostgreSQL parameter typing conflict and transaction rollback. Fixed to `VALUES($1,'account.password.change','app_user',$2)` with `[user.id,user.id]`. **No password was changed by failed requests**; original current password remains valid.
+- Strengthened `test/http-portal.test.js` fake DB to enforce two distinct audit placeholders and equality; lecturer password-change test verifies 200 / audit / revoked old cookie / new login. Security CI passed after fixing an overly escaped test regex. No real user secret passed through CI.
+- On /admin and /lecturer anonymous entry, `public/portal.html` now shows **three large role cards** (admin, lecturer, student), separate dynamic heading/description/highlight based on the URL; /student remains separate no-login guide. Staff logout/password-change returns user to own role URL, not generic /portal. Added backend error translation; backend access controls unchanged. Added mobile grid/stacked CSS for three gateway cards; `test/ui-contract.test.js` now asserts all 3 gateway links and role-specific title IDs.
+- Manually deployed corrected code via Render `dep-dbb29vu7bikc73bfnst0` to SAME canonical FREE Node site `https://bata-attendify-node.onrender.com`; Render reports **LIVE** for commit `3078ff438515177835eef2bf732a2e1b836c596a`. Subsequent changes to GitHub workflow only (no application changes), Render autoDeploy still OFF.
+- External HTTPS live smoke check after this deployment **successful** via GitHub Actions `39266948714`: verifies all three visible gateway links in /admin HTML, live Neon health, protected /api/v2/password denies anonymous, all earlier role pages and disabled QR. Security regression run `39266948676` successful.
+- The Neon DB currently had **two lecturer accounts** at time of incident; do not invent more or reset anyone's passwords. Original 172 students remain private in one course. User should retry password change after browser refresh using unchanged current password, and confirm success/reauthentication. **Actual authenticated live password change has not yet been directly retested** because no user's fresh secret was supplied to tools. Never report real password change confirmed without a successful end-to-end result.
+
+
+## SUPERADMIN-ONLY LECTURER PASSWORD RESET — DEPLOYED LIVE 2026-10-19
+- User explicitly asked to allow superadmin to change/reset lecturers' passwords. This adds ONLY `lecturer.password.reset` to superadmin role, not lecturers and not any student/lecture/attendance permissions.
+- Backend `lib/admin-management.js` `resetLecturerPassword(pool,principal,{lecturerId})`: requires superadmin session/deny-by-default authorization, validates target UUID and requires active lecturer (never an admin), creates fresh 24-byte random base64url temporary password and salted scrypt hash, updates password/must_change_password=true, revokes **all active target lecturer sessions**, writes audit event `lecturer.password.reset` (UUID actor + separate TEXT target bind avoiding 42P08), atomically commits or rolls back. Only the HTTPS response carries the one-time plaintext credential; no database, audit or GitHub record stores it. No existing user passwords were changed by us.
+- `lib/http-app.js` exposes `POST /api/v2/lecturers/password/reset` under same-origin and verified superadmin session. Unauthorized 401, lecturers 403, invalid UUID 400, target admin/not found 404. Existing password self-change still forces logout/relogin after temporary login.
+- `public/app-v2.js` adds per-doctor reset button in "حسابات الدكاترة" with confirmation, one-time temporary password viewer, and dismiss. `public/portal.html` explains revocation and forced change. Previously created lecturers remain as is until the superadmin actively clicks reset.
+- Tests: permission policy, unit DB transaction/rollback and missing target, API CSRF/unauth, old password rejected, old sessions revoked, forced password change and re-login with new credentials, UI contract. CI security regression passed: https://github.com/AM-naguib/Bata/actions/runs/39270935273.
+- Reviewed actual Neon `app_users` schema (contains `updated_at`); new DB SQL compatible. **Render Free service is LIVE** with deploy `dep-dbb3p18n74is73bg2em0`, commit `bcf762126514e12d0f79a076d8493fb0d7a1080c`, URL https://bata-attendify-node.onrender.com/admin. Render autoDeploy remains OFF.
+- A new GitHub Actions live smoke verification was added for presence of reset UI and anonymous reset denial; its success should be checked independently. Do not submit a reset request as a privileged user without owner selecting a target; no lecturer accounts were modified by this deployment. QR attendance remains OFF, 172 private students unaffected.
+
+
+## COURSE REPORTS AND GENUINE XLSX IMPLEMENTED — 2026-10-19
+Owner said continue building remaining Attendify functionality; prioritized reporting before enabling QR. On feature branch `feature/superadmin-accounts-courses` added `lib/attendance-reports.js`, `lib/report-excel.js`, authenticated report + Excel endpoints in `lib/http-app.js`, report tab & filtering/export controls in `public/portal.html`, `public/app-v2.js` and `public/app-v2.css`. Reports use closed unarchived lectures and student's current enrollment date to avoid false absences. No eligible lectures means no absence and unknown percentage. Uses current active roster only. Genuine 3-sheet ZIP/OpenXML .xlsx written in memory with no extra NPM packages; no personal data or files committed. Tested with entirely synthetic student data via `test/attendance-reports.test.js` and `test/report-http.test.js`. Live smoke workflow extended to ensure admin-less report downloads fail closed, plus lecturer UI markup. Keep QR disabled (ATTENDANCE_ENABLED=0) and Neon 172 real student records private.
+- CI/Render verification of the new release is still subject to the current queue; check GitHub and Render before claiming production report release LIVE. Canonical host https://bata-attendify-node.onrender.com. AutoDeploy remains off. No actual report has been downloaded under real lecturer credentials in production.
+
+
+## REPORT AND XLSX RELEASE VERIFIED LIVE — 2026-10-19
+- Existing Render Free `bata-attendify-node` deployed code as LIVE in deployment `dep-dbb4f1rncjis73dei5lg` from app commit `d4001556066b0acc9c555f281ec07fcd45d3f029`. URL https://bata-attendify-node.onrender.com/lecturer → **تقارير وExcel**.
+- Reports private JSON and 3-sheet real .xlsx implemented; strict course assignment/lecturer-only, open and archived lectures excluded from absence, late enrollment does not count as absence. Existing 172 students remain private; no real lectures/attendance created; public QR remains OFF.
+- GitHub CI **all passed** on latest test-only corrected commit `ce2f1033cba5693f4431b5af96d300a72220a036`: security suite https://github.com/AM-naguib/Bata/actions/runs/39287349093 and live HTTPS smoke https://github.com/AM-naguib/Bata/actions/runs/39287349090. The initial new test had an extra `}` corrected after first failure; production application source was unchanged by fix.
+- Not yet done: authenticated real lecturer download/open in Excel, approving course absence policy, lecture archive/restoration and correction logs, mobile QR GPS test, backups. Render autoDeploy OFF; branch remains draft PR #3. Credentials/PII never committed to GitHub.
+
+
+## ARCHIVE / RESTORE / AUDITED CORRECTIONS + NEON BACKUP BRANCH — LIVE 2026-10-19
+Owner asked to continue remainder of Attendify. Implemented safe lecturer-only academic maintenance **without enabling public QR attendance**:
+- Added non-destructive migration `db/003_attendance_corrections.sql`, applied atomically to production Neon `wandering-mode-56487150` DB `attendify`. Verified `schema_versions.version=3` exists; **0 corrections / 0 lectures / 0 QR attendance; 172 students preserved**.
+- New `lib/lecture-maintenance.js` lists archived and unarchived lectures assigned to logged-in lecturer. Only **closed** lectures can be archived/restored. Writes take PostgreSQL lecture row locks and append `lecture.archive`/`lecture.restore` audit_events; never DELETE lectures or attendances. Archive removes lecture from current reports; restore reintroduces it.
+- Lecturer may manually correct attendance for **closed and non-archived** lecture AND an actively enrolled student whose enrollment predates lecture closure. Each correction requires status present/absent and a 5–500-character explanation; transactional upsert of attendance_corrections (overlay only), separate audit_events row `attendance.record.correct` with actor, target, old/new status, reason and student UUID. Raw QR attendance remains unchanged. Existing course report and Excel now apply latest correction status over raw check-ins.
+- New authenticated endpoints independent of QR flag: `GET /api/v2/lecturer/lecture-records`; `POST .../:lectureId/archive`, `.../restore`, `.../correct`. The URL-specified lecture ID overrides any request body supplied ID. Non-lecturers/anonymous unauthorized, session forced password change denied, active course assignment checked. HTML/JS: live lecture history and archive/restore controls inside 'المحاضرات والحضور' and manual correction form inside 'تقارير وExcel'.
+- CI tests include unit transaction/rollback, course and role scope, archive closed-only, correction audit, report override, real HTTP authorization and CSRF; full security https://github.com/AM-naguib/Bata/actions/runs/39291403895 SUCCESS and live HTTPS smoke https://github.com/AM-naguib/Bata/actions/runs/39291403822 SUCCESS after new Render deployed. Correct Render Free Node deployment `dep-dbb4rf49v7es73a78c4g`, commit `0b549499c8fc4b591af48870b9d00b22249513f7`, **LIVE**, canonical https://bata-attendify-node.onrender.com/lecturer. autoDeploy remains OFF.
+- **Neon internal backup branch created** `backup-pre-attendance-2026-10-19` (`br-blue-frost-akgrnlty`), parent `br-polished-rice-ak97392e`, LSN `0/1DC9EF0`; `no_compute=true` and ready, no extra compute deployed. Never point live Render at backup branch or delete it. This is a project-internal restore point, NOT encrypted offsite backup. See `docs/BACKUP_RECOVERY.md`.
+- Still NOT performed: real lecturer browser acceptance of correction/export, an independent encrypted dump and restore drill, real mobile GPS/QR fraud checks. QR remains disabled (`ATTENDANCE_ENABLED=0`). Existing private student data was not modified by deploy.
