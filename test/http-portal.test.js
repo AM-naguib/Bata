@@ -53,6 +53,15 @@ function fakeDatabase(bossHash){
    const course=courses.find(c=>c.id===p[1]);if(!course)return {rows:[]};
    course.name=p[0];return {rows:[{...course,code:null,created_at:new Date()}]};
   }
+  if(sql.startsWith('SELECT id,display_name,email FROM app_users WHERE id=')){
+   return {rows:users.filter(u=>u.id===p[0]&&u.role==='lecturer'&&!u.disabled_at)
+     .map(u=>({id:u.id,display_name:u.display_name,email:u.email}))};
+  }
+  if(sql.startsWith('UPDATE app_users SET password_hash=')&&sql.includes('must_change_password=true')){
+   const user=users.find(u=>u.id===p[1]&&u.role==='lecturer');
+   if(user){user.password_hash=p[0];user.must_change_password=true}
+   return {rows:[]};
+  }
   if(sql.startsWith('SELECT id FROM app_users WHERE id=')){
    return {rows:users.filter(u=>u.id===p[0]&&u.role==='lecturer'&&!u.disabled_at).map(u=>({id:u.id}))};
   }
@@ -71,6 +80,12 @@ function fakeDatabase(bossHash){
    return {rows:assignments.filter(a=>a.lecturerId===p[0]&&!a.removed).map(a=>courses.find(c=>c.id===a.courseId))};
   }
   if(sql.startsWith('INSERT INTO audit_events(')){
+   if(sql.includes("'lecturer.password.reset'")){
+    assert.ok(sql.includes("VALUES($1,'lecturer.password.reset','app_user',$2)"),
+      'separate UUID and text audit parameters required');
+    assert.equal(p.length,2);
+    assert.notEqual(p[0],p[1]);
+   }
    if(sql.includes("'account.password.change'")){
     // PostgreSQL error 42P08: one $1 parameter cannot simultaneously resolve
     // actor_id UUID and target_id TEXT. Enforce the actual two-parameter contract.
@@ -165,6 +180,47 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   assert.equal(mine.status,200);assert.equal(mine.body.items.length,1);
   assert.equal(mine.body.items[0].id,newCourse.body.id);
   assert.equal(mine.body.items[0].name,'المقرر الأول (مؤقت)');
+  // Reset is a superadmin action, not a lecturer self-service or a public endpoint.
+  const resetPath='/api/v2/lecturers/password/reset';
+  const resetJson={lecturerId:docId};
+  assert.equal((await request(resetPath,{method:'POST',json:resetJson})).status,401);
+  assert.equal((await request(resetPath,{method:'POST',cookie:doctor,json:resetJson})).status,403);
+  assert.equal((await request(resetPath,{method:'GET',cookie:bossCookie})).status,404);
+  assert.equal((await request(resetPath,{method:'POST',cookie:bossCookie,origin:'https://evil.example',json:resetJson})).status,403);
+  assert.equal((await request(resetPath,{method:'POST',cookie:bossCookie,json:{lecturerId:'not-a-uuid'}})).status,400);
+  assert.equal((await request(resetPath,{method:'POST',cookie:bossCookie,json:{lecturerId:bossId}})).status,404,
+   'superadmin account must never be a reset target');
+  const reset=await request(resetPath,{method:'POST',cookie:bossCookie,json:resetJson});
+  assert.equal(reset.status,200);
+  assert.ok(reset.body.ok&&reset.body.temporaryPassword.length>=24);
+  assert.equal(reset.body.lecturerId,docId);
+  assert.notEqual(reset.body.temporaryPassword,'another-strong-secret-password');
+  assert.ok(!JSON.stringify(data.users).includes(reset.body.temporaryPassword),
+   'plaintext temporary password must not be stored');
+  assert.ok(data.audit.some(a=>a.sql.includes('lecturer.password.reset')));
+  assert.ok(!JSON.stringify(data.audit).includes(reset.body.temporaryPassword));
+  assert.equal((await request('/api/v2/me',{cookie:doctor})).status,401,
+   'all old lecturer sessions must be revoked immediately');
+  const oldPw=await request('/api/v2/login',{method:'POST',
+   json:{email:'doctor@example.test',password:'another-strong-secret-password'}});
+  assert.equal(oldPw.status,401);
+  const resetLogin=await request('/api/v2/login',{method:'POST',
+   json:{email:'doctor@example.test',password:reset.body.temporaryPassword}});
+  assert.equal(resetLogin.status,200);
+  assert.equal(resetLogin.body.mustChangePassword,true);
+  const resetCookie=resetLogin.cookie.split(';')[0];
+  assert.equal((await request('/api/v2/lecturer/courses',{cookie:resetCookie})).status,403,
+   'doctor must change temporary password before viewing even an assigned course');
+  const resetChanged=await request('/api/v2/password',{method:'POST',cookie:resetCookie,
+   json:{currentPassword:reset.body.temporaryPassword,newPassword:'after-reset-a-better-password-2026'}});
+  assert.equal(resetChanged.status,200);
+  assert.equal((await request('/api/v2/me',{cookie:resetCookie})).status,401);
+  const afterResetLogin=await request('/api/v2/login',{method:'POST',
+   json:{email:'doctor@example.test',password:'after-reset-a-better-password-2026'}});
+  assert.equal(afterResetLogin.status,200);
+  const newDoctorSession=afterResetLogin.cookie.split(';')[0];
+  assert.equal((await request('/api/v2/lecturer/courses',{cookie:newDoctorSession})).status,200);
+
   assert.equal((await request('/api/v2/assignments/revoke',{method:'POST',cookie:bossCookie,json:{lecturerId:docId,courseId:newCourse.body.id}})).status,200);
   const afterRevoke=await request('/api/v2/lecturer/courses',{cookie:doctor});
   assert.equal(afterRevoke.status,200);assert.equal(afterRevoke.body.items.length,0);
