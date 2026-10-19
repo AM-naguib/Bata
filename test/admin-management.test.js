@@ -54,11 +54,11 @@ test('superadmin can create a course by name with an audit event and then assign
  assert.ok(queries.some(q=>q.sql==='COMMIT'));
  assert.deepEqual(await service.assignCourse(pool,boss,{lecturerId:id1,courseId:newCourse.id}),{ok:true});
  assert.ok(queries.some(q=>q.sql.includes('INSERT INTO lecturer_courses(')&&q.params[1]===id2));
- assert.ok(!queries.some(q=>/\\b(students|enrollments|attendances|lectures)\\b/i.test(q.sql)));
+ assert.ok(!queries.some(q=>/\b(students|enrollments|attendances|lectures)\b/i.test(q.sql)));
 });
 test('course creation validates name before DB access and does not grant other write powers',async()=>{
  const {pool,queries}=fakePool();
- for(const name of [undefined,null,'','   ','x'.repeat(151),'A\\nB']){
+ for(const name of [undefined,null,'','   ','x'.repeat(151),'A\nB']){
   await assert.rejects(service.createCourse(pool,boss,{name}),e=>e.status===400);
  }
  assert.equal(queries.length,0);
@@ -86,7 +86,7 @@ test('superadmin may create a lecturer with one-time password hash and audit eve
  assert.ok(queries.some(q=>q.sql.includes('INSERT INTO audit_events')));
  assert.ok(queries.some(q=>q.sql==='COMMIT'));
 });
-test('superadmin can assign and revoke existing course, no course or lecturer creation beyond account creation',async()=>{
+test('superadmin can assign and revoke existing course without accessing academic records',async()=>{
  const {pool,queries}=fakePool();
  assert.deepEqual(await service.assignCourse(pool,boss,{lecturerId:id1,courseId:id2}),{ok:true});
  assert.ok(queries.some(q=>q.sql.includes('ON CONFLICT (lecturer_id,course_id)')));
