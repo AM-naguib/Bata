@@ -6,13 +6,13 @@ const a={id:'dr-1',role:'lecturer'};
 const courseA='ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1';
 const courseB='5bc34655-6777-419b-9392-5705714f20df';
 test('superadmin can manage lecturer account creation and assignments but NEVER academic records',async()=>{
-  for(const action of ['lecturer.create','lecturer.list','assignment.list','assignment.grant','assignment.revoke','course.catalog.list']){
+  for(const action of ['lecturer.create','lecturer.list','assignment.list','assignment.grant','assignment.revoke','course.catalog.list','course.create']){
     assert.equal((await authorize({principal:boss,action})).allowed,true,action);
   }
   for(const action of ['lecture.read','lecture.create','lecture.archive','attendance.read','attendance.export','attendance.record.correct','enrollment.list','enrollment.add','enrollment.remove','device.reset.course','course.assigned.list']){
     assert.equal((await authorize({principal:boss,action,courseId:courseA,isAssignedToCourse:async()=>true})).status,403,action);
   }
-  for(const action of ['course.create','lecturer.delete','lecturer.password.reset','students.export','report.all','*']){
+  for(const action of ['course.delete','course.edit','lecturer.delete','lecturer.password.reset','students.export','report.all','*']){
     assert.equal(allowsRole('superadmin',action),false,action);
   }
 });
@@ -32,7 +32,7 @@ test('lecturer may operate only on active assigned course, checked by trusted da
   assert.equal(dbFail.status,503);
 });
 test('lecturer cannot create accounts, grant assignments or access other users profiles',async()=>{
-  for(const action of ['lecturer.create','lecturer.list','assignment.grant','assignment.revoke','course.catalog.list']){
+  for(const action of ['lecturer.create','lecturer.list','assignment.grant','assignment.revoke','course.catalog.list','course.create']){
     assert.equal((await authorize({principal:a,action})).allowed,false,action);
   }
   assert.equal((await authorize({principal:a,action:'profile.password.change.self',targetUserId:a.id})).allowed,true);
