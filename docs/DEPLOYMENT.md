@@ -42,3 +42,11 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - GitHub CI now runs the synthetic test suite; inspect Actions results before relying on branch changes.
 - **Do not deploy**: no Neon integration, remaining identity fraud & CSRF risks, multi-account authorization, and no private data import path. Student page now restored on feature branch.
 - The Render + Neon ChatGPT apps were installed, but provisioning actions were not exposed to the assistant in this session. No service was created.
+
+
+## Current deployment target — admin portal v2 (2026-10-19)
+- The branch `feature/superadmin-accounts-courses` now defaults to `node server-v2.js`. Requires a private `DATABASE_URL`; production mode additionally requires HTTPS `PUBLIC_ORIGIN`.
+- The v2 portal intentionally has no student attendance endpoints yet. It is **not suitable for live student use**. Do not connect a public class QR until course-scoped attendance and backup are implemented.
+- Actual Neon Free database schema exists and is empty; the existing student JSON data has not been uploaded.
+- Render free workspace has not been selected or provisioned. Never put connection strings, student records or admin secrets into a public repository.
+- Detailed setup, routes and blockers: [Portal v2](PORTAL_V2.md).
