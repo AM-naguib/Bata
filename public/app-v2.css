@@ -239,3 +239,10 @@ button:focus-visible,a:focus-visible{outline:3px solid #dfae45;outline-offset:3p
   .site-footer{padding:20px 14px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Lecturer reports: keep long Arabic names and counts legible on phones. */
+.report-actions{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 0 23px}
+.report-actions .muted{margin:0;flex:1}
+.report-actions .button{margin:0}
+.report-attendance{font-size:12px;color:#116c65;background:#e8f5f1;border-radius:9px;padding:8px 11px;display:inline-block;flex-shrink:0;white-space:nowrap}
+@media(max-width:580px){.report-actions{align-items:stretch}.report-actions .button{width:100%}.records li:has(.report-attendance){align-items:flex-start;flex-direction:column;gap:8px}.report-attendance{white-space:normal}}
