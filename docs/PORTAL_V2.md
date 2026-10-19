@@ -44,8 +44,13 @@ This is a **setup outline only**. No real account has been created or production
 
 - Connect and test against actual Neon with a private superadmin, including secured cross-role HTTP smoke tests.
 - Lecturer course-scoped students, enrollments, lectures, attendance/check-in, QR/GPS, report/Excel and audit/history migration have NOT moved to v2.
-- Secure student identity verification and handling of lost or changed devices are not decided.
+- Student UI fields are now confirmed: **roll number + typed full name**, no extra PIN. Handling device swaps and spoofing still needs safeguards.
 - Data backups and recovery, production load tests, rate-limiter under shared classroom IPs, and deployment workspace confirmation needed.
 - Front-end browser end-to-end tests, accessibility and actual deployment remain outstanding.
 
 Current state: **Admin portal preview implementation only; no live website.**
+
+## Student input form and future v2 check-in
+- `public/student.html` and legacy `server.js` now require both student ID and typed full name, with an edit/reset button and server roster check before saving attendance.
+- The v2 portal intentionally does not serve the legacy student route. Shared `lib/student-enrollment.js` prepares a private Neon active-course roster match (no public ID-to-name lookup); no v2 QR attendance/check-in endpoint is integrated yet.
+- Never deploy the old legacy server publicly as a workaround.
