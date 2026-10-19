@@ -97,3 +97,11 @@ The student enters **roll number AND full name**, both editable. The user does N
 - `lib/student-identity.js`: normalize name (NFC/whitespace), exact ID match including leading zeros, no guessing spelling; require both values.
 - `lib/student-enrollment.js`: future v2 Neon lookup requires the student be actively enrolled in that course; returns internal ID only, no public names/IDs enumeration endpoint. It has tests but is NOT connected to a working v2 attendance handler yet.
 - User's requirement matches a record, it cannot prove a student's physical identity. GPS/device spoofing remains an open security concern.
+
+
+## Verified student form correction — 2026-10-19
+- User requires **both roll number and typed full name** (no student PIN). Implementation and ownership documented in D-022 and ST-01..ST-06.
+- Code: `public/student.html`, `server.js`, `lib/student-identity.js`, `lib/student-enrollment.js`; tests `test/student-identity.test.js`, `test/student-enrollment.test.js`, extended `test/guardrails.test.js`.
+- Regression initially identified comparing Postgres student internal UUID instead of roll_number; fixed in commit `651aa31`.
+- GitHub Actions [run #39218694375](https://github.com/AM-naguib/Bata/actions/runs/39218694375) **succeeded** after fix. Tests verify correct name+roll accepted, missing/wrong entries rejected, mismatch before device binding, and course enrollment constraints.
+- Not a live app yet: `npm start` serves v2 account portal only; student check-in endpoint for v2 is an open task. No real records published or uploaded.
