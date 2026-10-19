@@ -54,3 +54,10 @@
 - FR-D10 (pending): Whether Excel means native XLSX or CSV compatible with Excel.
 - FR-D11 (pending): How historical records map to courses, with course-by-course attendance percentages and exact privileges.
 No changes to grading/absence rules authorized yet. Implement safe UI improvements before irreversible data operations.
+
+## Feature-branch interim safety choices — 2026-10-19 (not owner-approved product policies)
+- Pending student identity design, show full student name **only after successful attendance**, not as a public ID->name directory. Seat number can be cleared locally; correcting a prior recorded attendance remains lecturer-controlled and needs design.
+- A lecturer can archive an accidentally created **empty lecture** and restore it; if attendance exists, deletion is blocked (409). Archive removes it from current absence calculations without erasing any records. Restored lecture is CLOSED until explicitly reopened. Owner still needs to decide policy for lectures with attendance.
+- Course and lecturer names currently are metadata labels on lectures, **not user identities or validated per-course enrollments**. Do not confuse with account ownership.
+- Existing CSV is labelled 'opens in Excel' accurately; native XLSX remains pending.
+- Approved status: only the user feature requirements, not onboarding/deletion/privacy policies. No private roster or account secrets in public GitHub.
