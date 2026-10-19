@@ -42,9 +42,24 @@
 <div class="card"><h2>المقررات</h2><ul id="courseList"></ul></div></div>
 <div class="card"><h2>التكليفات الحالية</h2><ul id="assignmentList"></ul></div>
 </section>
-<section id="lecturerControls" class="card" hidden>
-<h2>مقرراتي</h2><ul id="myCourses"></ul>
-<p class="muted">إدارة الطلاب والمحاضرات والحضور هتتفعّل بعد نقل بياناتها وتأمين الصلاحيات لكل مقرر. الأدمن مش بيشوفها.</p>
+<section id="lecturerControls" hidden>
+<div class="card"><h2>مقرراتي</h2><ul id="myCourses"></ul></div>
+<div class="card" id="lectureManager">
+<h2>إنشاء محاضرة مع QR متغير</h2>
+<form id="lectureForm">
+<label for="lectureCourse">المقرر</label><select id="lectureCourse" required></select>
+<label for="lectureTitle">اسم المحاضرة</label><input id="lectureTitle" maxlength="120" placeholder="مثلاً المحاضرة الأولى" required>
+<label for="lectureRadius">نطاق القاعة (بالمتر)</label><input id="lectureRadius" type="number" min="20" max="500" value="100" required>
+<p class="muted">هناخد موقعك الحالي كمركز القاعة عند إنشاء المحاضرة. شغّلي GPS الدقيق من داخل القاعة.</p>
+<button>إنشاء المحاضرة وفتح QR</button>
+</form></div>
+<div class="card"><h2>المحاضرات</h2><ul id="lectureList"></ul></div>
+<div class="card" id="qrCard" hidden>
+<h2 id="qrTitle">QR المحاضرة</h2>
+<p class="muted">اعرضي الكود للطالبات. الكود بيتغير تلقائيًا كل 30 ثانية؛ الطالبة تمسحه بكاميرا الموبايل وتدخل رقم الجلوس والاسم بالكامل.</p>
+<img id="qrImage" alt="QR تسجيل حضور المحاضرة" width="300" height="300" style="max-width:100%;height:auto">
+<p id="qrStats" aria-live="polite"></p><button id="stopQr" type="button" class="secondary">إغلاق عرض QR</button>
+</div>
 </section>
 </section>
 <section class="card notice" id="temporaryPasswordCard" hidden>
