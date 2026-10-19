@@ -67,3 +67,7 @@
 - Session tokens are random, only hashes are stored in PostgreSQL, and changing password revokes all sessions. New lecturers are forced to change their temporary password.
 - This does NOT yet migrate class attendance or students. No initial superadmin account has been created or populated. Existing historical statements describing the earlier unintegrated modules are superseded for the v2 account portal only.
 - GitHub Actions run #39217213315 passed after npm dependency install, syntax checks and synthetic HTTP tests. Actual live Neon smoke test, UI browser E2E and production launch pending. See `docs/PORTAL_V2.md`.
+
+
+## Approved exception: rename course label (2026-10-19)
+Owner permitted a temporary first course named **المقرر الأول (مؤقت)** and renaming later. Superadmin authorization is now exactly lecturer create/list, course catalog list/create/**rename**, assignment list/grant/revoke, and own account self-service. No student/attendance/report permissions; course edit beyond its display name, archive/delete, and academic data operations are still forbidden. `renameCourse` updates only the course's name under the same course UUID with an audit event. The creation UI prepopulates this temporary label. No initial superadmin was created in Neon and therefore no actual course is currently present.
