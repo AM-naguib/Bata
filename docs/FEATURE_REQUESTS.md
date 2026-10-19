@@ -33,3 +33,10 @@ Multi-doctor permissions and per-course rosters require persistent schema change
 ## Implementation status
 - Original `public/student.html` is absent on the prior GitHub branch; uploading an enhanced privacy-conscious replacement is an outstanding task.
 - New work is isolated on `feature/teacher-student-improvements`, not deployed to production.
+
+## Delivered subset (verified CI #39210678172)
+- Added editable saved roll number with reset button; updated number is persisted only after successful attendance.
+- Full name shown only after attendance success, not a pre-registration identity lookup (decision needed).
+- Lecturer name and course title captured per lecture and shown in reports/CSV and live view (just free-text metadata, no authenticated lecturer association).
+- Reversible deletion of mistaken empty lectures, attendance-bearing lectures protected from deletion.
+- Student page restored to new feature branch. PR #2 is Draft and should not be deployed/merged until core architectural work is complete.
