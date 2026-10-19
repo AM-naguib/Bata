@@ -1,90 +1,215 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>حاضر | بوابة الإدارة</title><link rel="stylesheet" href="/app-v2.css">
-<script src="/app-v2.js" defer></script></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102f40">
+<meta name="description" content="حاضر — بوابة إدارة المقررات والحضور الجامعي">
+<title>حاضر | بوابة الإدارة والتعليم</title>
+<link rel="stylesheet" href="/app-v2.css">
+<script src="/app-v2.js" defer></script>
+</head>
 <body>
-<header><div class="brand">حاضر <small>Attendify</small></div><div id="identity"></div></header>
-<main>
-<section id="loginBox" class="card">
-<h1>تسجيل الدخول</h1><p class="muted">للدكتور أو الأدمن الرئيسي</p>
-<form id="loginForm">
-<label for="email">البريد الإلكتروني</label><input id="email" type="email" autocomplete="username" required>
-<label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" required>
-<button>دخول</button></form>
-</section>
-<section id="portalBox" hidden>
-<div class="row heading"><h1 id="welcome"></h1><button id="logoutButton" class="secondary">تسجيل الخروج</button></div>
-<section id="changePasswordCard" class="card">
-<h2>تغيير كلمة المرور</h2>
-<form id="changePasswordForm">
-<label for="currentPassword">كلمة المرور الحالية</label><input id="currentPassword" type="password" autocomplete="current-password" required>
-<label for="newPassword">كلمة المرور الجديدة (12 حرفًا على الأقل)</label>
-<input id="newPassword" type="password" autocomplete="new-password" minlength="12" required>
-<button>تغيير كلمة المرور</button></form>
-</section>
-<section id="adminControls" hidden>
-<div class="grid">
-<div class="card"><h2>إنشاء دكتور</h2><form id="lecturerForm">
-<label for="lecturerName">اسم الدكتور</label><input id="lecturerName" maxlength="120" required>
-<label for="lecturerEmail">البريد الإلكتروني للدكتور</label><input id="lecturerEmail" type="email" maxlength="254" required>
-<button>إنشاء حساب دكتور</button></form>
-<p class="muted">هيظهر باسورد مؤقت مرة واحدة؛ سلّمه للدكتور بشكل آمن.</p></div>
-<div class="card"><h2>إنشاء مقرر</h2><form id="courseForm">
-<label for="courseName">اسم المقرر</label><input id="courseName" maxlength="150" required value="المقرر الأول (مؤقت)" placeholder="اسم المقرر">
-<button>إنشاء المقرر</button></form></div>
-</div>
-<div class="card"><h2>تعديل اسم مقرر</h2>
-<p class="muted">تغيير الاسم لا يغيّر كود المقرر الداخلي ولا توزيع الدكاترة أو حضور الطالبات.</p>
-<form id="renameCourseForm">
-<label for="renameCourseSelect">المقرر</label><select id="renameCourseSelect" required></select>
-<label for="renameCourseName">الاسم الجديد</label><input id="renameCourseName" maxlength="150" required placeholder="اسم المقرر بعد التعديل">
-<button>حفظ الاسم الجديد</button>
-</form></div>
-<div class="card"><h2>تعيين مقرر لدكتور</h2><form id="assignForm" class="inline">
-<label for="lecturerSelect">الدكتور</label><select id="lecturerSelect" required></select>
-<label for="courseSelect">المقرر</label><select id="courseSelect" required></select>
-<button>تعيين المقرر</button></form></div>
-<div class="grid"><div class="card"><h2>حسابات الدكاترة</h2><ul id="lecturerList"></ul></div>
-<div class="card"><h2>المقررات</h2><ul id="courseList"></ul></div></div>
-<div class="card"><h2>التكليفات الحالية</h2><ul id="assignmentList"></ul></div>
-</section>
-<section id="lecturerControls" hidden>
-<div class="card"><h2>مقرراتي</h2><ul id="myCourses"></ul></div>
-<div class="card" id="rosterManager">
-<h2>طالبات المقرر</h2>
-<p class="muted">إضافة الطالبة أو إلغاء قيدها هنا يخص المقرر المختار فقط. حذفها من المقرر لا يمسح حضورها القديم.</p>
-<label for="rosterCourse">اختار المقرر</label><select id="rosterCourse"></select>
-<form id="rosterForm">
-<label for="rosterRoll">رقم الجلوس</label><input id="rosterRoll" maxlength="64" autocomplete="off" required placeholder="رقم الجلوس">
-<label for="rosterName">اسم الطالبة بالكامل</label><input id="rosterName" maxlength="200" autocomplete="off" required placeholder="الاسم زي الكشف">
-<button type="submit">إضافة الطالبة للمقرر</button>
-</form>
-<p id="rosterHint" class="muted"></p>
-<ul id="rosterList"></ul>
-</div>
-<div class="card" id="lectureManager">
-<h2>إنشاء محاضرة مع QR متغير</h2>
-<form id="lectureForm">
-<label for="lectureCourse">المقرر</label><select id="lectureCourse" required></select>
-<label for="lectureTitle">اسم المحاضرة</label><input id="lectureTitle" maxlength="120" placeholder="مثلاً المحاضرة الأولى" required>
-<label for="lectureRadius">نطاق القاعة (بالمتر)</label><input id="lectureRadius" type="number" min="20" max="500" value="100" required>
-<p class="muted">هناخد موقعك الحالي كمركز القاعة عند إنشاء المحاضرة. شغّلي GPS الدقيق من داخل القاعة.</p>
-<button>إنشاء المحاضرة وفتح QR</button>
-</form></div>
-<div class="card"><h2>المحاضرات</h2><ul id="lectureList"></ul></div>
-<div class="card" id="qrCard" hidden>
-<h2 id="qrTitle">QR المحاضرة</h2>
-<p class="muted">اعرضي الكود للطالبات. الكود بيتغير تلقائيًا كل 30 ثانية؛ الطالبة تمسحه بكاميرا الموبايل وتدخل رقم الجلوس والاسم بالكامل.</p>
-<img id="qrImage" alt="QR تسجيل حضور المحاضرة" width="300" height="300" style="max-width:100%;height:auto">
-<p id="qrStats" aria-live="polite"></p><button id="stopQr" type="button" class="secondary">إغلاق عرض QR</button>
-</div>
-</section>
-</section>
-<section class="card notice" id="temporaryPasswordCard" hidden>
-<h2>كلمة المرور المؤقتة للدكتور</h2><p id="tempPassword" class="secret"></p>
-<p>انسخ كلمة المرور واحفظها في مكان آمن. مش هتظهر تاني بعد إغلاق الرسالة.</p>
-<button id="dismissSecret" type="button">تم، إخفاء كلمة المرور</button>
-</section>
-<p id="flash" role="status" aria-live="polite"></p>
-</main></body></html>
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="/" aria-label="حاضر — الصفحة الرئيسية"><span class="brand__mark" aria-hidden="true">ح</span><span>حاضر <small>ATTENDIFY</small></span></a>
+    <div class="header-links">
+      <a href="/student" class="header-link">بوابة الطالبة</a>
+      <span id="identity" class="identity" aria-live="polite"></span>
+    </div>
+  </div>
+</header>
+<main class="shell">
+  <section id="loginBox" class="login-layout">
+    <div class="login-intro">
+      <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> نظام إدارة المقررات</span>
+      <h1>كل محاضرة،<br><em>في مكانها الصح.</em></h1>
+      <p>منصة واحدة لتنظيم المقررات وتكليف الدكاترة وإدارة كشوف الطالبات — بصلاحيات واضحة لكل دور.</p>
+      <div class="feature-stack">
+        <div class="feature"><span class="feature__icon" aria-hidden="true">✓</span><span><strong>مساحة مستقلة لكل دور</strong><small>الأدمن للمقررات والحسابات، والدكتور لإدارة طالباته.</small></span></div>
+        <div class="feature"><span class="feature__icon" aria-hidden="true">◈</span><span><strong>بيانات منظمة وآمنة</strong><small>الكشوف والحضور مرتبطان بالمقرر المخصص فقط.</small></span></div>
+      </div>
+      <div class="login-intro__foot">واجهة عربية · تعمل على الكمبيوتر والموبايل</div>
+    </div>
+    <section class="login-card card" aria-labelledby="loginTitle">
+      <div class="login-card__top"><span class="login-icon" aria-hidden="true">↳</span><span class="pill">بوابة العاملين</span></div>
+      <h2 id="loginTitle">أهلًا بيك في حاضر</h2>
+      <p class="muted" id="loginDescription">سجّل دخولك بحساب الأدمن أو الدكتور للمتابعة.</p>
+      <form id="loginForm">
+        <label for="email">البريد الإلكتروني / اسم الدخول</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email" placeholder="name@example.com" dir="ltr" required>
+        <label for="password">كلمة المرور</label>
+        <div class="input-with-action">
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="أدخل كلمة المرور" required>
+          <button id="toggleLoginPassword" type="button" class="reveal-button" aria-label="إظهار كلمة المرور" aria-pressed="false">إظهار</button>
+        </div>
+        <button class="button button--block" type="submit" id="loginButton">تسجيل الدخول <span aria-hidden="true">←</span></button>
+      </form>
+      <p class="login-note">حسابات الدكاترة بيُنشئها الأدمن الرئيسي. الطالبات مش محتاجين حساب دخول.</p>
+      <a class="text-link" href="/student">إزاي الطالبة بتسجّل حضورها؟ <span aria-hidden="true">↗</span></a>
+    </section>
+  </section>
+
+  <section id="portalBox" class="workspace" hidden>
+    <aside class="sidebar" aria-label="التنقل داخل لوحة التحكم">
+      <div class="sidebar__section">لوحة التحكم</div>
+      <nav id="adminNav" aria-label="أقسام الأدمن" hidden>
+        <button type="button" class="nav-link is-active" data-nav="overview"><span aria-hidden="true">◫</span> نظرة عامة</button>
+        <button type="button" class="nav-link" data-nav="lecturers"><span aria-hidden="true">♙</span> حسابات الدكاترة</button>
+        <button type="button" class="nav-link" data-nav="courses"><span aria-hidden="true">▤</span> المقررات</button>
+        <button type="button" class="nav-link" data-nav="assignments"><span aria-hidden="true">⇄</span> تكليفات الدكاترة</button>
+      </nav>
+      <nav id="lecturerNav" aria-label="أقسام الدكتور" hidden>
+        <button type="button" class="nav-link is-active" data-nav="overview"><span aria-hidden="true">◫</span> نظرة عامة</button>
+        <button type="button" class="nav-link" data-nav="roster"><span aria-hidden="true">▦</span> كشف الطالبات</button>
+        <button type="button" class="nav-link" data-nav="lectures"><span aria-hidden="true">▣</span> المحاضرات والحضور</button>
+      </nav>
+      <div class="sidebar__bottom">
+        <button type="button" class="nav-link" data-nav="security"><span aria-hidden="true">⚿</span> أمان الحساب</button>
+        <div class="sidebar__hint"><span class="status-dot" aria-hidden="true"></span> البيانات محفوظة في قاعدة بيانات آمنة</div>
+      </div>
+    </aside>
+
+    <div class="workspace__body">
+      <div class="workspace__topline">
+        <div><span class="eyebrow" id="roleLabel">لوحة التحكم</span><h1 id="welcome">مرحبًا</h1><p class="muted" id="welcomeDescription">تابع بياناتك من مكان واحد.</p></div>
+        <button type="button" id="logoutButton" class="button button--outline">تسجيل الخروج <span aria-hidden="true">↗</span></button>
+      </div>
+
+      <section id="adminControls" hidden>
+        <section data-page="overview" aria-label="ملخص الأدمن">
+          <div class="section-heading"><div><h2>نظرة عامة</h2><p class="muted">صورة سريعة عن الحسابات والمقررات والتكليفات.</p></div><span class="section-tag">إدارة النظام</span></div>
+          <div class="stat-grid">
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">♙</span><span class="stat-card__label">حسابات الدكاترة</span><strong id="adminLecturerCount">—</strong><span class="stat-card__foot">حسابات أُنشئت</span></div>
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">▤</span><span class="stat-card__label">المقررات</span><strong id="adminCourseCount">—</strong><span class="stat-card__foot">مقررات مضافة</span></div>
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">⇄</span><span class="stat-card__label">التكليفات النشطة</span><strong id="adminAssignmentCount">—</strong><span class="stat-card__foot">دكتور × مقرر</span></div>
+          </div>
+          <div class="card info-card">
+            <span class="info-card__mark" aria-hidden="true">i</span>
+            <div><h3>الصلاحيات مقسّمة لحماية الخصوصية</h3><p>الأدمن يدير الدكاترة والمقررات والتكليفات فقط. كشوف الطالبات والحضور تظهر للدكتور المكلّف بالمقرر، مش للأدمن.</p></div>
+          </div>
+          <div class="quick-grid">
+            <button type="button" data-go="lecturers" class="quick-card"><span>♙</span><strong>إضافة دكتور</strong><small>إنشاء حساب دخول بكلمة مرور مؤقتة</small><b aria-hidden="true">↗</b></button>
+            <button type="button" data-go="assignments" class="quick-card"><span>⇄</span><strong>تعيين مقرر</strong><small>تخصيص مقرر لدكتور موجود</small><b aria-hidden="true">↗</b></button>
+          </div>
+        </section>
+
+        <section data-page="lecturers" hidden>
+          <div class="section-heading"><div><h2>حسابات الدكاترة</h2><p class="muted">أنشئ حساب دكتور وسلّمه بيانات دخوله بشكل آمن.</p></div><span class="section-tag">إدارة المستخدمين</span></div>
+          <div class="grid">
+            <div class="card"><h3>إضافة دكتور جديد</h3><form id="lecturerForm">
+              <label for="lecturerName">اسم الدكتور بالكامل</label><input id="lecturerName" maxlength="120" placeholder="اسم الدكتور" required>
+              <label for="lecturerEmail">البريد الإلكتروني للدكتور</label><input id="lecturerEmail" type="email" maxlength="254" placeholder="doctor@example.com" dir="ltr" required>
+              <button class="button" type="submit">إنشاء حساب الدكتور <span aria-hidden="true">←</span></button>
+            </form><p class="muted hint">هيظهر باسورد مؤقت مرة واحدة بعد الإنشاء. الدكتور لازم يغيّره أول مرة.</p></div>
+            <div class="card"><div class="card-heading"><h3>الدكاترة المسجّلين</h3><span class="pill" id="lecturerCountChip">0 حساب</span></div><ul id="lecturerList" class="records"></ul></div>
+          </div>
+        </section>
+
+        <section data-page="courses" hidden>
+          <div class="section-heading"><div><h2>المقررات</h2><p class="muted">إضافة المقررات أو تعديل أسمائها بدون تغيير البيانات المرتبطة بها.</p></div><span class="section-tag">كتالوج المقررات</span></div>
+          <div class="grid">
+            <div class="card"><h3>إنشاء مقرر</h3><form id="courseForm"><label for="courseName">اسم المقرر</label>
+              <input id="courseName" maxlength="150" placeholder="اسم المقرر" required>
+              <button class="button" type="submit">إضافة المقرر <span aria-hidden="true">←</span></button>
+            </form></div>
+            <div class="card"><h3>تعديل اسم مقرر</h3><form id="renameCourseForm">
+              <label for="renameCourseSelect">اختار المقرر</label><select id="renameCourseSelect" required></select>
+              <label for="renameCourseName">الاسم الجديد</label><input id="renameCourseName" maxlength="150" required placeholder="الاسم الجديد">
+              <button class="button button--secondary" type="submit">حفظ الاسم الجديد</button>
+            </form><p class="muted hint">تغيير الاسم لا يؤثر على الطالبات أو التكليفات أو سجلات الحضور.</p></div>
+          </div>
+          <div class="card"><div class="card-heading"><h3>كل المقررات</h3><span class="pill" id="courseCountChip">0 مقرر</span></div><ul id="courseList" class="records"></ul></div>
+        </section>
+
+        <section data-page="assignments" hidden>
+          <div class="section-heading"><div><h2>تكليفات الدكاترة</h2><p class="muted">كل دكتور يشوف المقررات اللي أنت عيّنتها له فقط.</p></div><span class="section-tag">ربط الحساب بالمقرر</span></div>
+          <div class="card"><h3>تعيين مقرر لدكتور</h3><form id="assignForm" class="inline-form">
+            <div><label for="lecturerSelect">الدكتور</label><select id="lecturerSelect" required></select></div>
+            <div><label for="courseSelect">المقرر</label><select id="courseSelect" required></select></div>
+            <button class="button" type="submit">تأكيد التكليف <span aria-hidden="true">←</span></button>
+          </form><p class="muted hint">لازم تنشئ حساب الدكتور الأول، ثم تختار المقرر من القائمة.</p></div>
+          <div class="card"><div class="card-heading"><h3>التكليفات الحالية</h3><span class="pill" id="assignmentCountChip">0 تكليف</span></div><ul id="assignmentList" class="records"></ul></div>
+        </section>
+      </section>
+
+      <section id="lecturerControls" hidden>
+        <section data-page="overview" aria-label="ملخص الدكتور">
+          <div class="section-heading"><div><h2>صباح الخير، جاهز لمحاضرتك؟</h2><p class="muted">مقرراتك وطالباتك من مساحة عمل واحدة.</p></div><span class="section-tag">لوحة الدكتور</span></div>
+          <div class="stat-grid">
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">▤</span><span class="stat-card__label">مقرراتي</span><strong id="lecturerCourseCount">—</strong><span class="stat-card__foot">مقررات مكلّف بيها</span></div>
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">▦</span><span class="stat-card__label">كشف المقرر المختار</span><strong id="rosterVisibleCount">—</strong><span class="stat-card__foot">اختار مقرر في كشف الطالبات</span></div>
+            <div class="stat-card"><span class="stat-card__icon" aria-hidden="true">▣</span><span class="stat-card__label">المحاضرات</span><strong id="lectureCount">—</strong><span class="stat-card__foot">حسب حالة تفعيل الحضور</span></div>
+          </div>
+          <div class="card"><div class="card-heading"><h3>مقرراتي الحالية</h3><span class="pill">صلاحية الدكتور فقط</span></div><ul id="myCourses" class="records"></ul></div>
+          <div class="quick-grid">
+            <button type="button" data-go="roster" class="quick-card"><span>▦</span><strong>كشف الطالبات</strong><small>بحث وتعديل قيد الطالبات حسب المقرر</small><b aria-hidden="true">↗</b></button>
+            <button type="button" data-go="lectures" class="quick-card"><span>▣</span><strong>المحاضرات</strong><small>إدارة المحاضرات عند تفعيل الخدمة</small><b aria-hidden="true">↗</b></button>
+          </div>
+        </section>
+
+        <section data-page="roster" hidden>
+          <div class="section-heading"><div><h2>كشف الطالبات</h2><p class="muted">اعرض كشف كل مقرر وابحث بالاسم أو رقم الجلوس، من غير كشف المقررات الأخرى.</p></div><span class="section-tag">بيانات أكاديمية خاصة</span></div>
+          <div class="card" id="rosterManager">
+            <div class="toolbar">
+              <div class="toolbar__select"><label for="rosterCourse">المقرر</label><select id="rosterCourse"></select></div>
+              <div class="toolbar__search"><label for="rosterSearch">بحث في الكشف</label><input id="rosterSearch" type="search" placeholder="ابحثي بالاسم أو رقم الجلوس" autocomplete="off" aria-controls="rosterList"></div>
+            </div>
+            <div class="list-meta"><p id="rosterHint" class="muted" role="status">اختار مقرر لعرض الطالبات</p><span id="rosterResults" class="pill"></span></div>
+            <ul id="rosterList" class="records roster-records"></ul>
+            <div class="pagination" id="rosterPagination" hidden><button type="button" id="rosterPrevious" class="button button--outline">السابق</button><span id="rosterPage" aria-live="polite"></span><button type="button" id="rosterNext" class="button button--outline">التالي</button></div>
+          </div>
+          <div class="card"><h3>إضافة طالبة للمقرر</h3><p class="muted">لو الطالبة موجودة بالفعل في النظام هتتربط بالمقرر بدل ما يتعمل لها حساب مكرر.</p>
+            <form id="rosterForm" class="inline-form"><div><label for="rosterRoll">رقم الجلوس</label><input id="rosterRoll" maxlength="64" inputmode="numeric" autocomplete="off" placeholder="رقم الجلوس" required></div>
+              <div><label for="rosterName">اسم الطالبة بالكامل</label><input id="rosterName" maxlength="200" autocomplete="off" placeholder="الاسم كما هو في الكشف" required></div>
+              <button class="button" type="submit">إضافة الطالبة</button>
+            </form><p class="muted hint">إلغاء القيد لا يحذف سجلات الحضور القديمة.</p>
+          </div>
+        </section>
+
+        <section data-page="lectures" hidden>
+          <div class="section-heading"><div><h2>المحاضرات والحضور</h2><p class="muted">تنظيم المحاضرات، عرض QR المتغير ومتابعة تسجيل الحضور.</p></div><span class="section-tag">تسجيل حضور</span></div>
+          <div class="card info-card" id="attendanceNotice">
+            <span class="info-card__mark" aria-hidden="true">!</span>
+            <div><h3>ميزة الحضور لسه تحت الاختبار</h3><p>تسجيل حضور الطالبات بالـQR مقفول على السيرفر مؤقتًا؛ لن تظهر بيانات حضور أو جلسات وهمية. هنفعّله بعد اختبارات الموبايل والأمان.</p></div>
+          </div>
+          <div class="card" id="lectureManager" hidden><h3>إنشاء محاضرة وفتح QR</h3><form id="lectureForm">
+            <label for="lectureCourse">المقرر</label><select id="lectureCourse" required></select>
+            <label for="lectureTitle">اسم المحاضرة</label><input id="lectureTitle" maxlength="120" required placeholder="مثلاً: المحاضرة الأولى">
+            <label for="lectureRadius">نطاق القاعة بالمتر</label><input id="lectureRadius" type="number" min="20" max="500" value="100" required>
+            <p class="muted">الموقع الدقيق من جهاز الدكتور هيكون مركز القاعة عند إنشاء المحاضرة.</p>
+            <button class="button" type="submit">إنشاء المحاضرة وعرض QR</button>
+          </form></div>
+          <div class="card"><h3>المحاضرات المسجلة</h3><ul id="lectureList" class="records"></ul></div>
+          <div class="card qr-view" id="qrCard" hidden>
+            <h3 id="qrTitle">QR المحاضرة</h3><p class="muted">رمز QR بيتغير كل 30 ثانية. الطالبة تمسحه من الموبايل وتدخل اسمها ورقم جلوسها وتسمح بـGPS.</p>
+            <img id="qrImage" alt="رمز QR لتسجيل حضور المحاضرة" width="300" height="300">
+            <p id="qrStats" aria-live="polite"></p><button id="stopQr" type="button" class="button button--outline">إغلاق عرض QR</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="securityPanel" data-page="security" hidden>
+        <div class="section-heading"><div><h2>أمان الحساب</h2><p class="muted">غيّر كلمة مرورك بانتظام، وماتشاركهاش مع أي حد.</p></div><span class="section-tag">إعدادات شخصية</span></div>
+        <section id="changePasswordCard" class="card">
+          <h3>تغيير كلمة المرور</h3><p class="muted">بعد تغييرها هتخرج من كل الجلسات، وسجّل دخولك بكلمة المرور الجديدة.</p>
+          <form id="changePasswordForm" class="form-narrow">
+            <label for="currentPassword">كلمة المرور الحالية</label><input id="currentPassword" type="password" autocomplete="current-password" required>
+            <label for="newPassword">كلمة المرور الجديدة (12 حرفًا على الأقل)</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required>
+            <button class="button" type="submit">حفظ كلمة المرور الجديدة</button>
+          </form>
+        </section>
+      </section>
+
+      <section class="card notice secret-card" id="temporaryPasswordCard" hidden>
+        <div class="card-heading"><h3>كلمة المرور المؤقتة للدكتور</h3><span class="pill pill--warning">تُعرض مرة واحدة</span></div>
+        <p class="secret" id="tempPassword" dir="ltr"></p>
+        <p class="muted">انسخ كلمة المرور في مكان آمن وسلّمها للدكتور. لن تظهر مرة أخرى بعد الإغلاق.</p>
+        <button id="dismissSecret" type="button" class="button button--secondary">فهمت، إخفاء كلمة المرور</button>
+      </section>
+    </div>
+  </section>
+  <div id="flash" class="toast" role="status" aria-live="polite" hidden></div>
+</main>
+<footer class="site-footer"><span>حاضر © 2026</span><span>تنظيم أوضح. حضور أذكى.</span></footer>
+</body></html>
