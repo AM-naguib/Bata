@@ -110,5 +110,13 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] SA-28 — Connect to real Neon through an authorized private runtime, create first superadmin privately, and run real PostgreSQL integration smoke tests. Current Neon project is empty (0 accounts, 0 students, 0 courses, 0 assignments).
 - [ ] SA-29 — Implement lecturer-only course-scoped enrollments, class sessions, attendance, QR/GPS and reports in v2; migrate legacy data privately with backup. **LIVE CLASS USE BLOCKED.**
 - [ ] SA-30 — Add browser automation (real DOM), security audit for public deployment and a Render free-tier service only after confirming workspace and safety requirements.
-- [ ] SA-31 — Decide student identity verification, lost-device reset policy, grading/absence calculation and XLSX export.
+- [ ] SA-31 — Student identifier input CONFIRMED as seat number + typed full name (no PIN). Remaining decisions: anti-impersonation beyond this, lost-device reset, absence calculation and XLSX export.
 - Note: Previous SA-15/SA-16/SA-18 are now **partial**: completed for the new account portal, but not for course attendance workflows. Do not mark application-wide security complete. Read docs/PORTAL_V2.md.
+
+## Student fields correction and validation — 2026-10-19
+- [x] ST-01 — Owner confirmed student types BOTH roll/seat number and full name; no student code/PIN. This supersedes previous proposed secret-code approach.
+- [x] ST-02 — Add full-name input and `تعديل رقم الجلوس أو الاسم` reset control; cache both only after attendance succeeds.
+- [x] ST-03 — Legacy POST /api/attend now verifies submitted ID and full name against the roster BEFORE duplicate detection or device binding; mismatches use a generic error and do not register attendance.
+- [x] ST-04 — Add `lib/student-identity.js` shared validation and `lib/student-enrollment.js` for active per-course Neon enrolled-student lookup, returns only internal student ID. Tested on synthetic records.
+- [ ] ST-05 — **BLOCKER:** Wire the validated pair into a full *v2* QR attendance POST backed by Neon, including course lecture validation, geofence, anti-replay, and lecturer-only reports. Current v2 server has no student attendance route; the legacy server code is not exposed by default `npm start`.
+- [ ] ST-06 — Browser E2E test editing both fields and preserving full names; privacy review and safeguards against name/roll-number impersonation. No stronger student credential should be added without owner decision.
