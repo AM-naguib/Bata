@@ -10,7 +10,7 @@ The repository is **Public by owner's request (2026-10-19)**. GitHub Pages serve
 - `data.json` holds attendance/device records; keep it on persistent private storage with verified backups, not in a git checkout or ephemeral filesystem.
 - `.gitignore` only prevents future accidental additions. Before every commit/release verify `students.json`, `data.json`, `.env`, and student names do not appear in the diff/history.
 
-**INCOMPLETE SOURCE:** public/student.html is not yet in the GitHub review branch; the `/` path will not work until its upload is resolved.\n\n## Temporary local smoke test (synthetic roster ONLY)
+**FEATURE BRANCH:** public/student.html was restored on `feature/teacher-student-improvements` and test GET `/` passed. Parent audit branch remains incomplete until merged.\n\n## Temporary local smoke test (synthetic roster ONLY)
 1. `cp students.example.json students.json` or use a separate synthetic roster.
 2. Set `DOCTOR_PASSWORD` to a *non-default strong password*. Never use the source-code fallback `1234`.
 3. `npm start` (Node.js 18+); visit `http://localhost:3000` for student UI, `/doctor` for lecturer.
@@ -32,7 +32,7 @@ The repository is **Public by owner's request (2026-10-19)**. GitHub Pages serve
 
 ## Hosting connection still needed
 - Render and Neon need to be connected/provisioned under an authorized account. Nothing has been deployed.
-- Current audit branch is missing `public/student.html`. Its upload remains blocked, so verify file completeness before any deploy.
+- `feature/teacher-student-improvements` has a student page verified in CI #39210678172; the base audit branch does not have it. Keep PR Draft; verify full file completeness before any deploy.
 - Do not enable automatic deployment of the unremediated audit branch.
 
 Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, with each issue tracked in `docs/TASKS.md`.
@@ -40,5 +40,5 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 ## Current code readiness — 2026-10-19
 - Source on audit branch includes security fixes for default password, GPS validation, corrupt JSON startup, GET mutation and admin UI injection, with partial authentication measures.
 - GitHub CI now runs the synthetic test suite; inspect Actions results before relying on branch changes.
-- **Do not deploy**: missing student.html, no Neon integration, remaining identity fraud & CSRF risks, and no private data import path.
+- **Do not deploy**: no Neon integration, remaining identity fraud & CSRF risks, multi-account authorization, and no private data import path. Student page now restored on feature branch.
 - The Render + Neon ChatGPT apps were installed, but provisioning actions were not exposed to the assistant in this session. No service was created.

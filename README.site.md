@@ -5,7 +5,7 @@ Student attendance application based on rotating QR codes + browser geolocation.
 This is a **Node.js web server**, not a GitHub Pages static site. GitHub is public for the application's SOURCE CODE, not for actual student roster or attendance data.
 
 ## Current status
-**Audit in progress. Not safe for real student attendance until priority security findings are resolved.** Some vulnerabilities have been fixed and tested with synthetic students; the app still needs further security and data persistence work.\n\n**Source staging is incomplete:** `public/student.html` has not been uploaded successfully; until it is added, the student home page `/` does not work. Do not deploy this branch.
+**Audit in progress. Not safe for real student attendance until priority security findings are resolved.** Some vulnerabilities have been fixed and tested with synthetic students; the app still needs further security and data persistence work.\n\n**Feature branch update:** `public/student.html` is restored on `feature/teacher-student-improvements`; it remains absent in the parent audit branch. API tests pass in GitHub Actions but production deployment remains blocked on per-lecturer authentication, course roster isolation and durable database.
 
 - App server: `server.js`
 - Student page: `/`
@@ -23,4 +23,4 @@ DOCTOR_PASSWORD='choose-your-own-strong-password-at-least-12-chars' npm start
 
 See [deployment and safety checklist](docs/DEPLOYMENT.md) and [outstanding tasks](docs/TASKS.md). **Do not publicly deploy the current code.** Avoid placing actual student data into GitHub or web-accessible folders.
 
-Run `npm test` (synthetic roster, Node v22 locally tested). Original `public/student.html` remains missing on this GitHub branch, so deployment is blocked.
+Run `npm test` (synthetic roster, Node v22 locally tested). `public/student.html` is now present on the feature branch. Deployment remains blocked by privacy, authorization and persistent storage tasks.

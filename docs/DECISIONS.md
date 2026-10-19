@@ -40,3 +40,24 @@
 - I-002: Keep the GitHub pull request in Draft; **do not merge or deploy yet** because code remains incomplete, storage is still JSON and student identity/spoofing vulnerabilities are unresolved.
 - I-003: Render and Neon plugin installations verified from ChatGPT integration catalog; their management actions were **not accessible in this session**, so cloud services were not provisioned. No live URL available.
 - I-004: Regression checks passed locally with synthetic students; GitHub Actions run #39208681784 succeeded on audit branch; this does not constitute production approval.
+
+## New feature requirements received 2026-10-19
+- FR-D1 (confirmed): Student UI must show matching student name and make correction of previously saved seat number clear.
+- FR-D2 (confirmed): Lecturer can delete mistaken lectures.
+- FR-D3 (confirmed): Lecturer can add/remove students to a specific course roster.
+- FR-D4 (confirmed): Lecturer and course names must be captured alongside a lecture.
+- FR-D5 (confirmed): Excel attendance sheet saving/export requested; format not specified.
+- FR-D6 (confirmed): Separate account for every lecturer with account management and password change.
+- FR-D7 (pending): Lecturer registration/onboarding and administrator rights.
+- FR-D8 (pending): Whether lecture deletion is recoverable and how to preserve existing recorded attendance.
+- FR-D9 (pending): Student name lookup authorization and how to handle mistaken attendance recorded under another student's ID.
+- FR-D10 (pending): Whether Excel means native XLSX or CSV compatible with Excel.
+- FR-D11 (pending): How historical records map to courses, with course-by-course attendance percentages and exact privileges.
+No changes to grading/absence rules authorized yet. Implement safe UI improvements before irreversible data operations.
+
+## Feature-branch interim safety choices — 2026-10-19 (not owner-approved product policies)
+- Pending student identity design, show full student name **only after successful attendance**, not as a public ID->name directory. Seat number can be cleared locally; correcting a prior recorded attendance remains lecturer-controlled and needs design.
+- A lecturer can archive an accidentally created **empty lecture** and restore it; if attendance exists, deletion is blocked (409). Archive removes it from current absence calculations without erasing any records. Restored lecture is CLOSED until explicitly reopened. Owner still needs to decide policy for lectures with attendance.
+- Course and lecturer names currently are metadata labels on lectures, **not user identities or validated per-course enrollments**. Do not confuse with account ownership.
+- Existing CSV is labelled 'opens in Excel' accurately; native XLSX remains pending.
+- Approved status: only the user feature requirements, not onboarding/deletion/privacy policies. No private roster or account secrets in public GitHub.

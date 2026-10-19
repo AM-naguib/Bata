@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حاضر | تسجيل الحضور</title>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#0f766e;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:410px;text-align:center}h1{margin:0;color:#0f766e;font-size:34px}.subtitle{color:#64748b;font-size:13px}
+label{display:block;text-align:right;font-weight:700;margin:16px 0 6px}input{width:100%;padding:13px;border:2px solid #cbd5d3;border-radius:10px;font-size:18px;text-align:center}
+button{font:inherit;width:100%;padding:12px;border:0;border-radius:10px;background:#0f766e;color:#fff;margin-top:10px;cursor:pointer}
+button.secondary{background:#e2e8e7;color:#10201e}
+#name{margin-top:12px;padding:10px;border-radius:10px;background:#f0fdf4;color:#166534;display:none}
+#msg{margin-top:14px;min-height:28px;font-weight:700;line-height:1.6}.ok{color:#15803d}.error{color:#b91c1c}
+#reader{margin-top:10px}
+</style></head>
+<body><main class="card">
+<h1>حاضر</h1><p class="subtitle">Scan. In. Done.</p>
+<label for="sid">رقم الجلوس</label><input id="sid" inputmode="numeric" autocomplete="off" placeholder="اكتبي رقم الجلوس">
+<button id="edit" class="secondary" type="button">✏️ تعديل / تغيير رقم الجلوس المحفوظ</button>
+<div id="name" aria-live="polite"></div>
+<button id="go" type="button" hidden>✅ تأكيد الحضور</button>
+<button id="scan" class="secondary" type="button">📷 امسحي QR المحاضرة</button>
+<div id="reader"></div><div id="msg" aria-live="polite"></div>
+<p class="subtitle">تغيير الرقم هنا لا يلغي حضورًا اتسجّل بالفعل. في الحالة دي راجعي الدكتور.</p>
+</main><script>
+const el=id=>document.getElementById(id);
+const deviceKey='attendifyDeviceId',rollKey='sid';
+let token=new URLSearchParams(location.search).get('t'),scanner=null;
+let device=localStorage.getItem(deviceKey);
+if(!device){device=crypto.randomUUID();localStorage.setItem(deviceKey,device)}
+el('sid').value=localStorage.getItem(rollKey)||'';
+el('go').hidden=!token;
+const info=(text,cls='')=>{el('msg').textContent=text;el('msg').className=cls};
+const clearName=()=>{el('name').style.display='none';el('name').textContent=''};
+el('sid').addEventListener('input',()=>{clearName();info('')});
+el('edit').addEventListener('click',()=>{
+ localStorage.removeItem(rollKey);el('sid').value='';clearName();info('اكتبي رقم الجلوس الصحيح ثم امسحي الكود من جديد');
+ el('sid').focus();
+});
+async function submit(){
+ const id=el('sid').value.trim();
+ if(!id)return info('اكتبي رقم الجلوس الأول','error');
+ if(!token)return info('امسحي QR المحاضرة الأول','error');
+ if(!navigator.geolocation)return info('المتصفح لا يدعم تحديد الموقع','error');
+ info('بنحدد موقعك...');
+ navigator.geolocation.getCurrentPosition(async ({coords})=>{
+  try{
+   const response=await fetch('/api/attend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+     token,studentId:id,deviceId:device,lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy
+   })});
+   const data=await response.json();
+   if(!data.ok)return info(data.error||'تعذر تسجيل الحضور','error');
+   localStorage.setItem(rollKey,id);
+   if(typeof data.studentName==='string'){el('name').textContent='اسم الطالبة: '+data.studentName;el('name').style.display='block'}
+   info(data.message||'تم تسجيل الحضور','ok');history.replaceState({},'','/');
+  }catch{info('مشكلة في الاتصال، حاولي تاني','error')}
+ },()=>info('لازم تفعّلي الموقع الدقيق وتسمحي للمتصفح','error'),{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+el('go').addEventListener('click',submit);
+el('scan').addEventListener('click',async()=>{
+ if(!el('sid').value.trim())return info('اكتبي رقم الجلوس الأول','error');
+ if(scanner)return;
+ if(typeof Html5Qrcode!=='function')return info('خدمة الكاميرا غير متاحة حاليًا','error');
+ try{
+  scanner=new Html5Qrcode('reader');
+  await scanner.start({facingMode:'environment'},{fps:10,qrbox:240},async txt=>{
+   let found;try{found=new URL(txt).searchParams.get('t')}catch{return}
+   if(!found)return;
+   token=found;el('go').hidden=false;
+   const current=scanner;scanner=null;
+   try{await current.stop();await current.clear()}catch{}
+   submit();
+  });
+ }catch{scanner=null;info('مقدرناش نفتح الكاميرا، راجعي الإذن','error')}
+});
+</script></body></html>

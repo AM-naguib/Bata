@@ -45,3 +45,22 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - T-19 **partial**: synthetic regression tests and GitHub Actions CI added. Browser tests still missing; GitHub Actions run #39208681784 succeeded; browser tests still missing.
 - T-21 remains **OPEN**: original student.html could not be published; do not deploy this branch.
 - T-24 remains **OPEN**: Postgres migration not implemented. Render Free loses JSON data on restart. No live website or database connection was established.
+
+## Feature requests — 2026-10-19 (all separate from historical security backlog)
+- [x] FR-01 P1 — Student can clear/edit cached seat number. Saving now happens only after successful attendance. Verified by source/HTTP tests; full browser storage interaction test still desirable. Commit 737ac52.
+- [ ] FR-02 P1 — Show matching student name safely with validated seat number and suitable privacy protections (requires identity-flow decision; guard against enumeration).
+- [ ] FR-03 P1 — PARTIAL: reversible delete/restore of **empty** lectures implemented; refuses deletion when attendance exists (409), excludes archived from reports, restores closed. Await decision for populated lectures and audit/access control; commits 93200bf, 8d1330e.
+- [ ] FR-04 P1 — Course roster add/remove with lecturer scoping and persisted enrollment; preserve history; tests for unauthorized changes and cross-course isolation.
+- [x] FR-05 P2 — Save free-text lecturer/course labels with lectures; display on lecturer page, live projection and CSV headers, keeping backwards compatibility. Later account/course relationships remain separate. Commits 9f6e9f6, 47e00dd, 38a19d8.
+- [ ] FR-06 P1 — Export Excel sheet (.xlsx vs existing .csv TBD) with correct Arabic names, course filter, and formula-injection defense.
+- [ ] FR-07 P0 — Per-lecturer accounts, unique IDs, secure password hashing, session ownership, course access checks, and password self-service/change; owner decision required on provisioning and recovery.
+- [ ] FR-08 P0 — Migrate students, courses, enrollments, lecturers and attendance to persistent Neon DB with synthetic migration tests and backups; **do not migrate actual student names into GitHub**.
+- [ ] FR-09 P1 — Unit/API/E2E regression tests for new workflows, especially deleted lectures and enrollment changes.
+- [x] FR-10 P1 — Built and restored student page on feature branch; `/` loads in synthetic integration test. The parent audit branch is still missing that file until this PR is merged.
+
+## Verified feature branch tests
+- 2026-10-19: GitHub Actions run #39210678172 **passed** for feature branch PR #2. Tests cover login/session/GPS, public student page, saved-ID control presence, lecturer/course metadata in lecture/CSV, confirmed student name after attendance, and archival/recovery of no-attendance lectures.
+- FR-02 **partial**: name appears only after verified successful attendance, not at roll-number entry. A public identity lookup is not yet approved due to privacy/enumeration risks.
+- FR-06 **partial**: Excel-compatible CSV download exists; native XLSX export not implemented.
+- FR-04 / FR-07 / FR-08 **open**: per-course roster, per-doctor accounts/password management and persistent Neon database.
+- NO production deployment and NO real student records uploaded.
