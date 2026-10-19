@@ -8,6 +8,7 @@ function fakePool(mode='success'){
  const queries=[];
  const client={query:async(sql,params=[])=>{
   queries.push({sql,params});
+  if(sql.includes('RETURNING id,name,code,created_at'))return {rows:[{id:id2,name:params[0],code:null,created_at:'2026-10-19'}]};
   if(sql.includes('RETURNING id,email,display_name'))return {rows:[{id:id1,email:'doctor@example.test',display_name:'Dr Test'}]};
   if(sql.includes('SELECT id FROM app_users')){
    return {rows:mode==='missing-lecturer'?[]:[{id:id1}]};
@@ -27,6 +28,8 @@ test('lecturers and strangers cannot call superadmin management functions or rea
   await assert.rejects(service[method](pool,null),e=>e.status===401);
  }
  await assert.rejects(service.createLecturer(pool,lecturer,{email:'doctor@example.test',displayName:'Dr Test'}),e=>e.status===403);
+ await assert.rejects(service.createCourse(pool,lecturer,{name:'Test Course'}),e=>e.status===403);
+ await assert.rejects(service.createCourse(pool,null,{name:'Test Course'}),e=>e.status===401);
  await assert.rejects(service.assignCourse(pool,lecturer,{lecturerId:id1,courseId:id2}),e=>e.status===403);
  await assert.rejects(service.unassignCourse(pool,lecturer,{lecturerId:id1,courseId:id2}),e=>e.status===403);
  assert.equal(queries.length,0,'deny before ANY database query');
@@ -39,6 +42,38 @@ test('superadmin sees minimal identity/catalog data, not student or attendance',
  assert.equal(queries.length,3);
  assert.ok(queries.every(q=>!/(students|attendances|enrollments|lectures)/.test(q.sql)));
  assert.ok(queries.every(q=>!q.sql.includes('password_hash')));
+});
+test('superadmin can create a course by name with an audit event and then assign it to a lecturer',async()=>{
+ const {pool,queries}=fakePool();
+ const newCourse=await service.createCourse(pool,boss,{name:'  الكيمياء العضوية  '});
+ assert.equal(newCourse.id,id2);
+ assert.equal(newCourse.name,'الكيمياء العضوية');
+ const insert=queries.find(q=>q.sql.includes('INSERT INTO courses('));
+ assert.deepEqual(insert.params,['الكيمياء العضوية',boss.id]);
+ assert.ok(queries.some(q=>q.sql.includes("'course.create'")));
+ assert.ok(queries.some(q=>q.sql==='COMMIT'));
+ assert.deepEqual(await service.assignCourse(pool,boss,{lecturerId:id1,courseId:newCourse.id}),{ok:true});
+ assert.ok(queries.some(q=>q.sql.includes('INSERT INTO lecturer_courses(')&&q.params[1]===id2));
+ assert.ok(!queries.some(q=>/\\b(students|enrollments|attendances|lectures)\\b/i.test(q.sql)));
+});
+test('course creation validates name before DB access and does not grant other write powers',async()=>{
+ const {pool,queries}=fakePool();
+ for(const name of [undefined,null,'','   ','x'.repeat(151),'A\\nB']){
+  await assert.rejects(service.createCourse(pool,boss,{name}),e=>e.status===400);
+ }
+ assert.equal(queries.length,0);
+});
+test('course creation rolls back when catalog insertion or audit insert fails',async()=>{
+ let released=false;const sqls=[];
+ const client={query:async(sql)=>{
+  sqls.push(sql);
+  if(sql.startsWith('INSERT INTO courses'))return {rows:[{id:id2,name:'Course'}]};
+  if(sql.includes('INSERT INTO audit_events'))throw Error('DB write failed');
+  return {rows:[]};
+ },release:()=>{released=true}};
+ await assert.rejects(service.createCourse({connect:async()=>client},boss,{name:'Course'}),/DB write failed/);
+ assert.ok(sqls.includes('ROLLBACK'));
+ assert.equal(released,true);
 });
 test('superadmin may create a lecturer with one-time password hash and audit event',async()=>{
  const {pool,queries}=fakePool();
