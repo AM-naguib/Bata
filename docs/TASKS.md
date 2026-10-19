@@ -216,3 +216,14 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] UI-08: first credentialed admin sign-in and password change, create lecturer, assign existing first course. No lecturer in database yet, so only lecturer after assignment sees the 172 real students.
 - [ ] UI-09: actual student check-in/QR flag remains OFF pending mobile GPS/replay protections, data backup and all required attendance reporting features. No premature activation.
 - NOTE: canonical deployed portal now `https://bata-attendify-node.onrender.com/` with staff /admin and /lecturer, public /student guide; old Go service still misconfigured and untouched.
+
+
+## LIVE BUGFIX AND THREE GATES — 2026-10-19
+- [x] BUG-001 — Diagnose user's password-change SERVER_ERROR from Render: PostgreSQL SQLSTATE `42P08` in mixed UUID/TEXT repeated bind for password audit; split into $1/$2 without changing password policy or exposing credentials.
+- [x] BUG-002 — Extend integration fake DB to detect mixed audit placeholders, verify successful lecturer password change records audit, revoked cookie and new sign-in. CI passed [#39266948676](https://github.com/AM-naguib/Bata/actions/runs/39266948676).
+- [x] UI-10 — Show three prominent separate role gates (admin / lecturer / student) from all staff login entries, role-specific intro and login labels, mobile responsive cards, explicit student no-account guidance.
+- [x] UI-11 — Preserve role URL when signing out or changing password, translate SERVER_ERROR into actionable Arabic error, update UI contract test.
+- [x] DEP-10 — Manually deploy fixed application build `dep-dbb29vu7bikc73bfnst0` to `bata-attendify-node`: Render status LIVE; test actual HTTPS 3 gates / login UI / Neon health / unauthorized password-change / QR disabled [#39266948714](https://github.com/AM-naguib/Bata/actions/runs/39266948714).
+- [ ] QA-12 — Owner refreshes live /lecturer, changes temporary/current password via security panel and verifies success + forced logout/relogin. The previous failed transaction did **not** update password. Do not claim credentialed live action verified until user confirms.
+- [ ] QA-13 — Browser visual testing at owner's viewport/mobiles to fine-tune sidebar and 3-card layout.
+- [ ] QA-14 — QR attendance flag still OFF pending safe real-world location and attendance reporting tests.
