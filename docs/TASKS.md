@@ -250,3 +250,11 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] RP-07 — Academic owner approves absence denominator and whether removed/reinstated students and cancellations should appear in historic reports. Current behavior documented in D-033.
 - [ ] LT-01 — Build lecturer lecture archive/restore and corrections/audit separate from reporting. Must not enable public attendance before end-to-end safety checks.
 - [ ] OPS-01 — Secure backups / restoration drills and actual mobile GPS/QR tests before using attendance with real students.
+
+
+## Report release verification — latest 2026-10-19
+- [x] RP-06 (CI/hosting checks) — Render Free Node deployment `dep-dbb4f1rncjis73dei5lg` LIVE, app commit `d4001556066b0acc9c555f281ec07fcd45d3f029`. New UI, JSON report and true XLSX endpoints are on the live service.
+- [x] RP-08 — Latest **security regression CI passed** https://github.com/AM-naguib/Bata/actions/runs/39287349093; **real HTTPS live smoke passed** https://github.com/AM-naguib/Bata/actions/runs/39287349090. Initial report test fixture had an extra closing brace (only tests, not production module); corrected in test-only commit `ce2f1033cba5693f4431b5af96d300a72220a036`.
+- [ ] RP-09 — Real lecturer must log in and download a 3-sheet XLSX once, confirming Excel opens it with correct Arabic/right-to-left layout. External smoke confirms protected endpoints but not authorized real student download.
+- [ ] RP-10 — Owner confirms absenteeism policy (closed unarchived lecture after enrollment; current enrolled roster only) before official academic reports; no real attendance records exist yet.
+- [ ] LT-01 — Next implementation: lecturer-scoped lecture archive/restore and correction audit. Do not enable QR prematurely.
