@@ -1,0 +1,13 @@
+# Student personally identifiable information; deploy outside git
+/students.json
+/data.json
+/data.json.*
+/*.db
+/*.sqlite
+/*.sqlite3
+.env
+.env.*
+!.env.example
+node_modules/
+*.log
+.DS_Store
