@@ -95,3 +95,7 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [x] SA-21 — Add `createCourse(pool,principal,{name})` to `lib/admin-management.js`: validated course name, authenticated creator ID, parameterized INSERT and audit event in one transaction; create then assign tested with synthetic IDs. **Not attached to HTTP endpoints yet.**
 - [ ] SA-22 — Connect course creation/assignment to new DB-backed authenticated admin API, plus UI name input, course selector and lecturer selector; tests must block lecturers and unauthenticated callers. Depends on SA-15 and SA-16.
 - [ ] SA-23 — Decide whether identical course names are allowed across academic terms and whether a course code/semester should be required. No unrequested uniqueness assumption in current code.
+
+## Verified course-creation regression — 2026-10-19
+- GitHub Actions run [#39215894790](https://github.com/AM-naguib/Bata/actions/runs/39215894790) completed **successfully** on this feature branch (CI run 39).
+- The tests exercise administrator-only course insertion, validation, rollback, audit log and create-then-assign workflow using synthetic data; existing security regression suite also passed. This is **not** a test of a live admin UI or production role-based HTTP endpoints.
