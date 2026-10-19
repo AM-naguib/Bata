@@ -11,3 +11,15 @@
 node_modules/
 *.log
 .DS_Store
+
+# Defense in depth for copied/imported real student lists or runtime exports
+**/students.json
+**/data.json
+**/data.json.*
+**/private/
+**/imports/
+**/rosters/
+attendify.zip
+*.bak
+*.sqlite-journal
+# Still inspect git status/diff before push; ignore rules cannot undo already committed data.
