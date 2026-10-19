@@ -67,7 +67,7 @@ test('HTTP QR workflow: doctor-only lecture, QR link, student full name+seat/GPS
  const request=async(p,{method='GET',body,cookie,origin=base}={})=>{
   const h={};if(cookie)h.cookie=cookie;if(body!==undefined)h['content-type']='application/json';
   if(method==='POST'&&origin!==null)h.origin=origin;
-  const r=await fetch(base+p,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body),redirect:'manual'});
+  const r=await fetch(base+p,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body),redirect:'manual',signal:AbortSignal.timeout(7000)});
   const contentType=r.headers.get('content-type')||'';
   const data=contentType.includes('application/json')?await r.json():await r.text();
   return {status:r.status,data,headers:r.headers};
@@ -107,14 +107,14 @@ test('HTTP QR workflow: doctor-only lecture, QR link, student full name+seat/GPS
   assert.equal((await request('/api/v2/attendance/checkin',{method:'POST',body:details(token)})).status,409);
   const closed=await request('/api/v2/lecturer/lectures/'+lecture+'/live',{cookie:doc});
   assert.equal(closed.data.token,null);assert.equal(closed.data.closed,true);
- }finally{await new Promise(resolve=>server.close(resolve))}
+ }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}
 });
 test('student attendance remains disabled until explicitly configured',async()=>{
  const db=makeDb(),server=http.createServer(createHandler(db.pool,{production:false}));
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const base='http://127.0.0.1:'+server.address().port;
  try{
-  assert.equal((await fetch(base+'/checkin')).status,404);
-  assert.equal((await fetch(base+'/api/v2/attendance/checkin',{method:'POST',headers:{origin:base,'content-type':'application/json'},body:'{}'})).status,404);
- }finally{await new Promise(resolve=>server.close(resolve))}
+  assert.equal((await fetch(base+'/checkin',{signal:AbortSignal.timeout(7000)})).status,404);
+  assert.equal((await fetch(base+'/api/v2/attendance/checkin',{method:'POST',headers:{origin:base,'content-type':'application/json'},body:'{}',signal:AbortSignal.timeout(7000)})).status,404);
+ }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}
 });
