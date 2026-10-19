@@ -22,7 +22,7 @@
 ## Pending owner decisions
 - D-002b (resolved): Owner instructed on 2026-10-19 to keep the GitHub repository **Public**, with the goal of operating the project as a website. Hosting does not require a public GitHub repo, but the requested visibility is retained.
 - D-002c (pending): Where/how will the actual 172 student records be stored and provisioned securely at runtime? Never commit the actual roster to public GitHub.
-- D-003: How strongly must student identities be verified? Roll-over/recovery for lost devices? Browsers cannot prove physical GPS/device authenticity.
+- D-003 (partly resolved): Owner requires roll number PLUS typed full name; no secret PIN/code was requested. This is not strong identity authentication. Lost-device handling and GPS impersonation risk remain unresolved.
 - D-004: Should absences count only after lectures close? Is the >=25% rule per course, semester or overall, and are exemptions needed?
 - D-005: Hosting provider (GitHub Pages cannot run this Node API), HTTPS, persistent storage/backup, number of classes and admins/instances. Do not deploy to a public URL until P1 security fixes and private roster provisioning are in place.
 - D-006: Device binding per lecture or throughout the course?
@@ -50,7 +50,7 @@
 - FR-D6 (confirmed): Separate account for every lecturer with account management and password change.
 - FR-D7 (resolved): A single superadmin creates lecturers and assigns lecturer-course memberships; no lecturer self-registration.
 - FR-D8 (pending): Whether lecture deletion is recoverable and how to preserve existing recorded attendance.
-- FR-D9 (pending): Student name lookup authorization and how to handle mistaken attendance recorded under another student's ID.
+- FR-D9 (partly resolved): Owner requires student to TYPE both roll number and full name; server must match both to an enrolled student's record. No public ID-to-name lookup. Historical incorrect attendance correction still pending.
 - FR-D10 (pending): Whether Excel means native XLSX or CSV compatible with Excel.
 - FR-D11 (pending): How historical records map to courses, with course-by-course attendance percentages and exact privileges.
 No changes to grading/absence rules authorized yet. Implement safe UI improvements before irreversible data operations.
@@ -99,3 +99,12 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - No additional user-facing policy was assumed about name uniqueness, semester, report access, ID verification or course deletion.
 - No first superadmin or real student records have been inserted; private admin email/password and Render workspace have not been confirmed.
 - Tests passed with synthetic data only; real Neon bootstrap and production deployment are pending.
+
+## D-022 — Student attendance identification — OWNER CONFIRMED 2026-10-19
+- Student enters **BOTH seat/roll number AND full name** on the attendance page. Do NOT request a PIN, secret code or student password.
+- Validate the pair server-side against the **student enrolled in that specific course** before recording attendance. Invalid/incomplete/mismatched pairs must not bind a device or create attendance.
+- The student can edit or clear both fields, including after a locally saved typo. Corrections to previously recorded attendance remain subject to an authorized lecturer; browser changes do not rewrite history.
+- Preserve meaningful ID leading zeros; normalize name to Unicode NFC, trim and collapse whitespace, but do not guess alternate spellings.
+- Never provide an unauthenticated public ID-to-name lookup or publish the 172 real names/IDs in GitHub.
+- This pair is personally known information, NOT secure proof of physical identity. Additional anti-impersonation mechanisms have not been approved; no new student PIN requirement.
+- Implementation: legacy `server.js` and `public/student.html` updated on feature branch; `lib/student-enrollment.js` supports future course-scoped v2 lookups. **V2 check-in and actual class attendance are NOT deployed or implemented yet.**
