@@ -153,3 +153,12 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] RO-06 — **REAL IMPORT BLOCKED**: Neon still has 0 accounts/courses/assignments, so the 172 students cannot be enrolled into an assigned course without inventing mapping. Create first private superadmin, lecturer, course and assignment; confirm which course(s) the original roster belongs to, then dry-run and apply in private runtime.
 - [ ] RO-07 — Browser UX tests, actual Neon SQL integration with synthetic users, lecturer permissions, backup/restore and safe public deployment.
 - [ ] RO-08 — Native Excel XLSX per-course reports and exam eligibility/absence policy; still pending.
+
+
+## Initial cohort allocation — 2026-10-19
+- [x] RO-09 — Owner chose to initially import the original 172 students into **one course only**. Reuse global student records via course enrollment for future courses.
+- [x] RO-10 — Reconfirm authorization: superadmin creates courses and assigns them to lecturers; student enrollment/distribution belongs **only** to lecturers of assigned courses.
+- [ ] RO-11 — Create first superadmin through **private** bootstrap with owner-selected credentials, then create target course and lecturer assignment. No default login or source-code secrets.
+- [ ] RO-12 — Confirm which named course and lecturer receive the 172 students; do not infer or invent mapping. Then back up original roster, run private dry-run and atomic import.
+- [ ] RO-13 — Verify course has exactly 172 active enrollments in lecturer-only UI, test second-course re-enrollment of a synthetic student, and confirm old attendance remains unaffected.
+- **Current status:** no real student import yet; Neon remains unpopulated according to last read-only check. Website not deployed.
