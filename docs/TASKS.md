@@ -180,3 +180,15 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] BO-05 — Back up real roster privately, have lecturer approve assignment, dry-run and import 172 students into this one course; current Neon still has 0 students.
 - [ ] BO-06 — Setup usable account recovery/email migration for placeholder login. Do not advertise the placeholder as a deliverable real email address.
 - Previous RO-11 / CO-04 / SA-03 are **partially/resolved regarding account and course provisioning** but full portal security and live deployment tests remain open.
+
+
+## Confirmed real roster import and Render prep — 2026-10-19
+- [x] BO-05 / RO-12 (data import part) — Owner explicitly requested importing the original 172 real students into the one already-created course `المقرر الأول (مؤقت)`. Completed one-time, atomic PostgreSQL import through the private Neon connection with no GitHub roster files or secrets. Verified 172 students, 172 active enrollments in first course, no duplicate student IDs, 0 students in other courses and 0 attendance records.
+- [x] RO-13 (DB verification) — Compared a canonical ordered-roll/full-name checksum of the original uploaded private ZIP against the real Neon enrolled roster; **matched exactly**. No individual names or IDs appear in logs/docs.
+- [x] BO-07 — Rechecked the previously provided temporary admin password locally against the stored salted scrypt hash: match confirmed. Do not publish credentials in docs.
+- [x] DEP-01 — Add `render.yaml` for Render Free/Frankfurt on the working feature branch, `npm start`, PostgreSQL health check, private `DATABASE_URL` and `PUBLIC_ORIGIN`; private lecturer roster enabled and public QR attendance disabled by default.
+- [ ] DEP-02 — **Render workspace must be explicitly confirmed by owner.** Exactly one connected workspace was listed, `ahmed's workspace`, but tool explicitly requires owner confirmation before managing services there. Do NOT assume a workspace or claim website deployed.
+- [ ] DEP-03 — After workspace confirmation, create Render Free Node service on the feature branch, set Neon DATABASE_URL privately and PUBLIC_ORIGIN to the actual HTTPS domain, verify /healthz, admin sign-in, password change, and lecturer roster access.
+- [ ] BO-04 (still open) — Admin creates a lecturer account and assigns existing course. Database currently has **0 lecturer accounts and 0 lecturer assignments**. DO NOT invent doctor identity or login credentials.
+- [ ] DEP-04 — Backups/restoration, production student privacy checks, mobile QR/GPS and XLSX/report support need signoff before enabling `ATTENDANCE_ENABLED=1` for classes. Students are stored privately in Neon but the QR feature remains disabled.
+- Previous dated notes saying zero real students/no actual import have been superseded by this verified import.
