@@ -23,9 +23,16 @@ The repository is **Public by owner's request (2026-10-19)**. GitHub Pages serve
 - Choose data durability, backup and restore plan BEFORE recording any real attendance.
 - Test on real devices with synthetic IDs and real classroom network (multiple users may share an IP).
 
-## Hosting decision: pending
-- Is deployment on Render, Railway, a VPS or another provider intended?
-- Render, as one possible service, uses ephemeral filesystem by default; a persistent disk or external database is needed for attendance records. Persistent disks are available for paid web services. See https://render.com/docs/disks .
+## Selected free-tier prototype architecture
+- **Compute:** Render Free Web Service; Node server requires a running compute service, GitHub Pages cannot host it. Cold starts after 15 min idle can take about one minute; it has no persistent disk. Reference: https://render.com/docs/free
+- **Data:** Neon Free PostgreSQL, provision database independently from the GitHub repo and keep DATABASE_URL secret in Render's environment variables. Neon reported 1 GB/project in October 2026: https://neon.com/blog/neon-free-plan-1-gb-per-project . Confirm ongoing compute/data quotas.
+- **Code work required:** Migrate local JSON `students.json` and `data.json` reads/writes to transactional Postgres tables with indexes and data-preservation tests; add secure provisioning/import for the real 172 student records, with no rows in Git. Do not add DATABASE_URL or student records to committed config.
+- **Cost/reliability:** Both plans advertise $0 under quota; cold starts, suspended accounts, resource caps or terms changes mean these are prototype tiers. Configure billing to avoid unintended charges and devise a safe restore/export procedure.
+- **Safety gate:** Private student roster, strong admin auth, anti-spoofing policy, cookies/CSRF, HTML escaping, reliable writes and browser E2E must be addressed before live classes.
+
+## Hosting connection still needed
+- Render and Neon need to be connected/provisioned under an authorized account. Nothing has been deployed.
+- Current audit branch is missing `public/student.html`. Its upload remains blocked, so verify file completeness before any deploy.
 - Do not enable automatic deployment of the unremediated audit branch.
 
 Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, with each issue tracked in `docs/TASKS.md`.
