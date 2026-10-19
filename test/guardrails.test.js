@@ -9,6 +9,8 @@ const pass = 'test-only-strong-password';
 function fixture(data) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bata-test-'));
   fs.copyFileSync(path.join(root, 'server.js'), path.join(dir, 'server.js'));
+  fs.mkdirSync(path.join(dir, 'lib'));
+  fs.copyFileSync(path.join(root, 'lib/student-identity.js'), path.join(dir, 'lib/student-identity.js'));
   fs.mkdirSync(path.join(dir, 'public'));
   fs.copyFileSync(path.join(root, 'public/doctor.html'), path.join(dir, 'public/doctor.html'));
   fs.copyFileSync(path.join(root, 'public/student.html'), path.join(dir, 'public/student.html'));
@@ -48,7 +50,10 @@ test('validates GPS and revokes logout session; GET cannot close lecture',async(
     const roster=await call('/api/lectures','GET',undefined,cookie);
     assert.equal(roster.data[0].lecturerName,'Test Doctor');assert.equal(roster.data[0].courseName,'Test Course');
     const studentPage=await fetch(base+'/');assert.equal(studentPage.status,200);
-    assert.match(await studentPage.text(),/تعديل \/ تغيير رقم الجلوس/);
+    const studentHtml=await studentPage.text();
+    assert.match(studentHtml,/اسم الطالبة بالكامل/);
+    assert.match(studentHtml,/تعديل رقم الجلوس أو الاسم/);
+    assert.match(studentHtml,/studentName,deviceId:device/);
     const id=a.data.id,live=(await call('/api/lectures/'+id+'/live','GET',undefined,cookie)).data;
     assert.equal(live.lecturerName,'Test Doctor');assert.equal(live.courseName,'Test Course');
     const rep=(await call('/api/report','GET',undefined,cookie)).data;
@@ -56,12 +61,19 @@ test('validates GPS and revokes logout session; GET cannot close lecture',async(
     const csv=await fetch(base+'/api/report.csv',{headers:{cookie}});
     assert.equal(csv.status,200);assert.match(await csv.text(),/Test Course/);
     const t=live.token;
-    const attendance={token:t,studentId:'TEST01',deviceId:'test-device',lat:30,lng:31};
+    const attendance={token:t,studentId:'TEST01',studentName:'Test Student',deviceId:'test-device',lat:30,lng:31};
     for(const accuracy of [undefined,-1,0,null,151]){
       const r=await call('/api/attend','POST',{...attendance,accuracy});assert.equal(r.status,400);
     }
     assert.equal((await call('/api/lectures/'+id+'/close','GET',undefined,cookie)).status,405);
     assert.equal((await call('/api/lectures/'+id+'/live','GET',undefined,cookie)).data.open,true);
+    const wrongName=await call('/api/attend','POST',{...attendance,studentName:'Other Student',accuracy:10});
+    assert.equal(wrongName.status,400);
+    assert.equal(wrongName.data.ok,false);
+    const noName=await call('/api/attend','POST',{...attendance,studentName:undefined,accuracy:10});
+    assert.equal(noName.status,400);
+    const wrongId=await call('/api/attend','POST',{...attendance,studentId:'TEST99',accuracy:10});
+    assert.equal(wrongId.status,400);
     const success=await call('/api/attend','POST',{...attendance,accuracy:10});
     assert.equal(success.status,200);assert.equal(success.data.studentName,'Test Student');
     const duplicated=await call('/api/attend','POST',{...attendance,accuracy:10});assert.equal(duplicated.data.studentName,'Test Student');
