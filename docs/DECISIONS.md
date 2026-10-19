@@ -136,3 +136,12 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Do not invent which course, its title, initial lecturer, or private superadmin credentials. As of last verified Neon state, all are absent. No real student import has been performed.
 - Before import, superadmin privately creates one course, creates/assigns its lecturer, then the lecturer approves the roster mapping. Only then privately dry-run and apply the import against that one course.
 - Additional courses later: their assigned lecturers can add existing students by roll number+full name, reusing identities; do NOT automatically copy the 172 names to unrelated courses.
+
+
+## D-026 — Temporary first course name and future rename — OWNER APPROVED 2026-10-19
+- The **initial course display name is `المقرر الأول (مؤقت)`**, selected as a reversible placeholder. The owner permits renaming this course later.
+- Superadmin gains the narrowly scoped **`course.rename`** right, in addition to previously authorized lecturer creation, course creation and assignments. This **supersedes** earlier notes saying superadmin cannot rename a course.
+- Rename changes only `courses.name` by existing course UUID. It must NOT modify UUID, course enrollments, assignments, lectures, attendance, historical data or lecturer academic permissions. Record an audit event.
+- Do not grant deleting courses or editing student/attendance information. Lecturers cannot rename course catalog entries.
+- Admin course creation form is prefilled with the placeholder; this is *not a database insertion*. Last verified Neon state had **zero superadmin accounts and zero courses**, and no real course, lecturer or 172-student roster has been inserted.
+- After owner-selected superadmin is bootstrapped privately, the superadmin may create this named first course, assign it to a lecturer, and the lecturer can privately import the original 172 student records into this ONE course.
