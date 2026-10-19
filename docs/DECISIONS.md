@@ -160,3 +160,11 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Verified count: 172/172 unique students/active course enrollments, no second-course enrollments, no attendance; full ordered name+roll checksum matched uploaded source. No PII/credentials were pushed to public source.
 - The original superadmin temporary password was verified to match the stored scrypt hash. Website remains offline, no doctor account exists.
 - Render Free workspace selection is blocked until explicit user confirmation that `ahmed's workspace` is the intended destination (only workspace listed). A safe blueprint was added but no live service or HTTPS URL created. Keep `ATTENDANCE_ENABLED=0` until further testing.
+
+
+## D-029 — Render deployment route confirmed (2026-10-19)
+- Owner authorized immediate automated deployment after original Go runtime error. Render connector offers create/free but no update-runtime/branch service action; create a **separate new free Node service** rather than changing the old service through unsupported API or destructive action.
+- New canonical app URL is `https://bata-attendify-node.onrender.com/portal`; old `https://bata-yil7.onrender.com` still points to improperly configured Go/main and should be ignored.
+- Private Neon DATABASE_URL placed in Render secrets, never committed. New service runs staff portal with `ROSTER_ENABLED=1`, `ATTENDANCE_ENABLED=0`. Keep student public QR check-in disabled.
+- Independent GitHub Actions HTTPS smoke (#39258848867) verified Neon health, public login form, unauthenticated roster rejection and QR/legacy endpoints disabled.
+- Live staff staging is NOT equivalent to full production student attendance readiness; do not claim password-change/login with real credentials tested yet.
