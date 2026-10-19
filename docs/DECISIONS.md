@@ -82,3 +82,11 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - D-018: No superadmin login/password was invented and no real account created in Neon. No exposure of student details in public GitHub.
 - D-019: Keep app offline; the legacy JSON server still has a single shared doctor password and bypasses the new role module. Even with correct policy code, this prevents production deployment.
 - GitHub Actions #39213860392 passed RBAC/admin/password/bootstrap tests; these do NOT prove the live API enforces role boundaries.
+
+## D-020 — Course creation by superadmin — CONFIRMED 2026-10-19
+- **Owner explicitly approved:** the main superadmin types a course name, creates the course catalog entry, then assigns the new course to a lecturer.
+- This **supersedes** the earlier pending question about who creates the course catalog and earlier restriction denying `course.create`. The superadmin has this narrowly defined course-creation permission.
+- All previous academic-data restrictions remain: no student rosters, lectures, attendance/absence, reports or exports, and no course edit/delete rights have been granted.
+- Course name alone is required; duplicate-name, course-code, academic-term, rename/delete policies have NOT been approved. Do not impose a new uniqueness policy without further decision.
+- The approval permits a server-side `course.create` and create-then-assign flow, not self-service lecturer signup or any new role privileges.
+- Status: `lib/permissions.js` and `lib/admin-management.js` have an isolated implementation and tests. Legacy `server.js` still does **not** invoke them, so no live admin form/API or deployed site yet.
