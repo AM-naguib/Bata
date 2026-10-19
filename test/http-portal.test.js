@@ -74,7 +74,8 @@ function fakeDatabase(bossHash){
    if(sql.includes("'account.password.change'")){
     // PostgreSQL error 42P08: one $1 parameter cannot simultaneously resolve
     // actor_id UUID and target_id TEXT. Enforce the actual two-parameter contract.
-    assert.match(sql, /VALUES\\(\\$1,'account\\.password\\.change','app_user',\\$2\\)/);
+    assert.ok(sql.includes("VALUES($1,'account.password.change','app_user',$2)"),
+      'password change audit must bind UUID actor and TEXT target separately');
     assert.equal(p.length,2);
     assert.equal(p[0],p[1]);
    }
