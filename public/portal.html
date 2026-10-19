@@ -44,6 +44,18 @@
 </section>
 <section id="lecturerControls" hidden>
 <div class="card"><h2>مقرراتي</h2><ul id="myCourses"></ul></div>
+<div class="card" id="rosterManager">
+<h2>طالبات المقرر</h2>
+<p class="muted">إضافة الطالبة أو إلغاء قيدها هنا يخص المقرر المختار فقط. حذفها من المقرر لا يمسح حضورها القديم.</p>
+<label for="rosterCourse">اختار المقرر</label><select id="rosterCourse"></select>
+<form id="rosterForm">
+<label for="rosterRoll">رقم الجلوس</label><input id="rosterRoll" maxlength="64" autocomplete="off" required placeholder="رقم الجلوس">
+<label for="rosterName">اسم الطالبة بالكامل</label><input id="rosterName" maxlength="200" autocomplete="off" required placeholder="الاسم زي الكشف">
+<button type="submit">إضافة الطالبة للمقرر</button>
+</form>
+<p id="rosterHint" class="muted"></p>
+<ul id="rosterList"></ul>
+</div>
 <div class="card" id="lectureManager">
 <h2>إنشاء محاضرة مع QR متغير</h2>
 <form id="lectureForm">
