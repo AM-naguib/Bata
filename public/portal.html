@@ -222,6 +222,24 @@
             </div>
           </div>
           <div class="card">
+            <h3>تصحيح حضور طالبة</h3>
+            <p class="muted">للدكتور المكلّف بالمقرر فقط. ينفع إثبات الحضور أو تسجيل الغياب في محاضرة مقفولة غير مؤرشفة، مع توضيح سبب التصحيح. التغيير بيتسجل للمراجعة ومش بيمسح تسجيل QR الأصلي.</p>
+            <form id="correctionForm" class="grid">
+              <div><label for="correctionLecture">المحاضرة المقفولة</label><select id="correctionLecture" required></select></div>
+              <div><label for="correctionStudent">الطالبة</label><select id="correctionStudent" required></select></div>
+              <div><label for="correctionStatus">التصحيح المطلوب</label>
+                <select id="correctionStatus" required>
+                  <option value="present">إثبات حضور</option>
+                  <option value="absent">تسجيل غياب</option>
+                </select>
+              </div>
+              <div><label for="correctionReason">سبب التصحيح (5 أحرف على الأقل)</label>
+                <input id="correctionReason" type="text" minlength="5" maxlength="500" required placeholder="سبب تعديل سجل الحضور">
+              </div>
+              <button type="submit" class="button">حفظ التصحيح وتسجيله للمراجعة</button>
+            </form>
+          </div>
+          <div class="card">
             <h3>ملخص المحاضرات المقفولة</h3>
             <ul id="reportLectures" class="records"></ul>
             <p class="muted hint">المحاضرات المفتوحة أو المؤرشفة مش بتدخل في الغياب. الطالبة ما بتتحسبش غائبة عن المحاضرات اللي اتقفلت قبل تاريخ قيدها. الملفات تحتوي بيانات خاصة؛ احتفظ بيها في مكان آمن.</p>
@@ -242,6 +260,10 @@
             <button class="button" type="submit">إنشاء المحاضرة وعرض QR</button>
           </form></div>
           <div class="card"><h3>المحاضرات المسجلة</h3><ul id="lectureList" class="records"></ul></div>
+          <div class="card"><h3>أرشفة المحاضرات واستعادتها</h3>
+            <p class="muted">الأرشفة بتخفي المحاضرة من تقارير الغياب من غير حذف الحضور القديم. يمكن استعادتها بعدين؛ المحاضرات المفتوحة لازم تتقفل قبل الأرشفة.</p>
+            <ul id="lectureRecordsList" class="records"></ul>
+          </div>
           <div class="card qr-view" id="qrCard" hidden>
             <h3 id="qrTitle">QR المحاضرة</h3><p class="muted">رمز QR بيتغير كل 30 ثانية. الطالبة تمسحه من الموبايل وتدخل اسمها ورقم جلوسها وتسمح بـGPS.</p>
             <img id="qrImage" alt="رمز QR لتسجيل حضور المحاضرة" width="300" height="300">
