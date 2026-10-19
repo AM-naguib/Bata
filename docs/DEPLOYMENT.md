@@ -104,3 +104,9 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - CI https://github.com/AM-naguib/Bata/actions/runs/39270935273 passed security/API/transaction/UI tests, and actual Neon schema checked `app_users.updated_at`.
 - Live smoke updated to verify deployed UI script contains new endpoint and unauthenticated POST is rejected with 401 without mutating accounts. Keep Render autoDeploy OFF; commit after release may contain only docs and smoke workflow, not live app code.
 - Data access unchanged: superadmin cannot view student roster/attendance, public QR attendance still disabled (`ATTENDANCE_ENABLED=0`), 172 students stay in Neon private first course.
+
+
+## Latest release: reporting and Excel 2026-10-19 — LIVE, CI PASS
+- New Render deployment `dep-dbb4f1rncjis73dei5lg` was confirmed **LIVE** for app commit `d4001556066b0acc9c555f281ec07fcd45d3f029`. Canonical app https://bata-attendify-node.onrender.com/lecturer.
+- Lecturer-only report JSON and three-sheet real Excel .xlsx GET routes are live independent of QR attendance flag; authorization checks active course assignment in Neon. `ATTENDANCE_ENABLED=0` and student `/checkin` still disabled.
+- Security CI https://github.com/AM-naguib/Bata/actions/runs/39287349093 **success**, external HTTPS smoke https://github.com/AM-naguib/Bata/actions/runs/39287349090 **success**, including unauthenticated report and XLSX endpoint 401. A synthetic test syntax error in a previously failing run was repaired with test-only commit `ce2f1033cba5693f4431b5af96d300a72220a036`, with both tests passing afterward. No authenticated real lecturer Excel download/browser open has yet been run.
