@@ -55,3 +55,6 @@ User asked for student name + editable roll number; lecturer deletion of acciden
 - Empty-lecture soft delete/restore available to logged-in lecturer. If any attendance recorded, delete returns 409 to protect the history. Deleted lectures excluded from reports and cannot accept QR attendance; restoration leaves closed.
 - Existing CSV exports continue; not native XLSX yet. Single shared lecturer password and single global student roster remain; no multi-account/course access controls.
 - 3 GitHub Actions integration tests successful in run #39210678172 (PR #2). Browser e2e, privacy audit and production load remain pending. Not deployed.
+
+## October 19 2026 — owner-approved account model
+User chose **one superadmin**, who creates lecturer accounts and assigns courses. No self-registration. Separate `feature/superadmin-accounts-courses` branch with `db/001_initial.sql` and `docs/SUPERADMIN.md`. Neon Free project `bata-attendify` ID `wandering-mode-56487150` created, database `attendify` holds 10 new EMPTY tables, verified. No student data, user accounts, passwords or sessions inserted. Existing Node app not yet migrated; continue tracking SA-03..SA-10. Render workspace discovered but no workspace selected/production service created. Do not assume site is live or that role security is working.
