@@ -162,3 +162,11 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] RO-12 — Confirm which named course and lecturer receive the 172 students; do not infer or invent mapping. Then back up original roster, run private dry-run and atomic import.
 - [ ] RO-13 — Verify course has exactly 172 active enrollments in lecturer-only UI, test second-course re-enrollment of a synthetic student, and confirm old attendance remains unaffected.
 - **Current status:** no real student import yet; Neon remains unpopulated according to last read-only check. Website not deployed.
+
+
+## Editable temporary course name — 2026-10-19
+- [x] CO-01 — Owner authorized provisional first-course name `المقرر الأول (مؤقت)` and later rename, with no change of course UUID.
+- [x] CO-02 — Add `course.rename` permission only to superadmin and `renameCourse` transaction with audited name update. No student/lecture/attendance writes.
+- [x] CO-03 — Add `POST /api/v2/courses/rename` and RTL admin rename form. Creation form prefilled with the temporary name; renaming refreshes list/assignment labels.
+- [ ] CO-04 — Bootstrap owner-controlled superadmin privately and CREATE the first course in Neon. As of last read-only verification, Neon had zero superadmin accounts/courses; never bypass created_by audit FK or invent an admin identity.
+- [ ] CO-05 — Verify real Neon database rename and end-to-end browser UI once account exists. Import of real 172 students remains blocked until assigned lecturer and private backup exist.
