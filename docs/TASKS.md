@@ -4,10 +4,10 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 
 - [ ] T-00 P0 — Repo bootstrap, privacy review and ensure no student records reach public git. **Owner confirmed this is the correct project**. Deploy real roster only via controlled data source. Verify full git history and artifacts.
 - [ ] T-01 P0 — Decide private/public repo and how admins will import/manage enrolled students. Add safe provisioning, backup and access controls. **Decision pending**.
-- [ ] T-02 P1 — F-01 Remove default password 1234; require strong DOCTOR_PASSWORD to start. Test startup without it fails closed.
+- [x] T-02 P1 — F-01 Removed fallback 1234, require DOCTOR_PASSWORD with length >=12. Verified by synthetic Node test. Commit `1335905`. **Operational secret still must be set securely at deploy.**
 - [ ] T-03 P1 — F-02 Add login brute-force protection. Test repeated incorrect attempts limited without unnecessary class-wide lockout.
 - [ ] T-04 P1 — F-04/F-05 Decide threat model and independent student identification. Test replay/impersonation within chosen mechanism. **Decision pending**.
-- [ ] T-05 P1 — F-06 Require numeric finite lat/lng/accuracy, accuracy>0, lat [-90,90], lng [-180,180]. Test missing/negative/out-of-range values rejected.
+- [x] T-05 P1 — F-06 Reject missing/non-numeric/zero/negative accuracy and invalid coordinates, plus enforce MAX_ACC. Verified by synthetic Node test. Commit `1335905`.
 - [ ] T-06 P1 — F-07 Replace unsafe innerHTML interpolation with DOM textContent/escaped HTML; browser regression using adversarial text.
 - [ ] T-07 P1 — F-08 Fail safely on corrupt data.json; preserve original and add backup/restore; test no overwrite on parse error.
 - [ ] T-08 P1 — F-09 Define when lectures count for absence and eligibility. Test open/closed lessons and exact threshold. **Decision pending**.
@@ -33,3 +33,15 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] T-24 P1 — Migrate private roster/attendance/device persistence to **Neon Free PostgreSQL**; write schema, import routine, atomic transactions and migration tests with synthetic fixtures. Never store real student data in source control.
 - [ ] T-25 P1 — Create backup/export and restore test for private student and attendance records, including free-tier service outage response.
 - [ ] T-26 P1 — Verify free plan spend limits, any credit-card requirement, instance sleep/recovery, Neon quotas, backup and reliability before running a real class.
+
+## Implementation update — 2026-10-19
+- T-03 **partial**: IP-based login limiter implemented (10 attempts / 15 min), but classroom NAT behaviour and distributed-instance enforcement untested.
+- T-06 **partial**: escaped untrusted text in doctor UI (commit c95dcd3); browser XSS regression still required.
+- T-07 **partial**: startup fails closed on malformed/invalid data.json (commit 1335905); full backups, restores, storage migration still OPEN.
+- T-09 **partial**: close/open now require POST, and GET is read-only (commit 1335905); CSRF/origin protection still OPEN.
+- T-10 **partial**: logout now revokes server session, enforces 12-hour expiry and HTTPS cookie Secure flag in NODE_ENV=production (commits 1335905, c95dcd3); production proxy/HTTPS checks still OPEN.
+- T-12 **partial**: invalid lecture coordinates rejected (commit 1335905); dedicated regression test outstanding.
+- T-13 **partial**: malformed signatures now rejected without timingSafeEqual length mismatch (commit 1335905); fuzz suite outstanding.
+- T-19 **partial**: synthetic regression tests and GitHub Actions CI added. Browser tests still missing; check remote CI status after push.
+- T-21 remains **OPEN**: original student.html could not be published; do not deploy this branch.
+- T-24 remains **OPEN**: Postgres migration not implemented. Render Free loses JSON data on restart. No live website or database connection was established.
