@@ -11,6 +11,9 @@ function fakePool(mode='success'){
   if(sql.startsWith('UPDATE courses SET name='))return {rows:mode==='missing-rename'?[]:[{id:id2,name:params[0],code:null,created_at:'2026-10-19'}]};
   if(sql.includes('RETURNING id,name,code,created_at'))return {rows:[{id:id2,name:params[0],code:null,created_at:'2026-10-19'}]};
   if(sql.includes('RETURNING id,email,display_name'))return {rows:[{id:id1,email:'doctor@example.test',display_name:'Dr Test'}]};
+  if(sql.includes("SELECT id,display_name,email FROM app_users")){
+   return {rows:mode==='missing-lecturer'?[]:[{id:id1,display_name:'Dr Test',email:'doctor@example.test'}]};
+  }
   if(sql.includes('SELECT id FROM app_users')){
    return {rows:mode==='missing-lecturer'?[]:[{id:id1}]};
   }
@@ -29,6 +32,8 @@ test('lecturers and strangers cannot call superadmin management functions or rea
   await assert.rejects(service[method](pool,null),e=>e.status===401);
  }
  await assert.rejects(service.createLecturer(pool,lecturer,{email:'doctor@example.test',displayName:'Dr Test'}),e=>e.status===403);
+ await assert.rejects(service.resetLecturerPassword(pool,lecturer,{lecturerId:id1}),e=>e.status===403);
+ await assert.rejects(service.resetLecturerPassword(pool,null,{lecturerId:id1}),e=>e.status===401);
  await assert.rejects(service.createCourse(pool,lecturer,{name:'Test Course'}),e=>e.status===403);
  await assert.rejects(service.renameCourse(pool,lecturer,{courseId:id2,name:'Another Name'}),e=>e.status===403);
  await assert.rejects(service.renameCourse(pool,null,{courseId:id2,name:'Another Name'}),e=>e.status===401);
@@ -135,4 +140,56 @@ test('reject malformed IDs, unknown lecturer and unknown course; rollback transa
  const noAssignment=fakePool('missing-assignment');
  await assert.rejects(service.unassignCourse(noAssignment.pool,boss,{lecturerId:id1,courseId:id2}),e=>e.status===404);
  assert.ok(noAssignment.queries.some(q=>q.sql==='ROLLBACK'));
+});
+
+
+test('superadmin resets only an existing lecturer, returns a one-time strong secret, revokes sessions and audits',async()=>{
+ const {pool,queries}=fakePool();
+ const reset=await service.resetLecturerPassword(pool,boss,{lecturerId:id1});
+ assert.equal(reset.ok,true);
+ assert.equal(reset.lecturerId,id1);
+ assert.equal(reset.displayName,'Dr Test');
+ assert.ok(reset.temporaryPassword.length>=24);
+ assert.ok(queries.some(q=>q.sql==='BEGIN'));
+ const update=queries.find(q=>q.sql.startsWith('UPDATE app_users SET password_hash='));
+ assert.ok(update);
+ assert.equal(update.params[1],id1);
+ assert.match(update.params[0],/^scrypt:v1:/);
+ assert.ok(!update.params.includes(reset.temporaryPassword),'never send plaintext secret to database');
+ assert.match(update.sql,/must_change_password=true/);
+ const revoke=queries.find(q=>q.sql.startsWith('UPDATE auth_sessions SET revoked_at=now()'));
+ assert.deepEqual(revoke.params,[id1]);
+ const audit=queries.find(q=>q.sql.includes("'lecturer.password.reset'"));
+ assert.ok(audit);
+ assert.deepEqual(audit.params,[boss.id,id1]);
+ assert.ok(!JSON.stringify(queries).includes(reset.temporaryPassword),'secret never written to audit or DB');
+ assert.ok(queries.some(q=>q.sql==='COMMIT'));
+ assert.ok(!queries.some(q=>/\\b(students|enrollments|attendances|lectures)\\b/i.test(q.sql)));
+});
+test('reset input and nonexistent doctor fail closed without leaking a password',async()=>{
+ const invalid=fakePool();
+ for(const id of ['invalid',null,undefined,id1.slice(0,-1)])
+  await assert.rejects(service.resetLecturerPassword(invalid.pool,boss,{lecturerId:id}),e=>e.status===400);
+ assert.equal(invalid.queries.length,0);
+ const missing=fakePool('missing-lecturer');
+ await assert.rejects(service.resetLecturerPassword(missing.pool,boss,{lecturerId:id1}),e=>e.status===404);
+ assert.ok(missing.queries.some(q=>q.sql==='ROLLBACK'));
+ assert.ok(!missing.queries.some(q=>q.sql.startsWith('UPDATE app_users')));
+});
+test('reset rolls back atomically if audit fails, with no successful response',async()=>{
+ const statements=[];
+ const client={query:async(sql,params=[])=>{
+  statements.push(sql);
+  if(sql.startsWith('SELECT id,display_name,email FROM app_users'))
+   return {rows:[{id:id1,display_name:'Dr Test',email:'doctor@example.test'}]};
+  if(sql.includes("'lecturer.password.reset'"))throw Error('Audit insert unavailable');
+  return {rows:[]};
+ },release:()=>statements.push('RELEASE')};
+ await assert.rejects(
+  service.resetLecturerPassword({connect:async()=>client},boss,{lecturerId:id1}),
+  /Audit insert unavailable/
+ );
+ assert.ok(statements.includes('ROLLBACK'));
+ assert.ok(!statements.includes('COMMIT'));
+ assert.ok(statements.includes('RELEASE'));
 });
