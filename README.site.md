@@ -61,3 +61,7 @@ The account/lecturer staff portal is now deployed at **https://bata-attendify-no
 - **Student guidance:** https://bata-attendify-node.onrender.com/student
 The staff portal includes role-based navigation, admin lecturer/course/assignment workflows, security/password change and lecturer-only searchable paginated roster (20/page). The student page is a safe informational guide only; QR attendance/check-in are still OFF. **Never put student data or temporary passwords in the public repo.**
 This release passed both [security CI](https://github.com/AM-naguib/Bata/actions/runs/39263443641) and [live HTTPS smoke test](https://github.com/AM-naguib/Bata/actions/runs/39263443594). Render service deployment is LIVE, but real-user account sign-in and lecturer/student use still need manual acceptance testing.
+
+
+## Superadmin reset of lecturer login — live 2026-10-19
+At https://bata-attendify-node.onrender.com/admin, superadmin opens **حسابات الدكاترة** and selects **إعادة تعيين الباسورد** beside an existing lecturer. After confirmation, a fresh random temporary password appears once. Old sessions and password become invalid; lecturer must change the temporary password on first new login. No current password lookup is available, and administrators do not get academic/student access. Existing accounts and private 172 students were not modified by this release.
