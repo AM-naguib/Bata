@@ -39,7 +39,7 @@ Check DECISIONS.md first. Do not change grading/absence/device/GPS policy withou
 Owner wants Public GitHub + free website hosting, no provider preference. Prototype stack selected: Render Free Node web service + Neon Free PostgreSQL. No Render/Neon account connected, website URL does not exist, student.html missing from audit branch, and code still relies on local JSON. Do not assume deployed/production-ready. Source of limitations: https://render.com/docs/free and https://neon.com/blog/neon-free-plan-1-gb-per-project .
 
 ## Implemented and tested partial remediation (2026-10-19)
-Branch audit/attendify-review-2026-10-19 now has `server.js` fixes and `public/doctor.html` fixes. Locally ran Node v22 integration tests using synthetic roster: 3 tests passed. Pushed `test/guardrails.test.js` and GitHub Actions `.github/workflows/security-tests.yml`; remote CI execution status not verified yet. **Not all findings resolved**. See TASKS.md for per-task states. No real records uploaded.
+Branch audit/attendify-review-2026-10-19 now has `server.js` fixes and `public/doctor.html` fixes. Locally ran Node v22 integration tests using synthetic roster: 3 tests passed. Pushed `test/guardrails.test.js` and GitHub Actions `.github/workflows/security-tests.yml`; GitHub Actions run #39208681784 completed successfully on the audit branch at commit ff9bcd1 (verified via GitHub API). **Not all findings resolved**. See TASKS.md for per-task states. No real records uploaded.
 - No `1234` default; strong DOCTOR_PASSWORD required.
 - Reject missing/negative GPS accuracy, out-of-range coordinates, malformed QR signatures.
 - Refuse to start and overwrite malformed data.json.
