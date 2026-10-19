@@ -33,10 +33,10 @@ function report(){
   const rows=students.map(s=>{const p=Ls.map(L=>db.att.some(a=>a.l===L.id&&a.s===s.id));
     const n=p.filter(Boolean).length,abs=Ls.length-n;
     return {id:s.id,name:s.name,p,n,abs,pct:Ls.length?Math.round(abs/Ls.length*100):0}});
-  return {lectures:Ls.map(L=>({id:L.id,title:L.title,date:L.date})),rows,max:MAX_ABSENCE};
+  return {lectures:Ls.map(L=>({id:L.id,title:L.title,date:L.date,lecturerName:L.lecturerName||'',courseName:L.courseName||''})),rows,max:MAX_ABSENCE};
 }
 const csv=()=>{const R=report(),q=x=>'"'+String(x).replace(/"/g,'""')+'"';
-  const h=['رقم الجلوس','الاسم',...R.lectures.map(L=>L.title+' '+L.date),'حضور','غياب','نسبة الغياب %','الحالة'];
+  const h=['رقم الجلوس','الاسم',...R.lectures.map(L=>(L.courseName?L.courseName+' - ':'')+L.title+(L.lecturerName?' - '+L.lecturerName:'')+' '+L.date),'حضور','غياب','نسبة الغياب %','الحالة'];
   const lines=R.rows.map(r=>[r.id,r.name,...r.p.map(x=>x?'✓':'✗'),r.n,r.abs,r.pct,r.pct>=R.max?'محرومة':'منتظمة']);
   return '\ufeff'+[h,...lines].map(l=>l.map(q).join(',')).join('\r\n')};
 
@@ -57,7 +57,7 @@ async function api(req,res,p){
     const dev=String(b.deviceId||'').slice(0,64);if(!dev)return err(res,'جهاز غير معروف');
     if(db.devices[s.id]&&db.devices[s.id]!==dev)return err(res,'رقم الجلوس ده مسجل على موبايل تاني، كلّمي الدكتور');
     if(db.att.some(a=>a.l===L.id&&a.dev===dev&&a.s!==s.id))return err(res,'الموبايل ده سجّل حضور لطالبة تانية في المحاضرة دي');
-    if(db.att.some(a=>a.l===L.id&&a.s===s.id))return json(res,{ok:true,message:'حضورك متسجل قبل كده ✔'});
+    if(db.att.some(a=>a.l===L.id&&a.s===s.id))return json(res,{ok:true,studentName:s.name,message:'حضورك متسجل قبل كده ✔'});
     const {lat,lng,accuracy:acc}=b;
     if(typeof lat!=='number'||!Number.isFinite(lat)||lat < -90||lat > 90||typeof lng!=='number'||!Number.isFinite(lng)||lng < -180||lng > 180)return err(res,'إحداثيات GPS غير صالحة');
     if(typeof acc!=='number'||!Number.isFinite(acc)||acc<=0)return err(res,'دقة GPS غير صالحة');
@@ -65,7 +65,7 @@ async function api(req,res,p){
     const d=dist(L.lat,L.lng,lat,lng);
     if(d>L.radius)return err(res,'إنتي بره القاعة (بعيد '+Math.round(d)+' متر)');
     db.devices[s.id]=dev;db.att.push({l:L.id,s:s.id,dev,t:Date.now(),d:Math.round(d)});save();
-    return json(res,{ok:true,message:'تم تسجيل حضورك يا '+s.name.split(' ').slice(0,2).join(' ')+' ✅'})}
+    return json(res,{ok:true,studentName:s.name,message:'تم تسجيل حضورك يا '+s.name.split(' ').slice(0,2).join(' ')+' ✅'})}
   if(!authed(req))return err(res,'غير مصرح',401);
   if(m==='POST'&&p==='/api/logout'){const sid=(/sid=([a-f0-9]{32})/.exec(req.headers.cookie||'')||[])[1];sessions.delete(sid);
     res.setHeader('Set-Cookie','sid=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'+(process.env.NODE_ENV==='production'?'; Secure':''));return json(res,{ok:true})}
@@ -73,7 +73,7 @@ async function api(req,res,p){
   if(m==='GET'&&p==='/api/lectures')return json(res,db.lectures.map(L=>({...L,count:count(L.id)})).reverse());
   if(m==='POST'&&p==='/api/lectures'){const b=await body(req);
     if(typeof b.title!=='string'||!b.title.trim()||typeof b.lat!=='number'||!Number.isFinite(b.lat)||b.lat < -90||b.lat > 90||typeof b.lng!=='number'||!Number.isFinite(b.lng)||b.lng < -180||b.lng > 180)return err(res,'اكتبي اسم المحاضرة وحددي موقع القاعة بإحداثيات صحيحة');
-    const L={id:crypto.randomBytes(4).toString('hex'),title:String(b.title).slice(0,80),date:new Date().toLocaleDateString('ar-EG'),lat:+b.lat,lng:+b.lng,radius:Math.max(20,Math.min(500,+b.radius||100)),closed:false};
+    const L={id:crypto.randomBytes(4).toString('hex'),title:String(b.title).trim().slice(0,80),lecturerName:typeof b.lecturerName==='string'?b.lecturerName.trim().slice(0,80):'',courseName:typeof b.courseName==='string'?b.courseName.trim().slice(0,80):'',date:new Date().toLocaleDateString('ar-EG'),lat:+b.lat,lng:+b.lng,radius:Math.max(20,Math.min(500,+b.radius||100)),closed:false};
     db.lectures.push(L);save();return json(res,{ok:true,id:L.id})}
   if(x=/^\/api\/lectures\/(\w+)\/(live|close|open)$/.exec(p)){const L=db.lectures.find(l=>l.id===x[1]);if(!L)return err(res,'مش موجودة',404);
     if(x[2]==='live'){if(m!=='GET')return err(res,'Method Not Allowed',405);
