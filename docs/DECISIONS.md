@@ -153,3 +153,10 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - A placeholder login ID was used because no real recovery email was supplied. It is not a functional inbox: email delivery/recovery is NOT available. Account login details were provided directly to the owner in chat, not in GitHub.
 - Course ID and creator ID are stored in Neon, with valid foreign keys. Superadmin has NOT been granted any student/lecture/attendance access.
 - Do not create a duplicate admin/course. Next: choose and create the initial lecturer account via the admin UI once hosted, assign course, privately import the 172-person roster to that course. No students were inserted, no public website deployed.
+
+
+## D-028 — Direct owner-authorized initial import / deployment blocker — 2026-10-19
+- The owner explicitly requested to add the 172 already-provided real students. One-time private database operator import inserted all 172 into `المقرر الأول (مؤقت)`, without requiring a fabricated doctor account and **without granting any student/roster permissions to superadmin**. It logged `enrollment.owner_initial_import` as an owner-requested maintenance action (actor null), not as an admin action.
+- Verified count: 172/172 unique students/active course enrollments, no second-course enrollments, no attendance; full ordered name+roll checksum matched uploaded source. No PII/credentials were pushed to public source.
+- The original superadmin temporary password was verified to match the stored scrypt hash. Website remains offline, no doctor account exists.
+- Render Free workspace selection is blocked until explicit user confirmation that `ahmed's workspace` is the intended destination (only workspace listed). A safe blueprint was added but no live service or HTTPS URL created. Keep `ATTENDANCE_ENABLED=0` until further testing.
