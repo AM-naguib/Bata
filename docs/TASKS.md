@@ -203,3 +203,16 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] DEP-08 — Document and test backups/restoration, real-browser/mobile checks, session/cookie behavior and remaining privacy protections before expanding access.
 - [ ] DEP-09 — DO NOT enable public QR check-in until end-to-end roster and geolocation checks pass; ATTENDANCE_ENABLED remains 0.
 - NOTE: prior incorrectly configured Go service `Bata` in same workspace is unchanged (free plan); use the NEW Node URL. The tool could not edit an existing service's runtime/branch through current API, so an explicit NEW free service was created.
+
+
+## UI REDESIGN — implemented/deployed 2026-10-19
+- [x] UI-01: polished accessible Arabic RTL responsive homepage, dedicated /admin /lecturer /student routes, improved staff visual hierarchy and navigation.
+- [x] UI-02: role-specific admin summary, lecturers, course catalog/rename, assignments and security settings; no new superadmin student/attendance permissions.
+- [x] UI-03: role-specific lecturer summary and roster filtering/pagination (20 per page), course-scoped CRUD, safe text node rendering; own courses only.
+- [x] UI-04: public student QR guidance and visually updated check-in form (still disabled, no student info collection on public guide).
+- [x] UI-05: tests cover role routes and UI DOM IDs, Arabic RTL, mobile CSS, student guide no inputs, QR disabled; CI success [#39263443641](https://github.com/AM-naguib/Bata/actions/runs/39263443641).
+- [x] UI-06: manually deployed Render Free Node service update `dep-dbb1v4ijnfac739j6r4g` status LIVE; independent HTTPS page-and-privacy smoke [#39263443594](https://github.com/AM-naguib/Bata/actions/runs/39263443594) SUCCESS.
+- [ ] UI-07: owner visually checks admin/lecturer/student pages on actual phone and desktop and reports UX issues; browser mobile/accessibility automated tests are not yet done.
+- [ ] UI-08: first credentialed admin sign-in and password change, create lecturer, assign existing first course. No lecturer in database yet, so only lecturer after assignment sees the 172 real students.
+- [ ] UI-09: actual student check-in/QR flag remains OFF pending mobile GPS/replay protections, data backup and all required attendance reporting features. No premature activation.
+- NOTE: canonical deployed portal now `https://bata-attendify-node.onrender.com/` with staff /admin and /lecturer, public /student guide; old Go service still misconfigured and untouched.
