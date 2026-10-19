@@ -145,3 +145,11 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Do not grant deleting courses or editing student/attendance information. Lecturers cannot rename course catalog entries.
 - Admin course creation form is prefilled with the placeholder; this is *not a database insertion*. Last verified Neon state had **zero superadmin accounts and zero courses**, and no real course, lecturer or 172-student roster has been inserted.
 - After owner-selected superadmin is bootstrapped privately, the superadmin may create this named first course, assign it to a lecturer, and the lecturer can privately import the original 172 student records into this ONE course.
+
+
+## D-027 — Initial superadmin and provisional course provisioned in Neon (2026-10-19)
+- Owner explicitly requested **create the initial superadmin and send a generated temporary password to them**, then let them change it later. A random strong secret was created and **only the salted scrypt hash was stored in Neon**. Credentials must NOT be copied into any public GitHub source, docs, Actions, or artifacts.
+- Bootstrap inserted exactly one superadmin, one course `المقرر الأول (مؤقت)`, and two audit events in one atomic database statement. Verified counts are 1 superadmin / 1 temporary course, 0 students / 0 lecturer assignments, audit count 2.
+- A placeholder login ID was used because no real recovery email was supplied. It is not a functional inbox: email delivery/recovery is NOT available. Account login details were provided directly to the owner in chat, not in GitHub.
+- Course ID and creator ID are stored in Neon, with valid foreign keys. Superadmin has NOT been granted any student/lecture/attendance access.
+- Do not create a duplicate admin/course. Next: choose and create the initial lecturer account via the admin UI once hosted, assign course, privately import the 172-person roster to that course. No students were inserted, no public website deployed.
