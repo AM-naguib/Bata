@@ -1,26 +1,35 @@
-# حاضر — Attendify
+# حاضر — Attendify (Bata)
 
-Student attendance application based on rotating QR codes + browser geolocation.
+A role-restricted Node.js attendance management project. The GitHub repository is **Public**, but production students, user credentials and attendance history must stay in private storage.
 
-This is a **Node.js web server**, not a GitHub Pages static site. GitHub is public for the application's SOURCE CODE, not for actual student roster or attendance data.
+## Current branch — admin portal v2 (development only)
 
-## Current status
-**Audit in progress. Not safe for real student attendance until priority security findings are resolved.** Some vulnerabilities have been fixed and tested with synthetic students; the app still needs further security and data persistence work.\n\n**Feature branch update:** `public/student.html` is restored on `feature/teacher-student-improvements`; it remains absent in the parent audit branch. API tests pass in GitHub Actions but production deployment remains blocked on per-lecturer authentication, course roster isolation and durable database.
+The default `npm start` now runs **`server-v2.js`**, the database-backed lecturer-account portal. It **does not** expose the legacy `server.js` attendance API.
 
-- App server: `server.js`
-- Student page: `/`
-- Lecturer/admin page: `/doctor`
-- Runtime roster: `students.json` (PRIVATE — excluded from Git)
-- Runtime attendance: `data.json` (PRIVATE — excluded from Git)
-- Example records: `students.example.json` (synthetic)
-- Audit/memory/tasks/decisions: `docs/`
+Implemented and tested with synthetic users:
+- Email/password login with salted `scrypt` hashes and 12-hour revocable database sessions.
+- Single superadmin account bootstrapped privately (never by default).
+- Superadmin creates lecturer accounts, creates courses by name, assigns/removes lecturer-course relationships.
+- Lecturer sees **only** the catalog of their own assigned courses.
+- Both roles can change their own password; old sessions are revoked.
+- Origin checking for POST, secure production cookies, strict CSP and no-store API responses.
+- Safe `/healthz` endpoint checks database connectivity.
 
-## Local-only test
+**Not yet built:** actual lecturer course attendance/enrollment/lecture management in v2, student QR/GPS check-in, Excel export, real student import and backups. Do NOT deploy to live classes or expose real student rosters until these are finished.
+
+## Local portal configuration
+
+Requires Node.js >=18, PostgreSQL schema in `db/001_initial.sql`, and a **private** Neon PostgreSQL connection string:
+
 ```sh
-cp students.example.json students.json
-DOCTOR_PASSWORD='choose-your-own-strong-password-at-least-12-chars' npm start
+npm install
+# Set DATABASE_URL in a private environment, never in Git.
+# Set PUBLIC_ORIGIN to the exact HTTPS URL when NODE_ENV=production.
+npm test
+npm run test:syntax
+npm start
 ```
 
-See [deployment and safety checklist](docs/DEPLOYMENT.md) and [outstanding tasks](docs/TASKS.md). **Do not publicly deploy the current code.** Avoid placing actual student data into GitHub or web-accessible folders.
+Visit `/portal` (login/admin/lecturer roles). Create initial superadmin securely with `npm run bootstrap:superadmin` using `INIT_ADMIN_EMAIL`, `INIT_ADMIN_NAME`, `INIT_ADMIN_PASSWORD` and `DATABASE_URL` configured privately. Never check those environment values into Git, paste them into issues, or put student data in public web assets.
 
-Run `npm test` (synthetic roster, Node v22 locally tested). `public/student.html` is now present on the feature branch. Deployment remains blocked by privacy, authorization and persistent storage tasks.
+[Portal architecture](docs/PORTAL_V2.md) · [Review tasks](docs/TASKS.md) · [Owner decisions](docs/DECISIONS.md) · [Privacy/deployment](docs/DEPLOYMENT.md).
