@@ -45,22 +45,23 @@ th{background:#e8f1ef;position:sticky;top:0}.bad{background:#fee2e2;color:#991b1
 
 <script>
 const $=s=>document.querySelector(s);let pos=null,cur=null,last='';
+const esc=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 async function api(u,b){const r=await fetch(u,b===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
  if(r.status===401&&u!=='/api/login'){gate(false);throw 0}return r.json()}
 function gate(on){$('#login').style.display=on?'none':'';$('#app').style.display=on?'':'none';$('#out').style.display=on?'':'none';if(on)load()}
 $('#lg').onclick=async()=>{const d=await api('/api/login',{password:$('#pw').value});d.ok?gate(true):$('#le').textContent=d.error};
 $('#pw').onkeydown=e=>e.key==='Enter'&&$('#lg').click();
-$('#out').onclick=()=>{document.cookie='sid=;Max-Age=0;Path=/';gate(false)};
+$('#out').onclick=async()=>{try{await api('/api/logout',{})}finally{gate(false)}};
 $('#loc').onclick=()=>{$('#locs').textContent='بنحدد...';navigator.geolocation.getCurrentPosition(p=>{pos=p.coords;$('#locs').textContent='✅ تم (دقة '+Math.round(p.coords.accuracy)+' م)'},()=>$('#locs').textContent='❌ فعّل الموقع',{enableHighAccuracy:true,timeout:15000})};
 $('#start').onclick=async()=>{if(!pos)return alert('حدد موقع القاعة الأول');
  const d=await api('/api/lectures',{title:$('#title').value,lat:pos.latitude,lng:pos.longitude,radius:$('#rad').value});
  if(!d.ok)return alert(d.error);$('#title').value='';await load();show(d.id)};
 async function load(){const L=await api('/api/lectures');
- $('#ls').innerHTML=L.map(l=>`<div class="row"><span><b>${l.title}</b> · ${l.date} · حضور: ${l.count} ${l.closed?'🔒':'🟢'}</span>
+ $('#ls').innerHTML=L.map(l=>`<div class="row"><span><b>${esc(l.title)}</b> · ${esc(l.date)} · حضور: ${l.count} ${l.closed?'🔒':'🟢'}</span>
  <span><button onclick="show('${l.id}')">عرض QR</button><button class="alt" onclick="tog('${l.id}',${l.closed})">${l.closed?'فتح':'قفل'}</button></span></div>`).join('')||'مفيش محاضرات';
  const R=await api('/api/report');
  $('#rep').innerHTML='<tr><th>رقم الجلوس</th><th>الاسم</th><th>حضور</th><th>غياب</th><th>نسبة الغياب</th></tr>'+
- R.rows.map(r=>`<tr class="${r.pct>=R.max?'bad':''}"><td>${r.id}</td><td>${r.name}</td><td>${r.n}</td><td>${r.abs}</td><td>${r.pct}%</td></tr>`).join('')}
+ R.rows.map(r=>`<tr class="${r.pct>=R.max?'bad':''}"><td>${esc(r.id)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td>${r.abs}</td><td>${r.pct}%</td></tr>`).join('')}
 async function tog(id,closed){await api('/api/lectures/'+id+'/'+(closed?'open':'close'),{});load()}
 function show(id){cur=id;last='';$('#proj').style.display='flex';tick()}
 $('#pc').onclick=()=>{cur=null;$('#proj').style.display='none';load()};
