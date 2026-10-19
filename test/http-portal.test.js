@@ -49,6 +49,10 @@ function fakeDatabase(bossHash){
    const course={id:crypto.randomUUID(),name:p[0],created_by:p[1]};
    courses.push(course);return {rows:[{...course,code:null,created_at:new Date()}]};
   }
+  if(sql.startsWith('UPDATE courses SET name=')){
+   const course=courses.find(c=>c.id===p[1]);if(!course)return {rows:[]};
+   course.name=p[0];return {rows:[{...course,code:null,created_at:new Date()}]};
+  }
   if(sql.startsWith('SELECT id FROM app_users WHERE id=')){
    return {rows:users.filter(u=>u.id===p[0]&&u.role==='lecturer'&&!u.disabled_at).map(u=>({id:u.id}))};
   }
@@ -103,6 +107,13 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   const me=await request('/api/v2/me',{cookie:bossCookie});assert.equal(me.body.role,'superadmin');
   const newCourse=await request('/api/v2/courses',{method:'POST',cookie:bossCookie,json:{name:' Organic Chemistry '}});
   assert.equal(newCourse.status,201);assert.equal(newCourse.body.name,'Organic Chemistry');
+  const noRename=await request('/api/v2/courses/rename',{method:'POST',cookie:bossCookie,origin:'https://other.example',json:{courseId:newCourse.body.id,name:'Hacked'}});
+  assert.equal(noRename.status,403);
+  const nameChanged=await request('/api/v2/courses/rename',{method:'POST',cookie:bossCookie,json:{courseId:newCourse.body.id,name:' المقرر الأول (مؤقت) '}});
+  assert.equal(nameChanged.status,200);
+  assert.equal(nameChanged.body.id,newCourse.body.id);
+  assert.equal(nameChanged.body.name,'المقرر الأول (مؤقت)');
+  assert.equal((await request('/api/v2/courses',{cookie:bossCookie})).body.items[0].name,'المقرر الأول (مؤقت)');
   const newLecturer=await request('/api/v2/lecturers',{method:'POST',cookie:bossCookie,json:{email:'doctor@example.test',displayName:'Test Lecturer'}});
   assert.equal(newLecturer.status,201);assert.ok(newLecturer.body.initialPassword);
   assert.ok(!JSON.stringify(data.users).includes(newLecturer.body.initialPassword));
@@ -114,6 +125,7 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   const docCookie=docLogin.cookie.split(';')[0];
   assert.equal((await request('/api/v2/lecturers',{cookie:docCookie})).status,403);
   assert.equal((await request('/api/v2/courses',{method:'POST',cookie:docCookie,json:{name:'Hacked'}})).status,403);
+  assert.equal((await request('/api/v2/courses/rename',{method:'POST',cookie:docCookie,json:{courseId:newCourse.body.id,name:'Hacked'}})).status,403);
   assert.equal((await request('/api/v2/lecturer/courses',{cookie:docCookie})).status,403,'must first change temp password');
   const changed=await request('/api/v2/password',{method:'POST',cookie:docCookie,json:{currentPassword:newLecturer.body.initialPassword,newPassword:'another-strong-secret-password'}});
   assert.equal(changed.status,200);
@@ -124,6 +136,7 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   const mine=await request('/api/v2/lecturer/courses',{cookie:doctor});
   assert.equal(mine.status,200);assert.equal(mine.body.items.length,1);
   assert.equal(mine.body.items[0].id,newCourse.body.id);
+  assert.equal(mine.body.items[0].name,'المقرر الأول (مؤقت)');
   assert.equal((await request('/api/v2/assignments/revoke',{method:'POST',cookie:bossCookie,json:{lecturerId:docId,courseId:newCourse.body.id}})).status,200);
   const afterRevoke=await request('/api/v2/lecturer/courses',{cookie:doctor});
   assert.equal(afterRevoke.status,200);assert.equal(afterRevoke.body.items.length,0);
