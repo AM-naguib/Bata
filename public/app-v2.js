@@ -97,12 +97,53 @@ async function refreshLectures(){
   ul.append(row);
  }
 }
+async function refreshRoster(){
+ const courseId=el('rosterCourse').value,ul=el('rosterList');
+ ul.replaceChildren();
+ if(!courseId){el('rosterHint').textContent='اختار مقرر لعرض الطالبات';return}
+ try{
+  const roster=await api('lecturer/courses/'+courseId+'/students');
+  el('rosterHint').textContent='عدد الطالبات المقيدات: '+roster.items.length;
+  if(!roster.items.length){ul.append(li('لسه مفيش طالبات مضافين للمقرر'));return}
+  for(const student of roster.items){
+   const btn=makeButton('إزالة من المقرر',async()=>{
+    if(!confirm('إلغاء قيد الطالبة من المقرر المختار؟ حضورها السابق هيفضل محفوظ.'))return;
+    try{
+     await api('lecturer/courses/'+courseId+'/students/remove',{studentId:student.id});
+     await refreshRoster();flash('تم إلغاء قيد الطالبة من المقرر من غير حذف سجل حضورها')
+    }catch(err){flash(err.message,true)}
+   });
+   ul.append(li(student.roll_number+' — '+student.full_name,btn));
+  }
+ }catch(e){el('rosterHint').textContent=e.message==='ROSTER_NOT_ENABLED'?
+  'إدارة الطالبات مش مفعّلة على السيرفر حاليًا.':'تعذّر عرض طالبات المقرر: '+e.message;
+  flash(el('rosterHint').textContent,true)}
+}
+el('rosterCourse').addEventListener('change',refreshRoster);
+el('rosterForm').addEventListener('submit',async e=>{
+ e.preventDefault();flash('');
+ const courseId=el('rosterCourse').value;
+ if(!courseId)return flash('اختار المقرر الأول',true);
+ try{
+  await api('lecturer/courses/'+courseId+'/students',{
+   studentId:el('rosterRoll').value.trim(),studentName:el('rosterName').value.trim()
+  });
+  el('rosterForm').reset();await refreshRoster();flash('تم إضافة الطالبة للمقرر')
+ }catch(err){flash(err.message,true)}
+});
 async function refreshLecturer(){
  const data=await api('lecturer/courses');
  entries(el('myCourses'),data.items,c=>c.name);
- const selector=el('lectureCourse');selector.replaceChildren();
- option(selector,'','اختار المقرر');
- data.items.forEach(c=>option(selector,c.id,c.name));
+ const selector=el('lectureCourse'),rosterSelector=el('rosterCourse');
+ const previous=rosterSelector.value;
+ selector.replaceChildren();rosterSelector.replaceChildren();
+ option(selector,'','اختار المقرر');option(rosterSelector,'','اختار المقرر');
+ data.items.forEach(c=>{
+  option(selector,c.id,c.name);
+  option(rosterSelector,c.id,c.name);
+ });
+ if(data.items.some(c=>c.id===previous))rosterSelector.value=previous;
+ await refreshRoster();
  await refreshLectures();
 }
 async function refreshQr(){
