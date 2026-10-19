@@ -5,6 +5,11 @@ on:
       - feature/superadmin-accounts-courses
     paths:
       - .github/workflows/live-smoke.yml
+  pull_request:
+    branches:
+      - feature/teacher-student-improvements
+    paths:
+      - .github/workflows/live-smoke.yml
   workflow_dispatch:
 jobs:
   smoke:
