@@ -52,10 +52,13 @@ async function refreshAdmin(){
  state.lecturers=lecturers.items;state.courses=courses.items;state.assignments=assignments.items;
  entries(el('lecturerList'),state.lecturers,l=>l.display_name+' — '+l.email);
  entries(el('courseList'),state.courses,c=>c.name);
- const a=el('lecturerSelect'),b=el('courseSelect');a.replaceChildren();b.replaceChildren();
- option(a,'','اختار الدكتور');option(b,'','اختار المقرر');
+ const a=el('lecturerSelect'),b=el('courseSelect'),rename=el('renameCourseSelect');
+ const previousRename=rename.value;
+ a.replaceChildren();b.replaceChildren();rename.replaceChildren();
+ option(a,'','اختار الدكتور');option(b,'','اختار المقرر');option(rename,'','اختار المقرر لتعديل اسمه');
  state.lecturers.forEach(l=>option(a,l.id,l.display_name+' ('+l.email+')'));
- state.courses.forEach(c=>option(b,c.id,c.name));
+ state.courses.forEach(c=>{option(b,c.id,c.name);option(rename,c.id,c.name)});
+ if(state.courses.some(c=>c.id===previousRename))rename.value=previousRename;
  const ul=el('assignmentList');ul.replaceChildren();
  if(!state.assignments.length)ul.append(li('مفيش تكليفات حتى الآن'));
  for(const row of state.assignments){
@@ -220,6 +223,21 @@ el('courseForm').addEventListener('submit',async e=>{
  try{
   await api('courses',{name:el('courseName').value});
   el('courseForm').reset();await refreshAdmin();flash('تم إنشاء المقرر. اختار الدكتور لتعيينه.');
+ }catch(err){flash(err.message,true)}
+});
+el('renameCourseSelect').addEventListener('change',()=>{
+ const course=state.courses.find(c=>c.id===el('renameCourseSelect').value);
+ el('renameCourseName').value=course?course.name:'';
+});
+el('renameCourseForm').addEventListener('submit',async e=>{
+ e.preventDefault();flash('');
+ const courseId=el('renameCourseSelect').value,name=el('renameCourseName').value.trim();
+ if(!courseId||!name)return flash('اختار المقرر واكتب الاسم الجديد',true);
+ try{
+  await api('courses/rename',{courseId,name});
+  await refreshAdmin();
+  el('renameCourseName').value=name;
+  flash('تم تعديل اسم المقرر من غير تغيير الطالبات أو المحاضرات أو تكليفات الدكاترة.');
  }catch(err){flash(err.message,true)}
 });
 el('assignForm').addEventListener('submit',async e=>{
