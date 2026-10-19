@@ -76,3 +76,16 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] SA-08 — Safely migrate existing local data into Neon after confirming legacy lecture/course mapping and backup; prohibit real roster in public git.
 - [ ] SA-09 — Security and E2E tests using synthetic users/rosters, and upgrade frontend login/account flows.
 - [ ] SA-10 — Create deployment only after readiness, initial admin credentials chosen securely and all core authorisation tests pass.
+
+
+## Role-restricted admin follow-through (2026-10-19)
+- [x] SA-11 — Owner resolved superadmin access: lecturer account creation + lecturer-course assignment only. Explicitly DENY attendance, student roster, lectures, report export and course/lecturer deletion, even via direct APIs. See D-012..D-015.
+- [x] SA-12 — Implement/test deny-by-default RBAC module `lib/permissions.js`, including assigned-course lookup fail-closed and self-service boundaries; CI #39213860392 passed.
+- [x] SA-13 — Implement/test salted scrypt passwords and one-time bootstrap **code**, with no hardcoded credentials; CI #39213860392 passed.
+- [x] SA-14 — Implement/test account-management **data layer**: superadmin-only lecturer creation, minimal lists, course grant/revoke, audit log; CI #39213860392 passed.
+- [ ] SA-15 — Wire DB-backed authentication, sessions and RBAC to *every* HTTP endpoint; remove shared DOCTOR_PASSWORD; direct-HTTP cross-role tests. Required before public use.
+- [ ] SA-16 — Build superadmin UI limited to lecturer creation and course assignments (minimal names/codes, never student/attendance info). Build lecturer UI limited to assigned courses.
+- [ ] SA-17 — Validate live Neon connection/migrations, course provisioning policy, create initial superadmin via private one-time bootstrap, and import students securely after backup. No real records inserted yet.
+- [ ] SA-18 — Implement lecturer self-service password change and session invalidation after change.
+- [ ] SA-19 — Decide who creates the original course catalog; admin is NOT authorized to create a course under current narrow policy.
+- Remaining SA-03/SA-04/SA-05/SA-06 are **PARTIAL ONLY**. Bootstrap script is not run; functions are NOT exposed by an authenticated API; the running server does not enforce roles. GitHub Actions unit/integration tests verify only new code and existing legacy routes; they are not a live security assessment.
