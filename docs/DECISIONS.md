@@ -168,3 +168,10 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Private Neon DATABASE_URL placed in Render secrets, never committed. New service runs staff portal with `ROSTER_ENABLED=1`, `ATTENDANCE_ENABLED=0`. Keep student public QR check-in disabled.
 - Independent GitHub Actions HTTPS smoke (#39258848867) verified Neon health, public login form, unauthenticated roster rejection and QR/legacy endpoints disabled.
 - Live staff staging is NOT equivalent to full production student attendance readiness; do not claim password-change/login with real credentials tested yet.
+
+
+## D-030 — Separate UI entry points without weakening privacy (2026-10-19)
+- User approved redesign without design constraints. Added public home / and role entry /admin /lecturer, retaining shared server-side role verification and per-course lecturer DB authorization; staff HTML is shared but view selection is role-specific. Client navigation does NOT confer access.
+- A no-identity /student guidance page is public, but /checkin and POST attendance remain disabled until explicitly enabled after tests. No real student PII in public repo/static pages.
+- Optimize mobile roster UX with simple in-browser filtering and 20-row paging for authorized lecturer data; no cross-course public search API. Eliminate inline styles that conflict with CSP and use safe textContent everywhere.
+- The existing Render service uses autoDeploy OFF, so we manually deployed the successful CI-tested UI version; verified status Live and independent external HTTPS smoke.
