@@ -28,7 +28,7 @@ function fakeDb({lessons=true,assigned=true}={}){
   if(sql.startsWith('SELECT id,title,opened_at,closed_at FROM lectures'))return {rows:closed};
   if(sql.startsWith('SELECT a.student_id,a.lecture_id FROM attendances'))return {rows};
   throw Error('Unrecognized query '+sql);
- }}}};
+ }}};
 }
 function zipEntries(buffer){
  const entries={};let offset=0;
