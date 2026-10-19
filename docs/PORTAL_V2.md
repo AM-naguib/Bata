@@ -54,3 +54,9 @@ Current state: **Admin portal preview implementation only; no live website.**
 - `public/student.html` and legacy `server.js` now require both student ID and typed full name, with an edit/reset button and server roster check before saving attendance.
 - The v2 portal intentionally does not serve the legacy student route. Shared `lib/student-enrollment.js` prepares a private Neon active-course roster match (no public ID-to-name lookup); no v2 QR attendance/check-in endpoint is integrated yet.
 - Never deploy the old legacy server publicly as a workaround.
+
+## QR student attendance update (2026-10-19)
+- v2 now includes a **feature-flagged** QR check-in API and RTL student page. Prior notes saying there is no v2 attendance handler are superseded.
+- Lecturer routes under `/api/v2/lecturer/lectures` create/list/live/close, and `/api/v2/attendance/checkin` handles signed QR + name/seat + GPS. Native phone camera opens `/checkin?t=...`.
+- Generated QR changes every 30 seconds; PostgreSQL protects lecture close vs concurrent check-in and unique hashed device usage per lecture.
+- Both route sets remain OFF by default. Requires safe configured env values, real enrolled student records (not present yet) and further safety tests. See `docs/ATTENDANCE_V2.md`.
