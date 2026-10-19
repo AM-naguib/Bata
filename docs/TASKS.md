@@ -192,3 +192,14 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] BO-04 (still open) — Admin creates a lecturer account and assigns existing course. Database currently has **0 lecturer accounts and 0 lecturer assignments**. DO NOT invent doctor identity or login credentials.
 - [ ] DEP-04 — Backups/restoration, production student privacy checks, mobile QR/GPS and XLSX/report support need signoff before enabling `ATTENDANCE_ENABLED=1` for classes. Students are stored privately in Neon but the QR feature remains disabled.
 - Previous dated notes saying zero real students/no actual import have been superseded by this verified import.
+
+
+## DEPLOY SUCCESS — Render Node web service and Neon connection (2026-10-19)
+- [x] DEP-02 — User explicitly confirmed Render workspace `ahmed's workspace`.
+- [x] DEP-03 (basic production deployment) — New Render FREE Node web service `bata-attendify-node` deployed on Frankfurt, branch `feature/superadmin-accounts-courses`. Private Neon DATABASE_URL and exact HTTPS PUBLIC_ORIGIN set through connectors. Build/start successful; deployment status Live.
+- [x] DEP-05 — Added live smoke check workflow and passed GitHub Actions [#39258848867](https://github.com/AM-naguib/Bata/actions/runs/39258848867): /healthz 200 + Neon OK, /portal login page 200, unauthenticated roster/account 401, legacy/check-in endpoints 404.
+- [ ] DEP-06 — Owner signs in to https://bata-attendify-node.onrender.com/portal using previously provided temporary admin login and changes initial password. Actual credentialed browser login/password update not independently verified.
+- [ ] DEP-07 — Owner creates first lecturer identity via portal, assigns provisional course, lecturer signs in/changes password and verifies 172 pre-enrolled private students via lecturer-only UI.
+- [ ] DEP-08 — Document and test backups/restoration, real-browser/mobile checks, session/cookie behavior and remaining privacy protections before expanding access.
+- [ ] DEP-09 — DO NOT enable public QR check-in until end-to-end roster and geolocation checks pass; ATTENDANCE_ENABLED remains 0.
+- NOTE: prior incorrectly configured Go service `Bata` in same workspace is unchanged (free plan); use the NEW Node URL. The tool could not edit an existing service's runtime/branch through current API, so an explicit NEW free service was created.
