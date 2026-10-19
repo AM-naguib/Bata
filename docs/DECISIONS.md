@@ -90,3 +90,12 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Course name alone is required; duplicate-name, course-code, academic-term, rename/delete policies have NOT been approved. Do not impose a new uniqueness policy without further decision.
 - The approval permits a server-side `course.create` and create-then-assign flow, not self-service lecturer signup or any new role privileges.
 - Status: `lib/permissions.js` and `lib/admin-management.js` have an isolated implementation and tests. Legacy `server.js` still does **not** invoke them, so no live admin form/API or deployed site yet.
+
+
+## D-021 — Operational boundary of new account portal (2026-10-19)
+- `npm start` on the feature branch now runs **`server-v2.js`**, a PostgreSQL-backed role-restricted account portal (not legacy student attendance). Old `server.js` is kept only for migration/testing.
+- The owner-approved superadmin operations (create doctor, create named course, assign/unassign) are served over authenticated v2 HTTP APIs and RTL UI. Doctor can change own password and list assigned course names only.
+- This is **not** permission to deploy an incomplete live class attendance system. The prior student/lecture/check-in API is deliberately NOT exposed by the new server.
+- No additional user-facing policy was assumed about name uniqueness, semester, report access, ID verification or course deletion.
+- No first superadmin or real student records have been inserted; private admin email/password and Render workspace have not been confirmed.
+- Tests passed with synthetic data only; real Neon bootstrap and production deployment are pending.
