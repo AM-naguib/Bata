@@ -5,7 +5,7 @@ Student attendance application based on rotating QR codes + browser geolocation.
 This is a **Node.js web server**, not a GitHub Pages static site. GitHub is public for the application's SOURCE CODE, not for actual student roster or attendance data.
 
 ## Current status
-**Audit in progress. Not safe for real student attendance until priority security findings are resolved.**\n\n**Source staging is incomplete:** `public/student.html` has not been uploaded successfully; until it is added, the student home page `/` does not work. Do not deploy this branch.
+**Audit in progress. Not safe for real student attendance until priority security findings are resolved.** Some vulnerabilities have been fixed and tested with synthetic students; the app still needs further security and data persistence work.\n\n**Source staging is incomplete:** `public/student.html` has not been uploaded successfully; until it is added, the student home page `/` does not work. Do not deploy this branch.
 
 - App server: `server.js`
 - Student page: `/`
@@ -18,7 +18,9 @@ This is a **Node.js web server**, not a GitHub Pages static site. GitHub is publ
 ## Local-only test
 ```sh
 cp students.example.json students.json
-DOCTOR_PASSWORD='choose-your-own-strong-password' npm start
+DOCTOR_PASSWORD='choose-your-own-strong-password-at-least-12-chars' npm start
 ```
 
 See [deployment and safety checklist](docs/DEPLOYMENT.md) and [outstanding tasks](docs/TASKS.md). **Do not publicly deploy the current code.** Avoid placing actual student data into GitHub or web-accessible folders.
+
+Run `npm test` (synthetic roster, Node v22 locally tested). Original `public/student.html` remains missing on this GitHub branch, so deployment is blocked.
