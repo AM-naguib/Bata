@@ -16,6 +16,12 @@ test('responsive RTL staff portal keeps every JS-dependent element reachable',()
   assert.ok(html.includes('id="'+id+'"'),id+' expected');
  for(const route of ['overview','lecturers','courses','assignments','roster','lectures','security'])
   assert.ok(html.includes('data-page="'+route+'"'),'Missing role panel '+route);
+ for(const gate of ['superadmin','lecturer','student'])
+  assert.ok(html.includes('data-gateway="'+gate+'"'),'Visible gate missing: '+gate);
+ for(const field of ['entryEyebrow','entryTitle','entryEmphasis','entryDescription','loginTitle','loginDescription'])
+  assert.ok(html.includes('id="'+field+'"'),'Missing separate gate title: '+field);
+ assert.match(js,/function showEntryGate\(/,'staff routes should show dedicated admin/lecturer copy');
+ assert.match(js,/server_error/i,'backend failures must be translated for the user');
  assert.ok(css.includes('@media(max-width:580px)'),'mobile layout breakpoint');
  assert.ok(css.includes('[hidden]{display:none!important}'),'hidden sections must stay concealed');
  assert.doesNotMatch(js,/\.innerHTML\s*=/,'dynamic academic records must use safe DOM APIs');
