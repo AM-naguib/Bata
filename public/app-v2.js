@@ -2,10 +2,10 @@
 // Staff portal: role-specific navigation and DOM-safe rendering. All permissions live on the server.
 const el=id=>document.getElementById(id);
 const state={role:null,profile:null,lecturers:[],courses:[],assignments:[],assignedCourses:[],
-  roster:[],rosterPage:1,rosterCourseId:'',selectedQr:null,qrUpdating:false,flashTimer:null};
+  roster:[],rosterPage:1,rosterCourseId:'',reportData:null,reportPage:1,reportCourseId:'',selectedQr:null,qrUpdating:false,flashTimer:null};
 const PAGE_NAMES={
   overview:'نظرة عامة',lecturers:'حسابات الدكاترة',courses:'المقررات',
-  assignments:'تكليفات الدكاترة',roster:'كشف الطالبات',lectures:'المحاضرات والحضور',
+  assignments:'تكليفات الدكاترة',roster:'كشف الطالبات',reports:'تقارير وExcel',lectures:'المحاضرات والحضور',
   security:'أمان الحساب'
 };
 const ERROR_MESSAGES={
@@ -20,6 +20,7 @@ const ERROR_MESSAGES={
   COURSE_NOT_ASSIGNED:'المقرر ده مش متعيّن لحسابك.',
   ROSTER_NOT_ENABLED:'إدارة الكشوف غير مفعّلة حاليًا.',
   ATTENDANCE_NOT_ENABLED:'ميزة حضور المحاضرات مش مفعّلة حاليًا.',
+  REPORT_TOO_LARGE:'التقرير أكبر من الحد المسموح. تواصل مع المسؤول.',
   'Email already exists':'البريد الإلكتروني ده مسجل بالفعل.',
   'Invalid ID':'الاختيار غير صحيح. حدّث الصفحة وجرّب تاني.'
 };
@@ -70,7 +71,7 @@ function hasRolePage(page){
  return state.role==='superadmin'
   ?['overview','lecturers','courses','assignments'].includes(page)
   :state.role==='lecturer'
-   ?['overview','roster','lectures'].includes(page):false;
+   ?['overview','roster','lectures','reports'].includes(page):false;
 }
 function navigate(page){
  if(!hasRolePage(page))page='overview';
@@ -246,6 +247,84 @@ async function refreshRoster(){
   flash(err.message,true);
  }
 }
+const REPORT_PAGE_SIZE=20;
+function renderReports(){
+ const report=state.reportData;
+ const students=el('reportStudents'),lectures=el('reportLectures');
+ students.replaceChildren();lectures.replaceChildren();
+ if(!report){
+  empty(students,'اختار المقرر لتحميل نتائج الطالبات.');
+  empty(lectures,'المحاضرات المقفولة هتظهر هنا.');
+  el('reportPagination').hidden=true;el('reportDownload').disabled=true;
+  updateCount('reportStudentCount','—');updateCount('reportLectureCount','—');
+  updateCount('reportPresentCount','—');return;
+ }
+ updateCount('reportStudentCount',report.totalStudents);
+ updateCount('reportLectureCount',report.totalLectures);
+ updateCount('reportPresentCount',report.students.reduce((sum,s)=>sum+s.attended,0));
+ el('reportDownload').disabled=false;
+ const query=el('reportSearch').value.trim().normalize('NFC').toLocaleLowerCase('ar');
+ const matching=report.students.filter(s=>!query||
+  s.fullName.normalize('NFC').toLocaleLowerCase('ar').includes(query)||s.rollNumber.includes(query));
+ const maxPage=Math.max(1,Math.ceil(matching.length/REPORT_PAGE_SIZE));
+ state.reportPage=Math.min(Math.max(1,state.reportPage),maxPage);
+ const start=(state.reportPage-1)*REPORT_PAGE_SIZE;
+ if(!matching.length)empty(students,query?'مفيش طالبة مطابقة للبحث.':'لا توجد طالبات مقيدات حاليًا.');
+ else for(const student of matching.slice(start,start+REPORT_PAGE_SIZE)){
+  const pct=student.percentage===null?'—':student.percentage+'٪';
+  appendRow(students,labelRow(student.fullName,student.rollNumber),
+   (()=>{const label=document.createElement('span');label.className='report-attendance';
+    label.textContent='حضور '+student.attended+' | غياب '+student.absent+' | '+pct;return label})());
+ }
+ el('reportPagination').hidden=maxPage<=1;
+ updateCount('reportPage','صفحة '+state.reportPage+' من '+maxPage);
+ el('reportPrevious').disabled=state.reportPage<=1;
+ el('reportNext').disabled=state.reportPage>=maxPage;
+ if(!report.lectures.length)empty(lectures,'لسه مفيش محاضرات مقفولة. مفيش غياب محسوب.');
+ else for(const lecture of report.lectures)
+  appendRow(lectures,labelRow(lecture.title,new Date(lecture.closedAt).toLocaleDateString('ar-EG')),
+    (()=>{const label=document.createElement('span');label.className='report-attendance';
+     label.textContent=lecture.present+' حاضر | '+lecture.absent+' غائب';return label})());
+ el('reportNotice').textContent=report.totalLectures
+  ?'النتائج مبنية على '+report.totalLectures+' محاضرة مقفولة، وبتستبعد المحاضرات قبل قيد الطالبة.'
+  :'التقرير جاهز، لكن لسه مفيش محاضرات مقفولة؛ نسبة الحضور بتظهر «—» بدل غياب غير حقيقي.';
+}
+async function refreshReports(){
+ const courseId=el('reportCourse').value;
+ state.reportCourseId=courseId;state.reportData=null;state.reportPage=1;
+ renderReports();
+ if(!courseId){el('reportNotice').textContent='اختار المقرر لعرض التقرير.';return}
+ el('reportNotice').textContent='جارٍ حساب التقرير...';
+ try{
+  const report=await api('lecturer/courses/'+courseId+'/report');
+  if(state.reportCourseId!==courseId)return;
+  state.reportData=report;renderReports();
+ }catch(err){
+  if(state.reportCourseId!==courseId)return;
+  el('reportNotice').textContent='تعذر تحميل التقرير. حاول مرة تانية.';
+  flash(err.message,true);
+ }
+}
+async function downloadReport(){
+ const courseId=state.reportCourseId;
+ if(!courseId||!state.reportData)return;
+ const button=el('reportDownload');button.disabled=true;
+ try{
+  const response=await fetch('/api/v2/lecturer/courses/'+courseId+'/report.xlsx',{
+   credentials:'same-origin',headers:{Accept:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}});
+  if(!response.ok){
+   const responseData=await response.json().catch(()=>({error:'تعذر تنزيل التقرير.'}));
+   throw Error(safeMessage(responseData.error));
+  }
+  const blob=await response.blob(),url=URL.createObjectURL(blob);
+  const link=document.createElement('a');link.href=url;
+  link.download='hader-'+courseId+'.xlsx';document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  flash('تم تجهيز ملف Excel. احتفظ بيه في مكان آمن لأنه يحتوي على بيانات الطالبات.');
+ }catch(err){flash(err.message,true)}finally{
+  button.disabled=state.reportData===null;
+ }
+}
 async function refreshLectures(){
  let result;
  try{result=await api('lecturer/lectures')}
@@ -287,12 +366,13 @@ async function refreshLecturer(){
  const list=el('myCourses');list.replaceChildren();
  if(!data.items.length)empty(list,'لسه مفيش مقرر متعيّن ليك. تواصل مع الأدمن.');
  else for(const c of data.items)appendRow(list,labelRow(c.name,c.code||'مقرر جامعي'));
- const lectureSelector=el('lectureCourse'),rosterSelector=el('rosterCourse'),previous=rosterSelector.value;
- lectureSelector.replaceChildren();rosterSelector.replaceChildren();
- option(lectureSelector,'','اختار المقرر');option(rosterSelector,'','اختار المقرر');
- for(const c of data.items){option(lectureSelector,c.id,c.name);option(rosterSelector,c.id,c.name)}
+ const lectureSelector=el('lectureCourse'),rosterSelector=el('rosterCourse'),reportSelector=el('reportCourse'),previous=rosterSelector.value,previousReport=reportSelector.value;
+ lectureSelector.replaceChildren();rosterSelector.replaceChildren();reportSelector.replaceChildren();
+ option(lectureSelector,'','اختار المقرر');option(rosterSelector,'','اختار المقرر');option(reportSelector,'','اختار المقرر');
+ for(const c of data.items){option(lectureSelector,c.id,c.name);option(rosterSelector,c.id,c.name);option(reportSelector,c.id,c.name)}
  rosterSelector.value=data.items.some(c=>c.id===previous)?previous:(data.items[0]?.id||'');
- await Promise.all([refreshRoster(),refreshLectures()]);
+ reportSelector.value=data.items.some(c=>c.id===previousReport)?previousReport:(data.items[0]?.id||'');
+ await Promise.all([refreshRoster(),refreshLectures(),refreshReports()]);
 }
 async function refreshQr(){
  if(!state.selectedQr||state.qrUpdating)return;
@@ -340,6 +420,11 @@ el('rosterPrevious').addEventListener('click',()=>{
 el('rosterNext').addEventListener('click',()=>{
  state.rosterPage++;renderRoster();
 });
+el('reportCourse').addEventListener('change',()=>{el('reportSearch').value='';refreshReports()});
+el('reportSearch').addEventListener('input',()=>{state.reportPage=1;renderReports()});
+el('reportPrevious').addEventListener('click',()=>{if(state.reportPage>1){state.reportPage--;renderReports()}});
+el('reportNext').addEventListener('click',()=>{state.reportPage++;renderReports()});
+el('reportDownload').addEventListener('click',downloadReport);
 el('stopQr').addEventListener('click',()=>{state.selectedQr=null;el('qrCard').hidden=true});
 el('loginForm').addEventListener('submit',async event=>{
  event.preventDefault();
