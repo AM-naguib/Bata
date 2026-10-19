@@ -61,3 +61,9 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Course and lecturer names currently are metadata labels on lectures, **not user identities or validated per-course enrollments**. Do not confuse with account ownership.
 - Existing CSV is labelled 'opens in Excel' accurately; native XLSX remains pending.
 - Approved status: only the user feature requirements, not onboarding/deletion/privacy policies. No private roster or account secrets in public GitHub.
+
+## Confirmed role policy (2026-10-19)
+- **OWNER APPROVED:** A single main superadmin creates lecturer accounts and assigns courses to them; lecturers cannot sign themselves up or assign courses.
+- Lecturer accounts must be limited to their assigned courses; users may change their own passwords after authentication.
+- SQL schema deployed to new Neon Free project `bata-attendify` (ID `wandering-mode-56487150`), with 10 tables, no student records or credentials. Database schema is not the same as working application accounts. See docs/SUPERADMIN.md.
+- Do not invent superadmin credentials, privileges outside this policy, or a legacy-course mapping; remain pending.
