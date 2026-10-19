@@ -97,3 +97,10 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Render live deployment `dep-dbb29vu7bikc73bfnst0` reports **LIVE** on https://bata-attendify-node.onrender.com. App commit `3078ff438515177835eef2bf732a2e1b836c596a`.
 - Public HTTPS smoke [#39266948714](https://github.com/AM-naguib/Bata/actions/runs/39266948714) succeeded: three role gates, /healthz Neon ok, protected password POST 401, role pages, check-in still 404. Security CI [#39266948676](https://github.com/AM-naguib/Bata/actions/runs/39266948676) succeeded including password audit binding regression.
 - Actual credentialed browser password change **not yet verified** after deployment. User should retry with unchanged current password because failed transaction rolled back. Keep `ATTENDANCE_ENABLED=0`.
+
+
+## LIVE RELEASE: superadmin lecturer password reset — 2026-10-19
+- Latest application release LIVE at `https://bata-attendify-node.onrender.com/admin`, Render deploy `dep-dbb3p18n74is73bg2em0` built app commit `bcf762126514e12d0f79a076d8493fb0d7a1080c`. Changes: superadmin-only reset API and per-lecturer UI action, one-time temporary password display, forced change, target-session revocation and audit. No target user data or passwords modified by deployment itself.
+- CI https://github.com/AM-naguib/Bata/actions/runs/39270935273 passed security/API/transaction/UI tests, and actual Neon schema checked `app_users.updated_at`.
+- Live smoke updated to verify deployed UI script contains new endpoint and unauthenticated POST is rejected with 401 without mutating accounts. Keep Render autoDeploy OFF; commit after release may contain only docs and smoke workflow, not live app code.
+- Data access unchanged: superadmin cannot view student roster/attendance, public QR attendance still disabled (`ATTENDANCE_ENABLED=0`), 172 students stay in Neon private first course.
