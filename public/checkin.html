@@ -10,8 +10,8 @@
 <a class="brand" href="/" aria-label="حاضر — الرئيسية"><span class="brand__mark" aria-hidden="true">ح</span><span>حاضر <small>ATTENDIFY</small></span></a>
 <span class="pill">بوابة الطالبة</span>
 </div></header>
-<main class="student-shell" style="max-width:660px">
-<section class="card" style="padding:clamp(24px,5vw,42px)">
+<main class="student-shell student-shell--form">
+<section class="card checkin-card">
   <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> تسجيل حضور المحاضرة</span>
   <h1>سجّلي حضورك</h1>
   <p class="muted">بعد مسح QR المحاضرة، اكتبي اسمك ورقم جلوسك زي الكشف، واسمحي باستخدام موقعك الدقيق داخل القاعة.</p>
@@ -21,7 +21,7 @@
     <button id="submitAttendance" class="button button--block" type="submit">تسجيل الحضور باستخدام موقعي <span aria-hidden="true">←</span></button>
     <button type="button" id="edit" class="button button--outline button--block">تعديل الاسم أو رقم الجلوس المحفوظ</button>
   </form>
-  <p id="checkinMessage" role="status" aria-live="polite" style="margin-top:18px;font-weight:800"></p>
+  <p id="checkinMessage" class="checkin-message" role="status" aria-live="polite"></p>
 </section>
 <section class="card info-card">
   <span class="info-card__mark" aria-hidden="true">i</span>
