@@ -9,6 +9,7 @@ const PAGE_NAMES={
   security:'أمان الحساب'
 };
 const ERROR_MESSAGES={
+  SERVER_ERROR:'السيرفر واجه مشكلة أثناء تنفيذ الطلب. جرّب تاني، ولو استمرت المشكلة تواصل مع المسؤول.',
   INVALID_CREDENTIALS:'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   CURRENT_PASSWORD_INVALID:'كلمة المرور الحالية غير صحيحة.',
   PASSWORD_REQUIREMENTS:'كلمة المرور الجديدة لازم تكون 12 حرفًا على الأقل، ومختلفة عن الحالية.',
@@ -87,6 +88,36 @@ function navigate(page){
  if(title)document.title='حاضر | '+title;
  if(page==='roster')el('rosterSearch').focus({preventScroll:true});
 }
+function showEntryGate(){
+ const intent=location.pathname;
+ const role=intent==='/admin'?'superadmin':intent==='/lecturer'?'lecturer':'';
+ const data=role==='superadmin'
+  ?{eyebrow:'بوابة الأدمن الرئيسي',title:'إدارة النظام،',emphasis:'بخطوات واضحة.',
+     description:'أنشئ حسابات الدكاترة ونظّم المقررات والتكليفات؛ بيانات الطالبات والحضور مش ضمن صلاحيات الأدمن.',
+     login:'دخول الأدمن الرئيسي'}
+  :role==='lecturer'
+  ?{eyebrow:'بوابة الدكتور',title:'محاضراتك وكشوفك،',emphasis:'في مكان واحد.',
+     description:'تابع المقررات المعيّنة ليك، وابحث في كشف طالباتك وأدر المحاضرات بالصلاحيات الخاصة بدورك.',
+     login:'دخول الدكتور'}
+  :{eyebrow:'منصة حاضر',title:'3 بوابات،',emphasis:'تجربة لكل دور.',
+     description:'اختار بوابة الأدمن أو الدكتور أو الطالبة من الأعلى. كل فئة ليها مساحتها المستقلة وصلاحياتها.',
+     login:'بوابة العاملين'};
+ el('entryEyebrow').textContent=data.eyebrow;
+ el('entryTitle').textContent=data.title;
+ el('entryEmphasis').textContent=data.emphasis;
+ el('entryDescription').textContent=data.description;
+ el('loginTitle').textContent=data.login;
+ el('loginDescription').textContent=role
+  ?'سجّل دخولك بالبريد الإلكتروني وكلمة المرور الخاصة بحسابك.'
+  :'سجّل دخولك كأدمن أو دكتور، أو افتح بوابة الطالبة بدون تسجيل حساب.';
+ document.body.dataset.entry=role||'general';
+ for(const link of document.querySelectorAll('[data-gateway]')){
+  const active=link.dataset.gateway===role;
+  link.classList.toggle('is-active',active);
+  if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+ }
+ document.title='حاضر | '+data.login;
+}
 function setView(show,who){
  state.profile=show?who:null;state.role=show?who.role:null;
  el('loginBox').hidden=show;el('portalBox').hidden=!show;
@@ -94,12 +125,7 @@ function setView(show,who){
  if(!who){
   el('adminControls').hidden=true;el('lecturerControls').hidden=true;
   el('adminNav').hidden=true;el('lecturerNav').hidden=true;
-  const intent=location.pathname;
-  const kind=intent==='/admin'?'الأدمن الرئيسي':intent==='/lecturer'?'الدكتور':'';
-  el('loginTitle').textContent=kind?'تسجيل دخول '+kind:'أهلًا بيك في حاضر';
-  el('loginDescription').textContent=kind?'ادخل ببريدك الإلكتروني وكلمة المرور للمتابعة.':
-   'سجّل دخولك بحساب الأدمن أو الدكتور للمتابعة.';
-  document.title='حاضر | '+(kind?'دخول '+kind:'تسجيل الدخول');
+  showEntryGate();
   return;
  }
  el('welcome').textContent='أهلًا، '+who.name;
@@ -315,7 +341,8 @@ el('logoutButton').addEventListener('click',async()=>{
  state.selectedQr=null;el('qrCard').hidden=true;
  try{await api('logout',{})}catch{}
  el('temporaryPasswordCard').hidden=true;el('tempPassword').textContent='';
- setView(false);history.replaceState({},'','/portal');
+ const destination=state.role==='superadmin'?'/admin':state.role==='lecturer'?'/lecturer':'/portal';
+ history.replaceState({},'',destination);setView(false);
  flash('تم تسجيل الخروج بنجاح.');
 });
 el('lecturerForm').addEventListener('submit',async event=>{
@@ -396,8 +423,10 @@ el('changePasswordForm').addEventListener('submit',async event=>{
   await api('password',{
    currentPassword:el('currentPassword').value,newPassword:el('newPassword').value
   });
-  el('changePasswordForm').reset();setView(false);
-  history.replaceState({},'','/portal');flash('تم تغيير كلمة المرور. سجّل دخولك بالجديدة.');
+  const destination=state.role==='superadmin'?'/admin':state.role==='lecturer'?'/lecturer':'/portal';
+  el('changePasswordForm').reset();
+  history.replaceState({},'',destination);setView(false);
+  flash('تم تغيير كلمة المرور. سجّل دخولك بالجديدة.');
  }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
 refreshPortal();
