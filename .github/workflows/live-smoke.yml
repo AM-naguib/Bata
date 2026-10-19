@@ -39,6 +39,21 @@ jobs:
           curl --silent --show-error --fail --max-time 40 "$BASE/portal" -o /tmp/portal.html
           grep -q 'id="loginForm"' /tmp/portal.html
           echo "Portal: login form served"
+          curl --silent --show-error --fail --max-time 40 "$BASE/" -o /tmp/home.html
+          grep -q 'href="/admin"' /tmp/home.html
+          grep -q 'href="/lecturer"' /tmp/home.html
+          grep -q 'href="/student"' /tmp/home.html
+          echo "Landing: three role entries served"
+          curl --silent --show-error --fail --max-time 40 "$BASE/admin" -o /tmp/admin.html
+          grep -q 'id="adminControls"' /tmp/admin.html
+          echo "Admin: dashboard interface served"
+          curl --silent --show-error --fail --max-time 40 "$BASE/lecturer" -o /tmp/lecturer.html
+          grep -q 'id="lecturerControls"' /tmp/lecturer.html
+          grep -q 'id="rosterSearch"' /tmp/lecturer.html
+          echo "Lecturer: dashboard and roster search served"
+          curl --silent --show-error --fail --max-time 40 "$BASE/student" -o /tmp/student.html
+          grep -q 'غير مفعّل حاليًا' /tmp/student.html
+          echo "Student: safe guide served and attendance disabled"
           status=$(curl --silent --show-error --max-time 30 -o /tmp/me.json -w '%{http_code}' "$BASE/api/v2/me")
           test "$status" = 401
           echo "Session: unauthorized request rejected (401)"
