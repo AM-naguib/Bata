@@ -1,0 +1,22 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>حاضر | تسجيل حضور المحاضرة</title>
+<link rel="stylesheet" href="/app-v2.css"><script src="/checkin.js" defer></script>
+</head><body>
+<header><div class="brand">حاضر <small>تسجيل الحضور</small></div></header>
+<main style="max-width:490px">
+<section class="card">
+<h1>تسجيل حضور المحاضرة</h1>
+<p class="muted">افتحي QR المحاضرة بكاميرا الموبايل، وبعدها اكتبي رقم جلوسك واسمك بالكامل زي كشف المقرر.</p>
+<form id="checkinForm">
+<label for="roll">رقم الجلوس</label>
+<input id="roll" inputmode="numeric" autocomplete="off" maxlength="64" required placeholder="رقم الجلوس">
+<label for="fullName">اسم الطالبة بالكامل</label>
+<input id="fullName" autocomplete="name" maxlength="200" required placeholder="الاسم الكامل زي كشف المقرر">
+<button type="button" id="edit" class="secondary">تعديل رقم الجلوس والاسم المحفوظ</button>
+<button id="submitAttendance" type="submit">تسجيل الحضور باستخدام موقعي</button>
+</form>
+<p id="checkinMessage" role="status" aria-live="polite"></p>
+<p class="muted">تصحيح البيانات المحفوظة هنا لا يغيّر حضورًا سُجّل بالفعل؛ في الحالة دي راجعي الدكتور. لازم تفعّلي GPS والموقع الدقيق.</p>
+</section>
+</main></body></html>
