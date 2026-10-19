@@ -58,3 +58,12 @@
 3. Superadmin selects existing lecturer and the course ID to create or restore an assignment.
 4. If no lecturer is assigned yet, the course stays in the catalog; the lecturer cannot see or manage it.
 5. This is a **data-layer implementation only** until identity-backed API and UI are connected. The current shared-password app must not be used for this feature.
+
+
+## V2 account portal integration now built (2026-10-19)
+- `server-v2.js` and `lib/http-app.js` are the secure default npm entry; `/portal` is the single RTL login and role dashboard.
+- Superadmin can create lecturer accounts, create a named course, grant/revoke lecturer-course assignments, and see **minimal** lecturer/course metadata.
+- Lecturer may log in, list assigned course names and change own password. Neither role can reach the legacy academic API through v2. Superadmin still cannot see student lists or attendance reports.
+- Session tokens are random, only hashes are stored in PostgreSQL, and changing password revokes all sessions. New lecturers are forced to change their temporary password.
+- This does NOT yet migrate class attendance or students. No initial superadmin account has been created or populated. Existing historical statements describing the earlier unintegrated modules are superseded for the v2 account portal only.
+- GitHub Actions run #39217213315 passed after npm dependency install, syntax checks and synthetic HTTP tests. Actual live Neon smoke test, UI browser E2E and production launch pending. See `docs/PORTAL_V2.md`.
