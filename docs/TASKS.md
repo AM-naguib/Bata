@@ -99,3 +99,16 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 ## Verified course-creation regression — 2026-10-19
 - GitHub Actions run [#39215894790](https://github.com/AM-naguib/Bata/actions/runs/39215894790) completed **successfully** on this feature branch (CI run 39).
 - The tests exercise administrator-only course insertion, validation, rollback, audit log and create-then-assign workflow using synthetic data; existing security regression suite also passed. This is **not** a test of a live admin UI or production role-based HTTP endpoints.
+
+
+## Portal v2 HTTP/UI integration — 2026-10-19
+- [x] SA-22 (development implementation) — Database-backed HTTP `POST /api/v2/courses` + lecturer creation and assignment/revocation, RTL web UI forms. Synthetic end-to-end HTTP tests passed. **Not deployed, no real accounts created.**
+- [x] SA-24 — Implement `server-v2.js` and `lib/http-app.js` with Neon PostgreSQL sessions, role checks, POST same-origin enforcement and a verified public `/healthz` endpoint. `npm start` uses v2 rather than legacy server.
+- [x] SA-25 — Web admin dashboard `public/portal.html` + JavaScript/CSS for superadmin login, lecturer creation, typed course creation, assignment/revocation, and personal password change; lecturer sees only assigned course names.
+- [x] SA-26 — Integrate self-password-change API with current-password verification, updated hash and revocation of all existing sessions; initial temporary password must be changed first.
+- [x] SA-27 — HTTP integration tests against a synthetic in-memory fake-PG pool: login, origin check, old API blocked, admin create course/lecturer, grant/revoke, compulsory password change, lecturer denied admin, logout revocation. GitHub CI runs npm install, syntax and tests.
+- [ ] SA-28 — Connect to real Neon through an authorized private runtime, create first superadmin privately, and run real PostgreSQL integration smoke tests. Current Neon project is empty (0 accounts, 0 students, 0 courses, 0 assignments).
+- [ ] SA-29 — Implement lecturer-only course-scoped enrollments, class sessions, attendance, QR/GPS and reports in v2; migrate legacy data privately with backup. **LIVE CLASS USE BLOCKED.**
+- [ ] SA-30 — Add browser automation (real DOM), security audit for public deployment and a Render free-tier service only after confirming workspace and safety requirements.
+- [ ] SA-31 — Decide student identity verification, lost-device reset policy, grading/absence calculation and XLSX export.
+- Note: Previous SA-15/SA-16/SA-18 are now **partial**: completed for the new account portal, but not for course attendance workflows. Do not mark application-wide security complete. Read docs/PORTAL_V2.md.
