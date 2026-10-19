@@ -8,6 +8,7 @@ function fakePool(mode='success'){
  const queries=[];
  const client={query:async(sql,params=[])=>{
   queries.push({sql,params});
+  if(sql.startsWith('UPDATE courses SET name='))return {rows:mode==='missing-rename'?[]:[{id:id2,name:params[0],code:null,created_at:'2026-10-19'}]};
   if(sql.includes('RETURNING id,name,code,created_at'))return {rows:[{id:id2,name:params[0],code:null,created_at:'2026-10-19'}]};
   if(sql.includes('RETURNING id,email,display_name'))return {rows:[{id:id1,email:'doctor@example.test',display_name:'Dr Test'}]};
   if(sql.includes('SELECT id FROM app_users')){
@@ -29,6 +30,8 @@ test('lecturers and strangers cannot call superadmin management functions or rea
  }
  await assert.rejects(service.createLecturer(pool,lecturer,{email:'doctor@example.test',displayName:'Dr Test'}),e=>e.status===403);
  await assert.rejects(service.createCourse(pool,lecturer,{name:'Test Course'}),e=>e.status===403);
+ await assert.rejects(service.renameCourse(pool,lecturer,{courseId:id2,name:'Another Name'}),e=>e.status===403);
+ await assert.rejects(service.renameCourse(pool,null,{courseId:id2,name:'Another Name'}),e=>e.status===401);
  await assert.rejects(service.createCourse(pool,null,{name:'Test Course'}),e=>e.status===401);
  await assert.rejects(service.assignCourse(pool,lecturer,{lecturerId:id1,courseId:id2}),e=>e.status===403);
  await assert.rejects(service.unassignCourse(pool,lecturer,{lecturerId:id1,courseId:id2}),e=>e.status===403);
@@ -74,6 +77,31 @@ test('course creation rolls back when catalog insertion or audit insert fails',a
  await assert.rejects(service.createCourse({connect:async()=>client},boss,{name:'Course'}),/DB write failed/);
  assert.ok(sqls.includes('ROLLBACK'));
  assert.equal(released,true);
+});
+test('superadmin can rename a course without touching assignments or attendance',async()=>{
+ const {pool,queries}=fakePool();
+ const renamed=await service.renameCourse(pool,boss,{courseId:id2,name:'  اسم المقرر الجديد  '});
+ assert.equal(renamed.name,'اسم المقرر الجديد');
+ assert.equal(renamed.id,id2);
+ const update=queries.find(x=>x.sql.startsWith('UPDATE courses SET name='));
+ assert.deepEqual(update.params,['اسم المقرر الجديد',id2]);
+ assert.ok(queries.some(x=>x.sql.includes("'course.rename'")));
+ assert.ok(queries.some(x=>x.sql==='COMMIT'));
+ assert.ok(!queries.some(x=>/\\b(enrollments|students|attendances|lectures|lecturer_courses)\\b/.test(x.sql)));
+});
+test('course rename validates existing ID/name and rolls back absent course',async()=>{
+ const {pool,queries}=fakePool();
+ for(const req of [
+  {courseId:'bad',name:'Anything'},
+  {courseId:id2,name:''},
+  {courseId:id2,name:'  '},
+  {courseId:id2,name:'x'.repeat(151)},
+  {courseId:id2,name:'Bad\\nName'}
+ ])await assert.rejects(service.renameCourse(pool,boss,req),e=>e.status===400);
+ assert.equal(queries.length,0);
+ const missing=fakePool('missing-rename');
+ await assert.rejects(service.renameCourse(missing.pool,boss,{courseId:id2,name:'New Name'}),e=>e.status===404);
+ assert.ok(missing.queries.some(x=>x.sql==='ROLLBACK'));
 });
 test('superadmin may create a lecturer with one-time password hash and audit event',async()=>{
  const {pool,queries}=fakePool();
