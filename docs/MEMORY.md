@@ -89,3 +89,11 @@ Owner explicitly limited superadmin to **creating lecturer accounts and distribu
 - New HTTP integration tests exercise cross-role restrictions, lecturer setup and account lifecycle. GitHub Actions run #39217213315 succeeded with `pg` npm install, JavaScript syntax validation, and security suite.
 - Read-only Neon query confirmed project `wandering-mode-56487150`, DB `attendify`: 0 accounts, 0 courses, 0 students, 0 lecturer-course assignments. No real data migrated.
 - Outstanding: *every* real student/lecture/QR/check-in/report API requires v2 course-scoped implementation and backfill. No website deploy. No private admin credentials, no Render workspace confirmation. Use docs/PORTAL_V2.md for current truth; prior dated notes concern older branch stages.
+
+## Important owner correction: student identification — 2026-10-19
+The student enters **roll number AND full name**, both editable. The user does NOT want a secret student code. Do not ask again about roll-number-only vs PIN; the decision is final unless user changes it.
+- Updated `public/student.html`: both input boxes; reset clears locally cached ID/name; they are stored only after successful check-in.
+- Updated old `server.js` attendance: checks the pair before device binding. This old server is **not** default production entry.
+- `lib/student-identity.js`: normalize name (NFC/whitespace), exact ID match including leading zeros, no guessing spelling; require both values.
+- `lib/student-enrollment.js`: future v2 Neon lookup requires the student be actively enrolled in that course; returns internal ID only, no public names/IDs enumeration endpoint. It has tests but is NOT connected to a working v2 attendance handler yet.
+- User's requirement matches a record, it cannot prove a student's physical identity. GPS/device spoofing remains an open security concern.
