@@ -34,3 +34,6 @@ Isolated Node v22 tests on synthetic users showed: default password login succes
 
 ### Rules for future assistants/developers
 Check DECISIONS.md first. Do not change grading/absence/device/GPS policy without owner consent. Every fix needs regression test, documented commit, and updated TASKS.md. No task is closed just because a document exists. Never commit real student data or passwords.
+
+### Hosting decision 2026-10-19
+Owner wants Public GitHub + free website hosting, no provider preference. Prototype stack selected: Render Free Node web service + Neon Free PostgreSQL. No Render/Neon account connected, website URL does not exist, student.html missing from audit branch, and code still relies on local JSON. Do not assume deployed/production-ready. Source of limitations: https://render.com/docs/free and https://neon.com/blog/neon-free-plan-1-gb-per-project .
