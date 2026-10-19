@@ -157,8 +157,20 @@ async function refreshAdmin(){
  const lecturerList=el('lecturerList'),courseList=el('courseList'),assignmentsList=el('assignmentList');
  lecturerList.replaceChildren();courseList.replaceChildren();assignmentsList.replaceChildren();
  if(!state.lecturers.length)empty(lecturerList,'لسه مفيش دكاترة. أنشئ أول حساب من النموذج.');
- else for(const teacher of state.lecturers)
-  appendRow(lecturerList,labelRow(teacher.display_name,teacher.email));
+ else for(const teacher of state.lecturers){
+  const reset=actionButton('إعادة تعيين الباسورد',async()=>{
+   if(!confirm('تأكيد إنشاء باسورد مؤقت جديد للدكتور '+teacher.display_name+'؟\\nالباسورد الحالي هيتلغي، وكل جلساته المفتوحة هتتقفل.'))return;
+   reset.disabled=true;
+   try{
+    hideTemporaryPassword();
+    const response=await api('lecturers/password/reset',{lecturerId:teacher.id});
+    showTemporaryPassword('باسورد مؤقت جديد — '+teacher.display_name,response.temporaryPassword);
+    flash('تم تغيير باسورد الدكتور مؤقتًا. سلّمه الباسورد الجديد بشكل آمن.');
+   }catch(err){flash(err.message,true)}
+   finally{reset.disabled=false}
+  });
+  appendRow(lecturerList,labelRow(teacher.display_name,teacher.email),reset);
+ }
  if(!state.courses.length)empty(courseList,'مفيش مقررات مضافة.');
  else for(const c of state.courses)appendRow(courseList,labelRow(c.name,c.code||'مقرر جامعي'));
  if(!state.assignments.length)empty(assignmentsList,'لسه مفيش تكليفات. اختار دكتور ومقرر للتكليف.');
@@ -340,25 +352,34 @@ el('loginForm').addEventListener('submit',async event=>{
 el('logoutButton').addEventListener('click',async()=>{
  state.selectedQr=null;el('qrCard').hidden=true;
  try{await api('logout',{})}catch{}
- el('temporaryPasswordCard').hidden=true;el('tempPassword').textContent='';
+ hideTemporaryPassword();
  const destination=state.role==='superadmin'?'/admin':state.role==='lecturer'?'/lecturer':'/portal';
  history.replaceState({},'',destination);setView(false);
  flash('تم تسجيل الخروج بنجاح.');
 });
+function hideTemporaryPassword(){
+ el('tempPassword').textContent='';
+ el('tempPasswordHeading').textContent='كلمة المرور المؤقتة للدكتور';
+ el('temporaryPasswordCard').hidden=true;
+}
+function showTemporaryPassword(heading,password){
+ el('tempPasswordHeading').textContent=heading;
+ el('tempPassword').textContent=password;
+ el('temporaryPasswordCard').hidden=false;
+ el('temporaryPasswordCard').scrollIntoView({behavior:'smooth',block:'center'});
+}
 el('lecturerForm').addEventListener('submit',async event=>{
  event.preventDefault();
  const button=event.submitter;if(button)button.disabled=true;
  try{
   const t=await api('lecturers',{displayName:el('lecturerName').value,email:el('lecturerEmail').value});
-  el('tempPassword').textContent=t.initialPassword;
-  el('temporaryPasswordCard').hidden=false;
-  el('lecturerForm').reset();await refreshAdmin();flash('تم إنشاء حساب الدكتور. احفظ كلمة مروره المؤقتة.');
-  el('temporaryPasswordCard').scrollIntoView({behavior:'smooth',block:'center'});
+  el('lecturerForm').reset();
+  await refreshAdmin();
+  showTemporaryPassword('باسورد أول دخول — '+t.display_name,t.initialPassword);
+  flash('تم إنشاء حساب الدكتور. احفظ كلمة مروره المؤقتة.');
  }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
-el('dismissSecret').addEventListener('click',()=>{
- el('tempPassword').textContent='';el('temporaryPasswordCard').hidden=true;
-});
+el('dismissSecret').addEventListener('click',hideTemporaryPassword);
 el('courseForm').addEventListener('submit',async event=>{
  event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
  try{
