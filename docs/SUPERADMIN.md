@@ -42,3 +42,12 @@
 - Superadmin: `lecturer.create`, `lecturer.list`, `assignment.list`, `assignment.grant`, `assignment.revoke`, `course.list.metadata` only, plus personal login/logout/password change. No broad `admin:*` privileges.
 - Lecturer: `course.list.assigned`, course-scoped lecture and attendance operations, course-scoped student roster management and academic export, plus personal account actions.
 - Superadmin cannot export Excel, inspect QR attendance, access `/api/report` or any student roster. Logging and testing must prove denial by direct HTTP request.
+
+
+## Foundations implemented but NOT yet active (2026-10-19)
+- Auth/authorization foundation: `lib/permissions.js` (role boundaries + verified course membership), `lib/passwords.js` (salted scrypt), `lib/admin-management.js` (superadmin-only DB functions).
+- Private first-admin bootstrap: `scripts/bootstrap-superadmin.js` (reads DATABASE_URL and INIT_ADMIN_* variables, refuses second superadmin, writes audit entry).
+- Node test suite: `test/permissions.test.js`, `test/passwords.test.js`, `test/bootstrap.test.js`, `test/admin-management.test.js`; GitHub Actions run #39213860392 passed.
+- **NOT DONE:** No initial superadmin created, no API/UI integration, no lecturer sign-in, no switch-over from JSON data, no deployment. The current old server **does not enforce these permissions**.
+- Avoid handling superadmin password in chat, PR, CI logs or public GitHub. One-time bootstrap must happen in a trusted private environment.
+- Current administrative actions allow only lecturer creation/metadata listings, assignment listings/grants/revocations, plus own-profile actions. No course creation, no password reset of other users, no academic data reads/writes.
