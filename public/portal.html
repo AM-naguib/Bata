@@ -31,9 +31,16 @@
 <button>إنشاء حساب دكتور</button></form>
 <p class="muted">هيظهر باسورد مؤقت مرة واحدة؛ سلّمه للدكتور بشكل آمن.</p></div>
 <div class="card"><h2>إنشاء مقرر</h2><form id="courseForm">
-<label for="courseName">اسم المقرر</label><input id="courseName" maxlength="150" required placeholder="مثلاً: الكيمياء العضوية">
+<label for="courseName">اسم المقرر</label><input id="courseName" maxlength="150" required value="المقرر الأول (مؤقت)" placeholder="اسم المقرر">
 <button>إنشاء المقرر</button></form></div>
 </div>
+<div class="card"><h2>تعديل اسم مقرر</h2>
+<p class="muted">تغيير الاسم لا يغيّر كود المقرر الداخلي ولا توزيع الدكاترة أو حضور الطالبات.</p>
+<form id="renameCourseForm">
+<label for="renameCourseSelect">المقرر</label><select id="renameCourseSelect" required></select>
+<label for="renameCourseName">الاسم الجديد</label><input id="renameCourseName" maxlength="150" required placeholder="اسم المقرر بعد التعديل">
+<button>حفظ الاسم الجديد</button>
+</form></div>
 <div class="card"><h2>تعيين مقرر لدكتور</h2><form id="assignForm" class="inline">
 <label for="lecturerSelect">الدكتور</label><select id="lecturerSelect" required></select>
 <label for="courseSelect">المقرر</label><select id="courseSelect" required></select>
