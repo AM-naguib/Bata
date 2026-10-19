@@ -128,3 +128,18 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - Regression initially identified comparing Postgres student internal UUID instead of roll_number; fixed in commit `651aa31`.
 - GitHub Actions [run #39218694375](https://github.com/AM-naguib/Bata/actions/runs/39218694375) **succeeded** after fix. Tests verify correct name+roll accepted, missing/wrong entries rejected, mismatch before device binding, and course enrollment constraints.
 - Not a live app yet: `npm start` serves v2 account portal only; student check-in endpoint for v2 is an open task. No real records published or uploaded.
+
+## V2 QR attendance implementation — 2026-10-19
+- [x] AT-01 — Implement HMAC-signed time-limited QR token (30-second slots, previous slot tolerated) tied to a lecture UUID; tamper/expiry tests passed.
+- [x] AT-02 — Lecturer creates, lists, views QR and closes lectures only in actively assigned courses. Admin role forbidden. Add in-portal lecturer QR UI that refreshes automatically.
+- [x] AT-03 — Create student check-in page `/checkin` with editable **roll number + full name**, GPS and the native camera QR link; no student code/PIN.
+- [x] AT-04 — PostgreSQL check-in with FOR UPDATE lecture lock, active course roster validation, GPS accuracy/distance checks, duplicate detection, and privacy-preserving per-lecture device HMAC; regression tests.
+- [x] AT-05 — Non-destructive migration `db/002_attendance_device_guard.sql` applied to empty Neon DB; confirmed `schema_versions=2` and unique index exists, no students/accounts/attendance imported.
+- [x] AT-06 — Create gated `ATTENDANCE_ENABLED=1` API router and close unsafe HTTP rejection path; CI passing.
+- [ ] AT-07 — Lecturer-only add/remove enrolled student UI and API, with audit trail and historical attendance preservation. This is the **next prerequisite** for real classes.
+- [ ] AT-08 — Real-Neon integration tests using synthetic accounts and students only, backups and restore, security review of spoofing/device recovery; no live student deployment yet.
+- [ ] AT-09 — Course-specific Excel XLSX and attendance reports, with no admin access.
+- [ ] AT-10 — Real browser/mobile GPS check, HTTPS hosting, resilient free-tier operation; keep public rollout blocked.
+- [ ] AT-11 — Confirm course/absence calculation policy; QR attendance records alone do not compute course absence grades.
+- **Run**: GitHub Actions [#39238772639](https://github.com/AM-naguib/Bata/actions/runs/39238772639) passed HTTP+unit regression after fixes. SQL migration applied separately; course rosters still empty.
+- **Important**: v2 attendance endpoints are OFF by default. Missing private QR/device secrets prevent starting an enabled attendance server. Do NOT treat tested code as launched website.
