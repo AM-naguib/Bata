@@ -79,6 +79,15 @@ jobs:
           status=$(curl --silent --show-error --max-time 30 -o /tmp/roster.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/students")
           test "$status" = 401
           echo "Roster: unauthorized request rejected (401)"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/report-unauth.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/report")
+          test "$status" = 401
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/excel-unauth.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/report.xlsx")
+          test "$status" = 401
+          echo "Lecturer-only reports and Excel: anonymous requests rejected (401)"
+          curl --silent --show-error --fail --max-time 30 "$BASE/lecturer" -o /tmp/report-panel.html
+          grep -q 'id="reportCourse"' /tmp/report-panel.html
+          grep -q 'id="reportDownload"' /tmp/report-panel.html
+          echo "Lecturer reports: secure download interface served"
           status=$(curl --silent --show-error --max-time 30 -o /tmp/attendance.json -w '%{http_code}' "$BASE/api/v2/attendance/checkin")
           test "$status" = 404
           echo "Student check-in: feature disabled as configured"
