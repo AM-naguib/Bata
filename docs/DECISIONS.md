@@ -196,3 +196,13 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Export is genuine Excel .xlsx (ZIP/OpenXML, three Arabic sheets: student summary, lecture summary and per-lecture attendance matrix), not mislabeled CSV; preserve leading-zero roll numbers as text, escape XML and never emit formula cells. No new third-party dependencies or on-disk exports.
 - UI has dedicated lecturer reports section with per-course selection, search, 20-row display paging and authenticated download. Export is no-store and contains personal information; user is instructed to store securely.
 - QR/real student check-in flag stays off until mobile/GPS/security and backup tests. No database write or student migration in reports deployment.
+
+
+## D-034 — Non-destructive lecture archiving and override-based attendance corrections (2026-10-19)
+- Owner requested continuation of lecture management with audit. Treat archiving as reversible and permitted only after lecture is closed. Archive hides lecture from active reports but retains raw attendance. Restore must not reopen the lecture or enable an old QR token.
+- A lecturer with active course assignment may correct one enrolled student's attendance in a **closed unarchived** lecture only, with a mandatory 5–500-character reason. Store an overlay `attendance_corrections` row, not a hard DELETE or UPDATE of QR attendance. Maintain append-only audit with actor, target lecture/student UUID, prior override status, new status and reason. The report/Excel uses override as effective attendance.
+- Superadmin does NOT see or modify academic data. Unassigned/disabled/forced-change lecturers are denied. Archived lectures cannot be corrected; neither can unenrolled students. URL-scoped lecture ID is authoritative over any client body.
+- Migration v3 is additive and was applied safely to production Neon. No real student check-in has occurred. Public QR remains disabled.
+## D-035 — A private internal Neon recovery branch is not an offsite backup (2026-10-19)
+- Created a `no_compute` copy-on-write branch `backup-pre-attendance-2026-10-19` in the same Neon project, parent production `main`, ready at LSN `0/1DC9EF0`. This gives a pre-QR restore source without starting compute.
+- Do not treat this as a separate encrypted offsite dump; backup/restore-drill and recovery plan documented. Never overwrite production from backup without explicit owner approval.
