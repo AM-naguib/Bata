@@ -39,4 +39,4 @@
 - I-001: Only unequivocal low-risk security hardening has been implemented on the audit branch; the attendance/absence grade policy and student authentication design are unchanged.
 - I-002: Keep the GitHub pull request in Draft; **do not merge or deploy yet** because code remains incomplete, storage is still JSON and student identity/spoofing vulnerabilities are unresolved.
 - I-003: Render and Neon plugin installations verified from ChatGPT integration catalog; their management actions were **not accessible in this session**, so cloud services were not provisioned. No live URL available.
-- I-004: Regression checks passed locally with synthetic students; cloud CI run status has not been verified.
+- I-004: Regression checks passed locally with synthetic students; GitHub Actions run #39208681784 succeeded on audit branch; this does not constitute production approval.
