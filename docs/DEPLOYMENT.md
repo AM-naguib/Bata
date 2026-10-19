@@ -89,3 +89,11 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Self-hosted CSS/JS, no external libraries/CDNs; UI tests validate markup JS bindings and no CSP-violating inline styles. CI security [#39263443641](https://github.com/AM-naguib/Bata/actions/runs/39263443641) success.
 - IMPORTANT Render autoDeploy is OFF. UI code commits after deployment do not go live automatically; trigger a deploy manually after future code changes and re-run external smoke.
 - Real credentialed login/new lecturer course roster/mobile QR not independently verified yet. First lecturer and course assignment still required; previously imported 172 students remain intact and private.
+
+
+## Render live 42P08 password fix and separated entry (2026-10-19)
+- Production app log confirmed SQLSTATE 42P08 in password-change audit (same bind parameter UUID/TEXT). Fixed `lib/http-app.js` to use two separate typed placeholders; DB password/audit transaction previously rolled back on this error.
+- New three role gateway selector with separate /admin /lecturer login copy, public /student guidance, mobile card layout.
+- Render live deployment `dep-dbb29vu7bikc73bfnst0` reports **LIVE** on https://bata-attendify-node.onrender.com. App commit `3078ff438515177835eef2bf732a2e1b836c596a`.
+- Public HTTPS smoke [#39266948714](https://github.com/AM-naguib/Bata/actions/runs/39266948714) succeeded: three role gates, /healthz Neon ok, protected password POST 401, role pages, check-in still 404. Security CI [#39266948676](https://github.com/AM-naguib/Bata/actions/runs/39266948676) succeeded including password audit binding regression.
+- Actual credentialed browser password change **not yet verified** after deployment. User should retry with unchanged current password because failed transaction rolled back. Keep `ATTENDANCE_ENABLED=0`.
