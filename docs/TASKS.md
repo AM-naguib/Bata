@@ -42,6 +42,6 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - T-10 **partial**: logout now revokes server session, enforces 12-hour expiry and HTTPS cookie Secure flag in NODE_ENV=production (commits 1335905, c95dcd3); production proxy/HTTPS checks still OPEN.
 - T-12 **partial**: invalid lecture coordinates rejected (commit 1335905); dedicated regression test outstanding.
 - T-13 **partial**: malformed signatures now rejected without timingSafeEqual length mismatch (commit 1335905); fuzz suite outstanding.
-- T-19 **partial**: synthetic regression tests and GitHub Actions CI added. Browser tests still missing; check remote CI status after push.
+- T-19 **partial**: synthetic regression tests and GitHub Actions CI added. Browser tests still missing; GitHub Actions run #39208681784 succeeded; browser tests still missing.
 - T-21 remains **OPEN**: original student.html could not be published; do not deploy this branch.
 - T-24 remains **OPEN**: Postgres migration not implemented. Render Free loses JSON data on restart. No live website or database connection was established.
