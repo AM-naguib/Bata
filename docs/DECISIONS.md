@@ -74,3 +74,11 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - D-014: Superadmin does **not** inherit all lecturer permissions. Role gates must explicitly deny access, even to direct URLs/API calls.
 - D-015: Account self-service logout/profile and password change are universal identity functions, not academic/lecturer permissions. Do not assume superadmin may reset other users' passwords without explicit owner authorization.
 - Still pending: Who creates the catalog of courses if none exist? Initial superadmin credentials must be chosen privately. Superadmin account not created yet.
+
+
+## Implementation status after owner role decision (2026-10-19)
+- D-016: New files `lib/permissions.js`, `lib/passwords.js`, `lib/admin-management.js`, `scripts/bootstrap-superadmin.js` implement reusable foundations, not a connected/live multi-lecturer app.
+- D-017: The admin function for lecturer account creation generates a one-time strong temporary password; a doctor must change it at first login. Temporary password is NOT stored or logged as plaintext.
+- D-018: No superadmin login/password was invented and no real account created in Neon. No exposure of student details in public GitHub.
+- D-019: Keep app offline; the legacy JSON server still has a single shared doctor password and bypasses the new role module. Even with correct policy code, this prevents production deployment.
+- GitHub Actions #39213860392 passed RBAC/admin/password/bootstrap tests; these do NOT prove the live API enforces role boundaries.
