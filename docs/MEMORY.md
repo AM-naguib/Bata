@@ -105,3 +105,13 @@ The student enters **roll number AND full name**, both editable. The user does N
 - Regression initially identified comparing Postgres student internal UUID instead of roll_number; fixed in commit `651aa31`.
 - GitHub Actions [run #39218694375](https://github.com/AM-naguib/Bata/actions/runs/39218694375) **succeeded** after fix. Tests verify correct name+roll accepted, missing/wrong entries rejected, mismatch before device binding, and course enrollment constraints.
 - Not a live app yet: `npm start` serves v2 account portal only; student check-in endpoint for v2 is an open task. No real records published or uploaded.
+
+## Latest implementation: v2 QR attendance (2026-10-19)
+- Owner's identity input stays **seat/roll number + full typed student name**, no PIN. New `public/checkin.html` and `public/checkin.js` handle the phone camera QR URL and let students edit cached values before trying again.
+- `lib/attendance-v2.js`: HMAC QR 30-second tokens, lecturer assignment checks, closed lectures, GPS validation, Neon course enrollment + name/roll match, transactionally locked check-in, per-lecture HMAC device fingerprint and duplicate protection.
+- `lib/attendance-routes.js` mounted in `lib/http-app.js` only when `ATTENDANCE_ENABLED=1`. `qrcode@1.5.4` produces server-side QR images with a self-hosted student check-in URL.
+- Lecturer portal added lecture creation with GPS center, rotating QR, closed state and attendance count (not roster).
+- `db/002_attendance_device_guard.sql` applied to the real EMPTY Neon Free project: version=2, unique device index present, 0 student/account/attendance rows.
+- GitHub Actions #39238772639 succeeded. Prior failing HTTP test caught an unhandled rejection; fixed by `return await attendanceRouter(...)` so unauthorized operations yield HTTP errors.
+- Enabled attendance requires private `ATTENDANCE_QR_SECRET` and `ATTENDANCE_DEVICE_KEY` and HTTPS `PUBLIC_ORIGIN`. Config remains private; only variable names in `.env.example`.
+- **Outstanding**: per-course roster management/import and real database integration tests, genuine browser testing, report/Excel, backups and secure deploy. Website is NOT live and first admin account is NOT created. Features are on branch, not merged to main.
