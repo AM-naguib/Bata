@@ -18,6 +18,10 @@ test('responsive RTL staff portal keeps every JS-dependent element reachable',()
   assert.ok(html.includes('data-page="'+route+'"'),'Missing role panel '+route);
  for(const gate of ['superadmin','lecturer','student'])
   assert.ok(html.includes('data-gateway="'+gate+'"'),'Visible gate missing: '+gate);
+ for(const id of ['reportCourse','reportSearch','reportStudents','reportLectures','reportDownload','reportPagination'])
+  assert.ok(html.includes('id="'+id+'"'),'Missing lecturer report control '+id);
+ assert.ok(js.includes('report.xlsx'),'Excel should be downloaded through authenticated report endpoint');
+ assert.ok(html.includes('data-nav="reports"')&&html.includes('data-page="reports"'));
  for(const field of ['entryEyebrow','entryTitle','entryEmphasis','entryDescription','loginTitle','loginDescription'])
   assert.ok(html.includes('id="'+field+'"'),'Missing separate gate title: '+field);
  assert.match(js,/function showEntryGate\(/,'staff routes should show dedicated admin/lecturer copy');
