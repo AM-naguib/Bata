@@ -65,6 +65,25 @@ test('validates GPS and revokes logout session; GET cannot close lecture',async(
     const success=await call('/api/attend','POST',{...attendance,accuracy:10});
     assert.equal(success.status,200);assert.equal(success.data.studentName,'Test Student');
     const duplicated=await call('/api/attend','POST',{...attendance,accuracy:10});assert.equal(duplicated.data.studentName,'Test Student');
+    const blocked=await call('/api/lectures/'+id+'/delete','POST',{},cookie);
+    assert.equal(blocked.status,409,'never discard recorded attendance');
+    const mistaken=await call('/api/lectures','POST',{title:'Accidental Lecture',courseName:'Test Course',lecturerName:'Test Doctor',lat:30,lng:31},cookie);
+    assert.equal(mistaken.status,200);
+    const mistakenId=mistaken.data.id;
+    assert.equal((await call('/api/lectures/'+mistakenId+'/delete','GET',undefined,cookie)).status,404);
+    const archived=await call('/api/lectures/'+mistakenId+'/delete','POST',{},cookie);
+    assert.equal(archived.status,200);
+    const listed=(await call('/api/lectures','GET',undefined,cookie)).data;
+    assert.equal(listed.some(l=>l.id===mistakenId),false);
+    const deleted=(await call('/api/lectures/deleted','GET',undefined,cookie)).data;
+    assert.equal(deleted.some(l=>l.id===mistakenId),true);
+    const reportWithout=(await call('/api/report','GET',undefined,cookie)).data;
+    assert.equal(reportWithout.lectures.some(l=>l.id===mistakenId),false);
+    assert.equal((await call('/api/lectures/'+mistakenId+'/live','GET',undefined,cookie)).status,404);
+    assert.equal((await call('/api/lectures/'+mistakenId+'/restore','POST',{},cookie)).status,200);
+    const reportRestored=(await call('/api/report','GET',undefined,cookie)).data;
+    assert.equal(reportRestored.lectures.some(l=>l.id===mistakenId),true);
+    assert.equal((await call('/api/lectures/'+mistakenId+'/live','GET',undefined,cookie)).data.open,false);
     assert.equal((await call('/api/logout','POST',{},cookie)).status,200);
     assert.equal((await call('/api/lectures','GET',undefined,cookie)).status,401);
   } finally {child.kill();cleanup(dir)}
