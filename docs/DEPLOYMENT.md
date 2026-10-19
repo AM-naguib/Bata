@@ -50,3 +50,8 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Actual Neon Free database schema exists and is empty; the existing student JSON data has not been uploaded.
 - Render free workspace has not been selected or provisioned. Never put connection strings, student records or admin secrets into a public repository.
 - Detailed setup, routes and blockers: [Portal v2](PORTAL_V2.md).
+
+## Current QR implementation limitation — 2026-10-19
+- V2 has implemented gated lecturer lecture + student QR attendance but production feature flag is OFF. The real Neon DB has migration 002 / hashed-device unique index, and **zero student or attendance rows**.
+- Never deploy live until lecturers can manage private per-course rosters, backup and recover attendance, and the platform passes mobile/GPS and HTTP security tests. Private QR/device keys and HTTPS origin required to enable.
+- Legacy `server.js` stays offline. See ATTENDANCE_V2.md for routes and risks.
