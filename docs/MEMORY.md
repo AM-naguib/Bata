@@ -115,3 +115,13 @@ The student enters **roll number AND full name**, both editable. The user does N
 - GitHub Actions #39238772639 succeeded. Prior failing HTTP test caught an unhandled rejection; fixed by `return await attendanceRouter(...)` so unauthorized operations yield HTTP errors.
 - Enabled attendance requires private `ATTENDANCE_QR_SECRET` and `ATTENDANCE_DEVICE_KEY` and HTTPS `PUBLIC_ORIGIN`. Config remains private; only variable names in `.env.example`.
 - **Outstanding**: per-course roster management/import and real database integration tests, genuine browser testing, report/Excel, backups and secure deploy. Website is NOT live and first admin account is NOT created. Features are on branch, not merged to main.
+
+## Course roster manager + private import — 2026-10-19
+User requested to continue by implementing lecturer-managed per-course student add/remove and *privately and safely* importing the original student roster into Neon. Implemented code; **real import NOT executed** due to missing real lecturer/course mapping.
+- `lib/course-roster.js`: authenticated lecturer-only course listing, roster insert/reinstate and soft remove. Assignment checked inside SQL transaction with row lock; historical attendance untouched. Global student roll numbers reused across courses; conflicting names are rejected rather than overwritten.
+- `lib/roster-routes.js`: `GET/POST /api/v2/lecturer/courses/:courseUUID/students` and `POST .../students/remove`; independent `ROSTER_ENABLED=1` flag. `public/portal.html` + `public/app-v2.js` now show lecturer-only course roster select/entry/list/remove UI.
+- `scripts/import-roster.js`: default private JSON dry-run, `--apply` for atomic DB insertion into an **existing assigned course** under active lecturer ID. No student details logged. See `docs/PRIVATE_ROSTER_IMPORT.md`.
+- Locally inspected user-uploaded `attendify.zip`, its `attendify/students.json`: exactly **172** entries, JSON keys `id` and `name`, no duplicates/missing fields. Did NOT copy names or ID values to GitHub nor to a public URL.
+- Neon project `wandering-mode-56487150` still holds **zero** accounts, courses, assignments, students, enrollments and attendance; can't import into a nonexistent course. No personal records migrated or published.
+- CI verified successful: [run #39242649707](https://github.com/AM-naguib/Bata/actions/runs/39242649707). Feature branch only, not merged/deployed.
+- Remaining: create first superadmin privately, create lecturer/course, choose which course(s) original students belong to, then run private import; verify safely and arrange backup.
