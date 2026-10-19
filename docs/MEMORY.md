@@ -47,3 +47,11 @@ Branch audit/attendify-review-2026-10-19 now has `server.js` fixes and `public/d
 - Escape dynamic text in the admin HTML.
 - Confirm user installed Render + Neon apps; installation status verified, but no Render/Neon management tool actions were exposed in this session, so no infrastructure changes or deployments took place.
 - Page `public/student.html` remains absent on GitHub, despite being present in original ZIP. The audit branch is incomplete.
+
+## Feature implementation on branch feature/teacher-student-improvements — 2026-10-19
+User asked for student name + editable roll number; lecturer deletion of accidental lectures, course-specific roster add/removal, lecturer/course labels, saving Excel, separate lecturer accounts and password change. Decisions requiring approval in docs/FEATURE_REQUESTS.md.
+- Implemented `public/student.html` with clear cached-ID reset. It stores corrected ID only after successful attendance; displays full confirmed student name on success (no unauthenticated name lookup endpoint).
+- Lecturer/course labels saved with new lectures and displayed in admin list, live QR view, report API and CSV heading.
+- Empty-lecture soft delete/restore available to logged-in lecturer. If any attendance recorded, delete returns 409 to protect the history. Deleted lectures excluded from reports and cannot accept QR attendance; restoration leaves closed.
+- Existing CSV exports continue; not native XLSX yet. Single shared lecturer password and single global student roster remain; no multi-account/course access controls.
+- 3 GitHub Actions integration tests successful in run #39210678172 (PR #2). Browser e2e, privacy audit and production load remain pending. Not deployed.
