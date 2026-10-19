@@ -127,3 +127,12 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Separate `ROSTER_ENABLED` flag allows setting up a lecturer roster without enabling public QR attendance. Both default OFF.
 - No student identity data, secrets, or user ZIP contents have been uploaded to public GitHub.
 - **Still pending:** mapping 172 original records to one or more courses, first private superadmin setup, lecturer account and real source backup. Real Neon data import is NOT performed.
+
+
+## D-025 — Initial 172-student course allocation — OWNER CONFIRMED (2026-10-19)
+- The 172 valid real students in the original private roster should initially be enrolled into **one course only**, not automatically distributed to every course.
+- Later, the *assigned lecturer* can enroll a pre-existing student in an additional course. The same global students row is reused by roll number + full-name match; enrollment in multiple courses is represented by separate enrollments rows, and historical attendance is preserved.
+- **Superadmin can create courses and assign courses to lecturers**, NOT distribute students to courses or view any roster. This reinforces D-012/D-024: academic/student enrollment permissions are lecturer-only.
+- Do not invent which course, its title, initial lecturer, or private superadmin credentials. As of last verified Neon state, all are absent. No real student import has been performed.
+- Before import, superadmin privately creates one course, creates/assigns its lecturer, then the lecturer approves the roster mapping. Only then privately dry-run and apply the import against that one course.
+- Additional courses later: their assigned lecturers can add existing students by roll number+full name, reusing identities; do NOT automatically copy the 172 names to unrelated courses.
