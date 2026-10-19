@@ -1,3 +1,4 @@
+# Reverify protected lecture archive/correction endpoints AFTER Render deploy dep-dbb4rf49v7es73a78c4g.
 name: Attendify live deployment smoke check
 on:
   push:
