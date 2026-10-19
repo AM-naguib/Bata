@@ -69,3 +69,10 @@ Owner explicitly limited superadmin to **creating lecturer accounts and distribu
 - New permission, bootstrap, account-management and password tests passed in GitHub Actions #39213860392.
 - `package.json` pins pg v8.23.1 for future Neon connection. Database schema exists but `server.js` still uses local JSON and shared DOCTOR_PASSWORD, so there is **NO actual live multi-user security yet**.
 - Render not provisioned/deployed. Do not tell user the site is live, that admin UI works, or that permission policy protects the current server.
+
+## Owner decision update — course creation (2026-10-19)
+**Superadmin creates the course by typing its name first, then assigns it to a lecturer.** This replaces the previous explicit prohibition on course creation, but does **not** permit superadmin to see or edit enrolled students, lectures, attendance, reports or course content, or to rename/delete a course.
+- `lib/permissions.js` now allows superadmin action `course.create`, denies it to lecturer.
+- `lib/admin-management.js` implements isolated `createCourse` DB transaction (validated name + created_by principal + audit event) and existing `assignCourse` follows.
+- No schema mutation needed: Neon `courses` table already supports name, created_by, and assignment rows. No real student or course records were inserted into Neon.
+- No login/API/UI integration yet: DO NOT call course creation live or claim website deployed. Tests and GitHub Actions status must be verified.
