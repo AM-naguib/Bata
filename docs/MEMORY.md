@@ -76,3 +76,7 @@ Owner explicitly limited superadmin to **creating lecturer accounts and distribu
 - `lib/admin-management.js` implements isolated `createCourse` DB transaction (validated name + created_by principal + audit event) and existing `assignCourse` follows.
 - No schema mutation needed: Neon `courses` table already supports name, created_by, and assignment rows. No real student or course records were inserted into Neon.
 - No login/API/UI integration yet: DO NOT call course creation live or claim website deployed. Tests and GitHub Actions status must be verified.
+
+## Verified course-creation regression — 2026-10-19
+- GitHub Actions run [#39215894790](https://github.com/AM-naguib/Bata/actions/runs/39215894790) completed **successfully** on this feature branch (CI run 39).
+- The tests exercise administrator-only course insertion, validation, rollback, audit log and create-then-assign workflow using synthetic data; existing security regression suite also passed. This is **not** a test of a live admin UI or production role-based HTTP endpoints.
