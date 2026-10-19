@@ -1,259 +1,396 @@
 'use strict';
+// Staff portal: role-specific navigation and DOM-safe rendering. All permissions live on the server.
 const el=id=>document.getElementById(id);
-const state={lecturers:[],courses:[],assignments:[]};
+const state={role:null,profile:null,lecturers:[],courses:[],assignments:[],assignedCourses:[],
+  roster:[],rosterPage:1,rosterCourseId:'',selectedQr:null,qrUpdating:false,flashTimer:null};
+const PAGE_NAMES={
+  overview:'نظرة عامة',lecturers:'حسابات الدكاترة',courses:'المقررات',
+  assignments:'تكليفات الدكاترة',roster:'كشف الطالبات',lectures:'المحاضرات والحضور',
+  security:'أمان الحساب'
+};
+const ERROR_MESSAGES={
+  INVALID_CREDENTIALS:'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+  CURRENT_PASSWORD_INVALID:'كلمة المرور الحالية غير صحيحة.',
+  PASSWORD_REQUIREMENTS:'كلمة المرور الجديدة لازم تكون 12 حرفًا على الأقل، ومختلفة عن الحالية.',
+  TOO_MANY_ATTEMPTS:'محاولات دخول كتير. جرّب تاني بعد 15 دقيقة.',
+  AUTH_REQUIRED:'الجلسة انتهت. سجّل دخولك تاني.',
+  PASSWORD_CHANGE_REQUIRED:'لازم تغير كلمة المرور المؤقتة قبل المتابعة.',
+  FORBIDDEN:'مش مصرح لحسابك باستخدام الوظيفة دي.',
+  COURSE_NOT_ASSIGNED:'المقرر ده مش متعيّن لحسابك.',
+  ROSTER_NOT_ENABLED:'إدارة الكشوف غير مفعّلة حاليًا.',
+  ATTENDANCE_NOT_ENABLED:'ميزة حضور المحاضرات مش مفعّلة حاليًا.',
+  'Email already exists':'البريد الإلكتروني ده مسجل بالفعل.',
+  'Invalid ID':'الاختيار غير صحيح. حدّث الصفحة وجرّب تاني.'
+};
+function safeMessage(code){return ERROR_MESSAGES[code]||code||'حصل خطأ غير متوقع. حاول مرة تانية.'}
 function flash(message,failed=false){
- const node=el('flash');node.textContent=message||'';node.className=failed?'error':'success';
+ const box=el('flash');box.hidden=false;box.textContent=safeMessage(message);
+ box.className='toast '+(failed?'error':'success');
+ if(state.flashTimer)clearTimeout(state.flashTimer);
+ state.flashTimer=setTimeout(()=>{box.hidden=true},7000);
 }
 async function api(route,body){
- const options={credentials:'same-origin'};
+ const options={credentials:'same-origin',headers:{Accept:'application/json'}};
  if(body!==undefined){
-  options.method='POST';options.headers={'Content-Type':'application/json'};options.body=JSON.stringify(body);
+  options.method='POST';options.headers['Content-Type']='application/json';
+  options.body=JSON.stringify(body);
  }
- const response=await fetch('/api/v2/'+route,options);
- let data;try{data=await response.json()}catch{throw Error('تعذر قراءة رد السيرفر')}
- if(!response.ok)throw Error(data.error||'فشل الطلب');
+ let response;
+ try{response=await fetch('/api/v2/'+route,options)}
+ catch{throw Error('تعذر الاتصال بالسيرفر. تأكد من الإنترنت وجرب تاني.')}
+ let data;
+ try{data=await response.json()}catch{throw Error('تعذر قراءة رد السيرفر.')}
+ if(!response.ok)throw Error(safeMessage(data.error||'فشل الطلب'));
  return data;
 }
-function setView(show,who){
- el('loginBox').hidden=show;el('portalBox').hidden=!show;
- el('adminControls').hidden=true;el('lecturerControls').hidden=true;
- el('welcome').textContent=who?'مرحبًا، '+who.name:'';
- el('identity').textContent=who?who.email:'';
- if(!who)return;
- const locked=who.mustChangePassword;
- el('changePasswordCard').classList.toggle('notice',locked);
- if(locked)flash('لازم تغير كلمة المرور المؤقتة الأول قبل استخدام الحساب',true);
- if(!locked){
-  el('adminControls').hidden=who.role!=='superadmin';
-  el('lecturerControls').hidden=who.role!=='lecturer';
- }
+function empty(list,message){
+ list.replaceChildren();
+ const li=document.createElement('li');li.className='empty';li.textContent=message;list.append(li);
 }
-function li(text,button){
- const item=document.createElement('li');item.append(document.createTextNode(text));
- if(button)item.append(button);
- return item;
+function labelRow(title,description){
+ const label=document.createElement('span');label.className='record-label';label.textContent=title;
+ if(description){const sub=document.createElement('small');sub.className='record-sub';sub.textContent=description;label.append(sub)}
+ return label;
 }
-function makeButton(text,callback){
- const b=document.createElement('button');b.type='button';b.className='secondary';
- b.textContent=text;b.addEventListener('click',callback);return b;
+function appendRow(list,label,button){
+ const item=document.createElement('li');item.append(label);
+ if(button)item.append(button);list.append(item);return item;
 }
+function actionButton(name,action){
+ const button=document.createElement('button');button.type='button';button.textContent=name;
+ button.addEventListener('click',action);return button;
+}
+function updateCount(id,value){const node=el(id);if(node)node.textContent=String(value)}
 function option(select,value,label){
  const o=document.createElement('option');o.value=value;o.textContent=label;select.append(o);
 }
-function entries(list,items,mapping){
- list.replaceChildren();
- if(!items.length){list.append(li('لا يوجد بيانات حتى الآن'));return}
- for(const row of items)list.append(li(mapping(row)));
+function hasRolePage(page){
+ if(page==='security')return true;
+ return state.role==='superadmin'
+  ?['overview','lecturers','courses','assignments'].includes(page)
+  :state.role==='lecturer'
+   ?['overview','roster','lectures'].includes(page):false;
+}
+function navigate(page){
+ if(!hasRolePage(page))page='overview';
+ const sections=document.querySelectorAll('[data-page]');
+ for(const section of sections)section.hidden=section.dataset.page!==page;
+ for(const button of document.querySelectorAll('[data-nav]')){
+  const active=button.dataset.nav===page;
+  button.classList.toggle('is-active',active);
+  if(active)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
+ }
+ if(page==='security'&&state.profile?.mustChangePassword){
+  el('changePasswordCard').classList.add('notice');
+ }
+ const title=PAGE_NAMES[page];
+ if(title)document.title='حاضر | '+title;
+ if(page==='roster')el('rosterSearch').focus({preventScroll:true});
+}
+function setView(show,who){
+ state.profile=show?who:null;state.role=show?who.role:null;
+ el('loginBox').hidden=show;el('portalBox').hidden=!show;
+ el('identity').textContent=who?who.email:'';
+ if(!who){
+  el('adminControls').hidden=true;el('lecturerControls').hidden=true;
+  el('adminNav').hidden=true;el('lecturerNav').hidden=true;
+  document.title='حاضر | تسجيل الدخول';
+  return;
+ }
+ el('welcome').textContent='أهلًا، '+who.name;
+ el('roleLabel').textContent=who.role==='superadmin'?'مساحة الأدمن الرئيسي':'مساحة الدكتور';
+ el('welcomeDescription').textContent=who.role==='superadmin'
+  ?'إدارة الدكاترة والمقررات والصلاحيات من مكان واحد.'
+  :'مساحتك الخاصة لإدارة المقررات والطالبات.';
+ const forced=Boolean(who.mustChangePassword);
+ el('adminControls').hidden=forced||who.role!=='superadmin';
+ el('lecturerControls').hidden=forced||who.role!=='lecturer';
+ el('adminNav').hidden=forced||who.role!=='superadmin';
+ el('lecturerNav').hidden=forced||who.role!=='lecturer';
+ const path=who.role==='superadmin'?'/admin':'/lecturer';
+ if(location.pathname!==path)history.replaceState({},'',path);
+ navigate(forced?'security':'overview');
+ if(forced)flash('لازم تغير كلمة المرور المؤقتة الأول قبل استخدام حسابك.',true);
 }
 async function refreshAdmin(){
  const [lecturers,courses,assignments]=await Promise.all([
   api('lecturers'),api('courses'),api('assignments')
  ]);
  state.lecturers=lecturers.items;state.courses=courses.items;state.assignments=assignments.items;
- entries(el('lecturerList'),state.lecturers,l=>l.display_name+' — '+l.email);
- entries(el('courseList'),state.courses,c=>c.name);
- const a=el('lecturerSelect'),b=el('courseSelect'),rename=el('renameCourseSelect');
- const previousRename=rename.value;
- a.replaceChildren();b.replaceChildren();rename.replaceChildren();
- option(a,'','اختار الدكتور');option(b,'','اختار المقرر');option(rename,'','اختار المقرر لتعديل اسمه');
- state.lecturers.forEach(l=>option(a,l.id,l.display_name+' ('+l.email+')'));
- state.courses.forEach(c=>{option(b,c.id,c.name);option(rename,c.id,c.name)});
- if(state.courses.some(c=>c.id===previousRename))rename.value=previousRename;
- const ul=el('assignmentList');ul.replaceChildren();
- if(!state.assignments.length)ul.append(li('مفيش تكليفات حتى الآن'));
- for(const row of state.assignments){
-  const teacher=state.lecturers.find(l=>l.id===row.lecturer_id);
-  const course=state.courses.find(c=>c.id===row.course_id);
-  const text=(teacher?.display_name||'دكتور غير معروف')+' ← '+(course?.name||'مقرر غير معروف');
-  const button=makeButton('إلغاء التكليف',async()=>{
+ updateCount('adminLecturerCount',state.lecturers.length);
+ updateCount('adminCourseCount',state.courses.length);
+ updateCount('adminAssignmentCount',state.assignments.length);
+ updateCount('lecturerCountChip',state.lecturers.length+' حساب');
+ updateCount('courseCountChip',state.courses.length+' مقرر');
+ updateCount('assignmentCountChip',state.assignments.length+' تكليف');
+ const lecturerList=el('lecturerList'),courseList=el('courseList'),assignmentsList=el('assignmentList');
+ lecturerList.replaceChildren();courseList.replaceChildren();assignmentsList.replaceChildren();
+ if(!state.lecturers.length)empty(lecturerList,'لسه مفيش دكاترة. أنشئ أول حساب من النموذج.');
+ else for(const teacher of state.lecturers)
+  appendRow(lecturerList,labelRow(teacher.display_name,teacher.email));
+ if(!state.courses.length)empty(courseList,'مفيش مقررات مضافة.');
+ else for(const c of state.courses)appendRow(courseList,labelRow(c.name,c.code||'مقرر جامعي'));
+ if(!state.assignments.length)empty(assignmentsList,'لسه مفيش تكليفات. اختار دكتور ومقرر للتكليف.');
+ else for(const a of state.assignments){
+  const teacher=state.lecturers.find(row=>row.id===a.lecturer_id);
+  const course=state.courses.find(row=>row.id===a.course_id);
+  const button=actionButton('إلغاء التكليف',async()=>{
    if(!confirm('إلغاء تكليف الدكتور بهذا المقرر؟'))return;
-   try{await api('assignments/revoke',{lecturerId:row.lecturer_id,courseId:row.course_id});
-    await refreshAdmin();flash('تم إلغاء التكليف')}catch(e){flash(e.message,true)}
+   button.disabled=true;
+   try{
+    await api('assignments/revoke',{lecturerId:a.lecturer_id,courseId:a.course_id});
+    await refreshAdmin();flash('تم إلغاء تكليف الدكتور بالمقرر.');
+   }catch(e){flash(e.message,true)}finally{button.disabled=false}
   });
-  ul.append(li(text,button));
+  appendRow(assignmentsList,labelRow(course?.name||'مقرر غير معروف',teacher?.display_name||'دكتور غير معروف'),button);
  }
+ const a=el('lecturerSelect'),b=el('courseSelect'),rename=el('renameCourseSelect');
+ const previousRename=rename.value,previousLecturer=a.value,previousCourse=b.value;
+ a.replaceChildren();b.replaceChildren();rename.replaceChildren();
+ option(a,'','اختار الدكتور');option(b,'','اختار المقرر');
+ option(rename,'','اختار المقرر لتعديل اسمه');
+ for(const t of state.lecturers)option(a,t.id,t.display_name+' — '+t.email);
+ for(const c of state.courses){option(b,c.id,c.name);option(rename,c.id,c.name)}
+ if(state.courses.some(c=>c.id===previousRename))rename.value=previousRename;
+ if(state.lecturers.some(t=>t.id===previousLecturer))a.value=previousLecturer;
+ if(state.courses.some(c=>c.id===previousCourse))b.value=previousCourse;
 }
-let selectedQr=null,qrUpdating=false;
-async function refreshLectures(){
- let result;
- try{result=await api('lecturer/lectures')}catch(e){
-  el('lectureManager').hidden=true;
-  el('lectureList').replaceChildren(li('ميزة تسجيل الحضور غير مفعلة على السيرفر حالياً'));
-  return;
+const PAGE_SIZE=20;
+function renderRoster(){
+ const list=el('rosterList'),search=el('rosterSearch').value.trim().normalize('NFC').toLocaleLowerCase('ar');
+ const match=state.roster.filter(s=>!search||s.full_name.normalize('NFC').toLocaleLowerCase('ar').includes(search)||s.roll_number.includes(search));
+ const maxPage=Math.max(1,Math.ceil(match.length/PAGE_SIZE));
+ state.rosterPage=Math.min(Math.max(1,state.rosterPage),maxPage);
+ const start=(state.rosterPage-1)*PAGE_SIZE;
+ list.replaceChildren();
+ updateCount('rosterResults',search?'نتيجة البحث: '+match.length:'الإجمالي: '+state.roster.length);
+ updateCount('rosterVisibleCount',state.roster.length||'0');
+ if(!state.rosterCourseId)empty(list,'اختار مقرر لعرض كشف الطالبات.');
+ else if(!match.length)empty(list,search?'مفيش نتائج مطابقة للبحث.':'لسه مفيش طالبات في المقرر.');
+ else for(const student of match.slice(start,start+PAGE_SIZE)){
+  const button=actionButton('إلغاء القيد',async()=>{
+   if(!confirm('إلغاء قيد الطالبة من المقرر المختار؟ سجل حضورها القديم هيفضل محفوظ.'))return;
+   button.disabled=true;
+   try{
+    await api('lecturer/courses/'+state.rosterCourseId+'/students/remove',{studentId:student.id});
+    await refreshRoster();flash('تم إلغاء القيد من المقرر بدون مسح الحضور القديم.');
+   }catch(err){flash(err.message,true);button.disabled=false}
+  });
+  appendRow(list,labelRow(student.full_name,student.roll_number),button);
  }
- el('lectureManager').hidden=false;
- const ul=el('lectureList');ul.replaceChildren();
- if(!result.items.length)ul.append(li('لسه مفيش محاضرات'));
- for(const item of result.items){
-  const label=(item.course_name||'مقرر')+' — '+item.title+(item.closed_at?' (مقفولة)':' (مفتوحة)');
-  const show=makeButton('عرض QR',async()=>{try{selectedQr=item.id;await refreshQr()}catch(e){flash(e.message,true)}});
-  const row=li(label,item.closed_at?null:show);
-  if(!item.closed_at){
-   const close=makeButton('قفل المحاضرة',async()=>{
-    if(!confirm('تأكيد قفل المحاضرة؟ QR هيتوقف ومش هيتسجّل حضور جديد.'))return;
-    try{await api('lecturer/lectures/'+item.id+'/close',{});selectedQr=null;
-      el('qrCard').hidden=true;await refreshLectures();flash('تم قفل المحاضرة');}
-    catch(e){flash(e.message,true)}
-   });
-   row.append(close);
-  }
-  ul.append(row);
- }
+ el('rosterPagination').hidden=!state.rosterCourseId||maxPage===1;
+ updateCount('rosterPage','صفحة '+state.rosterPage+' من '+maxPage);
+ el('rosterPrevious').disabled=state.rosterPage<=1;
+ el('rosterNext').disabled=state.rosterPage>=maxPage;
+ el('rosterHint').textContent=!state.rosterCourseId?'اختار مقرر لعرض الطالبات':
+  match.length?'عرض '+(start+1)+'–'+Math.min(start+PAGE_SIZE,match.length)+' من '+match.length+' طالبة':
+   'لا توجد نتائج في هذا المقرر.';
 }
 async function refreshRoster(){
- const courseId=el('rosterCourse').value,ul=el('rosterList');
- ul.replaceChildren();
- if(!courseId){el('rosterHint').textContent='اختار مقرر لعرض الطالبات';return}
- try{
-  const roster=await api('lecturer/courses/'+courseId+'/students');
-  el('rosterHint').textContent='عدد الطالبات المقيدات: '+roster.items.length;
-  if(!roster.items.length){ul.append(li('لسه مفيش طالبات مضافين للمقرر'));return}
-  for(const student of roster.items){
-   const btn=makeButton('إزالة من المقرر',async()=>{
-    if(!confirm('إلغاء قيد الطالبة من المقرر المختار؟ حضورها السابق هيفضل محفوظ.'))return;
-    try{
-     await api('lecturer/courses/'+courseId+'/students/remove',{studentId:student.id});
-     await refreshRoster();flash('تم إلغاء قيد الطالبة من المقرر من غير حذف سجل حضورها')
-    }catch(err){flash(err.message,true)}
-   });
-   ul.append(li(student.roll_number+' — '+student.full_name,btn));
-  }
- }catch(e){el('rosterHint').textContent=e.message==='ROSTER_NOT_ENABLED'?
-  'إدارة الطالبات مش مفعّلة على السيرفر حاليًا.':'تعذّر عرض طالبات المقرر: '+e.message;
-  flash(el('rosterHint').textContent,true)}
-}
-el('rosterCourse').addEventListener('change',refreshRoster);
-el('rosterForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
  const courseId=el('rosterCourse').value;
- if(!courseId)return flash('اختار المقرر الأول',true);
+ state.rosterCourseId=courseId;state.rosterPage=1;state.roster=[];
+ if(!courseId){renderRoster();return}
  try{
-  await api('lecturer/courses/'+courseId+'/students',{
-   studentId:el('rosterRoll').value.trim(),studentName:el('rosterName').value.trim()
-  });
-  el('rosterForm').reset();await refreshRoster();flash('تم إضافة الطالبة للمقرر')
- }catch(err){flash(err.message,true)}
-});
+  const result=await api('lecturer/courses/'+courseId+'/students');
+  if(state.rosterCourseId!==courseId)return;
+  state.roster=result.items;
+  renderRoster();
+ }catch(err){
+  if(state.rosterCourseId!==courseId)return;
+  renderRoster();el('rosterHint').textContent='تعذر عرض كشف الطالبات.';
+  flash(err.message,true);
+ }
+}
+async function refreshLectures(){
+ let result;
+ try{result=await api('lecturer/lectures')}
+ catch(err){
+  el('lectureManager').hidden=true;el('attendanceNotice').hidden=false;
+  updateCount('lectureCount','—');
+  empty(el('lectureList'),'تسجيل الحضور بالـQR غير مفعّل حاليًا.');
+  return;
+ }
+ el('attendanceNotice').hidden=true;
+ el('lectureManager').hidden=false;
+ updateCount('lectureCount',result.items.length);
+ const list=el('lectureList');list.replaceChildren();
+ if(!result.items.length){empty(list,'لسه مفيش محاضرات. أنشئ أول محاضرة من النموذج.');return}
+ for(const item of result.items){
+  const label=labelRow(item.title,(item.course_name||'مقرر')+' — '+(item.closed_at?'مقفولة':'مفتوحة'));
+  const row=appendRow(list,label);
+  if(!item.closed_at){
+   const show=actionButton('عرض QR',async()=>{
+    try{state.selectedQr=item.id;await refreshQr()}catch(e){flash(e.message,true)}
+   });
+   const close=actionButton('قفل المحاضرة',async()=>{
+    if(!confirm('تأكيد قفل المحاضرة؟ QR هيتوقف ومش هيتسجّل حضور جديد.'))return;
+    close.disabled=true;
+    try{
+     await api('lecturer/lectures/'+item.id+'/close',{});
+     state.selectedQr=null;el('qrCard').hidden=true;
+     await refreshLectures();flash('تم قفل المحاضرة.');
+    }catch(e){flash(e.message,true)}finally{close.disabled=false}
+   });
+   row.append(show,close);
+  }
+ }
+}
 async function refreshLecturer(){
  const data=await api('lecturer/courses');
- entries(el('myCourses'),data.items,c=>c.name);
- const selector=el('lectureCourse'),rosterSelector=el('rosterCourse');
- const previous=rosterSelector.value;
- selector.replaceChildren();rosterSelector.replaceChildren();
- option(selector,'','اختار المقرر');option(rosterSelector,'','اختار المقرر');
- data.items.forEach(c=>{
-  option(selector,c.id,c.name);
-  option(rosterSelector,c.id,c.name);
- });
- if(data.items.some(c=>c.id===previous))rosterSelector.value=previous;
- await refreshRoster();
- await refreshLectures();
+ state.assignedCourses=data.items;
+ updateCount('lecturerCourseCount',data.items.length);
+ const list=el('myCourses');list.replaceChildren();
+ if(!data.items.length)empty(list,'لسه مفيش مقرر متعيّن ليك. تواصل مع الأدمن.');
+ else for(const c of data.items)appendRow(list,labelRow(c.name,c.code||'مقرر جامعي'));
+ const lectureSelector=el('lectureCourse'),rosterSelector=el('rosterCourse'),previous=rosterSelector.value;
+ lectureSelector.replaceChildren();rosterSelector.replaceChildren();
+ option(lectureSelector,'','اختار المقرر');option(rosterSelector,'','اختار المقرر');
+ for(const c of data.items){option(lectureSelector,c.id,c.name);option(rosterSelector,c.id,c.name)}
+ rosterSelector.value=data.items.some(c=>c.id===previous)?previous:(data.items[0]?.id||'');
+ await Promise.all([refreshRoster(),refreshLectures()]);
 }
 async function refreshQr(){
- if(!selectedQr||qrUpdating)return;
- qrUpdating=true;
+ if(!state.selectedQr||state.qrUpdating)return;
+ state.qrUpdating=true;
  try{
-  const item=await api('lecturer/lectures/'+selectedQr+'/live');
+  const item=await api('lecturer/lectures/'+state.selectedQr+'/live');
   el('qrCard').hidden=false;
   el('qrTitle').textContent=item.courseName+' — '+item.title;
-  el('qrStats').textContent='تم تسجيل حضور '+item.attendees+' طالبة — تحديث بعد '+item.secondsLeft+' ثانية';
+  el('qrStats').textContent='تم تسجيل حضور '+item.attendees+' طالبة — تحديث خلال '+item.secondsLeft+' ثانية';
   el('qrImage').hidden=item.closed;
-  if(item.closed){selectedQr=null;el('qrStats').textContent='المحاضرة مقفولة';}
+  if(item.closed){state.selectedQr=null;el('qrStats').textContent='المحاضرة مقفولة.'}
   else if(item.qr)el('qrImage').src=item.qr;
- }catch(e){flash(e.message,true);selectedQr=null;el('qrCard').hidden=true}
- finally{qrUpdating=false}
+ }catch(err){flash(err.message,true);state.selectedQr=null;el('qrCard').hidden=true}
+ finally{state.qrUpdating=false}
 }
-window.setInterval(()=>{if(selectedQr&&!el('qrCard').hidden)refreshQr()},10000);
-el('stopQr').addEventListener('click',()=>{selectedQr=null;el('qrCard').hidden=true});
-el('lectureForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
- const courseId=el('lectureCourse').value,title=el('lectureTitle').value;
- const radius=Number(el('lectureRadius').value);
- if(!courseId)return flash('اختار المقرر',true);
- if(!navigator.geolocation)return flash('المتصفح مش بيدعم GPS',true);
- const btn=e.submitter;if(btn)btn.disabled=true;
- navigator.geolocation.getCurrentPosition(async ({coords})=>{
-  try{
-   const item=await api('lecturer/lectures',{courseId,title,radius,lat:coords.latitude,
-     lng:coords.longitude,accuracy:coords.accuracy});
-   el('lectureTitle').value='';
-   await refreshLectures();selectedQr=item.id;await refreshQr();
-   flash('تم إنشاء المحاضرة. اعرض QR للطالبات.');
-  }catch(err){flash(err.message,true)}
-  finally{if(btn)btn.disabled=false}
- },()=>{flash('اسمحي للمتصفح باستخدام GPS من داخل القاعة',true);if(btn)btn.disabled=false},
- {enableHighAccuracy:true,timeout:15000,maximumAge:0});
-});
+window.setInterval(()=>{if(state.selectedQr&&!el('qrCard').hidden)refreshQr()},10000);
 async function refreshPortal(){
  let me;
- try{me=await api('me')}catch{setView(false);return}
+ try{me=await api('me')}
+ catch(err){setView(false);if(!err.message.includes('الجلسة انتهت'))flash(err.message,true);return}
  setView(true,me);
  if(me.mustChangePassword)return;
- try{if(me.role==='superadmin')await refreshAdmin();
-     else if(me.role==='lecturer')await refreshLecturer();}
- catch(e){flash(e.message,true)}
+ try{
+  if(me.role==='superadmin')await refreshAdmin();
+  else if(me.role==='lecturer')await refreshLecturer();
+ }catch(err){flash(err.message,true)}
 }
-el('loginForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
+for(const button of document.querySelectorAll('[data-nav]'))
+ button.addEventListener('click',()=>navigate(button.dataset.nav));
+for(const button of document.querySelectorAll('[data-go]'))
+ button.addEventListener('click',()=>navigate(button.dataset.go));
+el('toggleLoginPassword').addEventListener('click',()=>{
+ const field=el('password'),show=field.type==='password';
+ field.type=show?'text':'password';
+ el('toggleLoginPassword').textContent=show?'إخفاء':'إظهار';
+ el('toggleLoginPassword').setAttribute('aria-pressed',String(show));
+});
+el('rosterCourse').addEventListener('change',()=>{
+ el('rosterSearch').value='';refreshRoster();
+});
+el('rosterSearch').addEventListener('input',()=>{state.rosterPage=1;renderRoster()});
+el('rosterPrevious').addEventListener('click',()=>{
+ if(state.rosterPage>1){state.rosterPage--;renderRoster()}
+});
+el('rosterNext').addEventListener('click',()=>{
+ state.rosterPage++;renderRoster();
+});
+el('stopQr').addEventListener('click',()=>{state.selectedQr=null;el('qrCard').hidden=true});
+el('loginForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const button=el('loginButton');button.disabled=true;
  try{
   await api('login',{email:el('email').value,password:el('password').value});
   el('password').value='';await refreshPortal();
- }catch(err){flash(err.message,true)}
+ }catch(err){flash(err.message,true)}finally{button.disabled=false}
 });
 el('logoutButton').addEventListener('click',async()=>{
- selectedQr=null;el('qrCard').hidden=true;
+ state.selectedQr=null;el('qrCard').hidden=true;
  try{await api('logout',{})}catch{}
  el('temporaryPasswordCard').hidden=true;el('tempPassword').textContent='';
- flash('تم تسجيل الخروج');setView(false);
+ setView(false);history.replaceState({},'','/portal');
+ flash('تم تسجيل الخروج بنجاح.');
 });
-el('lecturerForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
+el('lecturerForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const button=event.submitter;if(button)button.disabled=true;
  try{
-  const teacher=await api('lecturers',{displayName:el('lecturerName').value,email:el('lecturerEmail').value});
-  el('tempPassword').textContent=teacher.initialPassword;
+  const t=await api('lecturers',{displayName:el('lecturerName').value,email:el('lecturerEmail').value});
+  el('tempPassword').textContent=t.initialPassword;
   el('temporaryPasswordCard').hidden=false;
-  el('lecturerForm').reset();await refreshAdmin();flash('تم إنشاء الدكتور. انقل كلمة المرور المؤقتة بشكل آمن.');
- }catch(err){flash(err.message,true)}
+  el('lecturerForm').reset();await refreshAdmin();flash('تم إنشاء حساب الدكتور. احفظ كلمة مروره المؤقتة.');
+  el('temporaryPasswordCard').scrollIntoView({behavior:'smooth',block:'center'});
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
 el('dismissSecret').addEventListener('click',()=>{
  el('tempPassword').textContent='';el('temporaryPasswordCard').hidden=true;
 });
-el('courseForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
+el('courseForm').addEventListener('submit',async event=>{
+ event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
  try{
   await api('courses',{name:el('courseName').value});
-  el('courseForm').reset();await refreshAdmin();flash('تم إنشاء المقرر. اختار الدكتور لتعيينه.');
- }catch(err){flash(err.message,true)}
+  el('courseForm').reset();await refreshAdmin();flash('تم إنشاء المقرر.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
 el('renameCourseSelect').addEventListener('change',()=>{
  const course=state.courses.find(c=>c.id===el('renameCourseSelect').value);
  el('renameCourseName').value=course?course.name:'';
 });
-el('renameCourseForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
+el('renameCourseForm').addEventListener('submit',async event=>{
+ event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
  const courseId=el('renameCourseSelect').value,name=el('renameCourseName').value.trim();
- if(!courseId||!name)return flash('اختار المقرر واكتب الاسم الجديد',true);
  try{
+  if(!courseId||!name)throw Error('اختار المقرر واكتب الاسم الجديد.');
   await api('courses/rename',{courseId,name});
-  await refreshAdmin();
-  el('renameCourseName').value=name;
-  flash('تم تعديل اسم المقرر من غير تغيير الطالبات أو المحاضرات أو تكليفات الدكاترة.');
- }catch(err){flash(err.message,true)}
+  await refreshAdmin();flash('تم تعديل الاسم، بدون تغيير الطالبات أو الحضور.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
-el('assignForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
+el('assignForm').addEventListener('submit',async event=>{
+ event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
  const lecturerId=el('lecturerSelect').value,courseId=el('courseSelect').value;
- if(!lecturerId||!courseId)return flash('اختار الدكتور والمقرر',true);
- try{await api('assignments',{lecturerId,courseId});
-  await refreshAdmin();flash('تم تعيين المقرر للدكتور');
- }catch(err){flash(err.message,true)}
-});
-el('changePasswordForm').addEventListener('submit',async e=>{
- e.preventDefault();flash('');
  try{
-  await api('password',{currentPassword:el('currentPassword').value,newPassword:el('newPassword').value});
+  if(!lecturerId||!courseId)throw Error('اختار الدكتور والمقرر الأول.');
+  await api('assignments',{lecturerId,courseId});
+  await refreshAdmin();flash('تم تعيين المقرر للدكتور بنجاح.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
+});
+el('rosterForm').addEventListener('submit',async event=>{
+ event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
+ const courseId=el('rosterCourse').value;
+ try{
+  if(!courseId)throw Error('اختار المقرر الأول.');
+  await api('lecturer/courses/'+courseId+'/students',{
+   studentId:el('rosterRoll').value.trim(),studentName:el('rosterName').value.trim()
+  });
+  el('rosterForm').reset();await refreshRoster();flash('تم إضافة الطالبة للمقرر.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
+});
+el('lectureForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const courseId=el('lectureCourse').value,title=el('lectureTitle').value;
+ const radius=Number(el('lectureRadius').value);
+ if(!courseId)return flash('اختار المقرر.',true);
+ if(!navigator.geolocation)return flash('المتصفح مش بيدعم GPS.',true);
+ const button=event.submitter;if(button)button.disabled=true;
+ navigator.geolocation.getCurrentPosition(async ({coords})=>{
+  try{
+   const item=await api('lecturer/lectures',{
+    courseId,title,radius,lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy
+   });
+   el('lectureTitle').value='';await refreshLectures();
+   state.selectedQr=item.id;await refreshQr();flash('تم إنشاء المحاضرة.');
+  }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
+ },()=>{flash('اسمح للمتصفح باستخدام GPS الدقيق من داخل القاعة.',true);if(button)button.disabled=false},
+ {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+});
+el('changePasswordForm').addEventListener('submit',async event=>{
+ event.preventDefault();const button=event.submitter;if(button)button.disabled=true;
+ try{
+  await api('password',{
+   currentPassword:el('currentPassword').value,newPassword:el('newPassword').value
+  });
   el('changePasswordForm').reset();setView(false);
-  flash('تم تغيير كلمة المرور. سجّل دخولك بكلمة المرور الجديدة.');
- }catch(err){flash(err.message,true)}
+  history.replaceState({},'','/portal');flash('تم تغيير كلمة المرور. سجّل دخولك بالجديدة.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
 });
 refreshPortal();
