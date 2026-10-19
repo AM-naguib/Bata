@@ -55,3 +55,8 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - V2 has implemented gated lecturer lecture + student QR attendance but production feature flag is OFF. The real Neon DB has migration 002 / hashed-device unique index, and **zero student or attendance rows**.
 - Never deploy live until lecturers can manage private per-course rosters, backup and recover attendance, and the platform passes mobile/GPS and HTTP security tests. Private QR/device keys and HTTPS origin required to enable.
 - Legacy `server.js` stays offline. See ATTENDANCE_V2.md for routes and risks.
+
+## Private roster launch gate — 2026-10-19
+- Roster management is implemented, independently gated by `ROSTER_ENABLED=1`, with no QR student check-in activated by default.
+- The real 172-record roster was validated **locally** and not published. Neon remains empty of accounts/courses/rosters. No import occurred.
+- Before using the roster: bootstrap a real superadmin in a private trusted environment, create a lecturer and course, assign it, obtain consent/mapping for this private roster, then run the private JSON import with backup and dry-run. See `PRIVATE_ROSTER_IMPORT.md`.
