@@ -292,13 +292,13 @@ function renderReports(){
 async function refreshReports(){
  const courseId=el('reportCourse').value;
  state.reportCourseId=courseId;state.reportData=null;state.reportPage=1;
- renderReports();
+ renderReports();renderCorrectionControls();
  if(!courseId){el('reportNotice').textContent='اختار المقرر لعرض التقرير.';return}
  el('reportNotice').textContent='جارٍ حساب التقرير...';
  try{
   const report=await api('lecturer/courses/'+courseId+'/report');
   if(state.reportCourseId!==courseId)return;
-  state.reportData=report;renderReports();
+  state.reportData=report;renderReports();renderCorrectionControls();
  }catch(err){
   if(state.reportCourseId!==courseId)return;
   el('reportNotice').textContent='تعذر تحميل التقرير. حاول مرة تانية.';
@@ -324,6 +324,43 @@ async function downloadReport(){
  }catch(err){flash(err.message,true)}finally{
   button.disabled=state.reportData===null;
  }
+}
+async function refreshLectureRecords(){
+ const list=el('lectureRecordsList');list.replaceChildren();
+ try{
+  const result=await api('lecturer/lecture-records');
+  state.lectureRecords=result.items;
+  if(!result.items.length){empty(list,'لسه مفيش محاضرات سابقة.');return}
+  for(const record of result.items){
+   const archived=Boolean(record.archived_at);
+   const tag=archived?'مؤرشفة':record.closed_at?'مقفولة':'مفتوحة';
+   const label=labelRow(record.title,(record.course_name||'مقرر')+' — '+tag);
+   if(!record.closed_at){appendRow(list,label);continue}
+   const button=actionButton(archived?'استعادة المحاضرة':'أرشفة المحاضرة',async()=>{
+    const verb=archived?'استعادة':'أرشفة';
+    if(!confirm('تأكيد '+verb+' المحاضرة؟ الحضور القديم مش هيتمسح.'))return;
+    button.disabled=true;
+    try{
+     await api('lecturer/lecture-records/'+record.id+'/'+(archived?'restore':'archive'),{});
+     await Promise.all([refreshLectureRecords(),refreshReports(),refreshLectures()]);
+     flash('تم '+verb+' المحاضرة بدون حذف سجلات الحضور.');
+    }catch(err){flash(err.message,true)}finally{button.disabled=false}
+   });
+   appendRow(list,label,button);
+  }
+ }catch(err){empty(list,'تعذر تحميل قائمة الأرشيف.');flash(err.message,true)}
+}
+function renderCorrectionControls(){
+ const lectureSelector=el('correctionLecture'),studentSelector=el('correctionStudent');
+ const report=state.reportData;
+ const oldLecture=lectureSelector.value,oldStudent=studentSelector.value;
+ lectureSelector.replaceChildren();studentSelector.replaceChildren();
+ option(lectureSelector,'','اختار المحاضرة');option(studentSelector,'','اختار الطالبة');
+ if(!report)return;
+ for(const l of report.lectures)option(lectureSelector,l.id,l.title+' — '+new Date(l.closedAt).toLocaleDateString('ar-EG'));
+ for(const s of report.students)option(studentSelector,s.id,s.rollNumber+' — '+s.fullName);
+ if(report.lectures.some(l=>l.id===oldLecture))lectureSelector.value=oldLecture;
+ if(report.students.some(s=>s.id===oldStudent))studentSelector.value=oldStudent;
 }
 async function refreshLectures(){
  let result;
@@ -372,7 +409,7 @@ async function refreshLecturer(){
  for(const c of data.items){option(lectureSelector,c.id,c.name);option(rosterSelector,c.id,c.name);option(reportSelector,c.id,c.name)}
  rosterSelector.value=data.items.some(c=>c.id===previous)?previous:(data.items[0]?.id||'');
  reportSelector.value=data.items.some(c=>c.id===previousReport)?previousReport:(data.items[0]?.id||'');
- await Promise.all([refreshRoster(),refreshLectures(),refreshReports()]);
+ await Promise.all([refreshRoster(),refreshLectures(),refreshReports(),refreshLectureRecords()]);
 }
 async function refreshQr(){
  if(!state.selectedQr||state.qrUpdating)return;
@@ -425,6 +462,23 @@ el('reportSearch').addEventListener('input',()=>{state.reportPage=1;renderReport
 el('reportPrevious').addEventListener('click',()=>{if(state.reportPage>1){state.reportPage--;renderReports()}});
 el('reportNext').addEventListener('click',()=>{state.reportPage++;renderReports()});
 el('reportDownload').addEventListener('click',downloadReport);
+el('correctionForm').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const courseId=state.reportCourseId,lectureId=el('correctionLecture').value,
+       studentId=el('correctionStudent').value,status=el('correctionStatus').value,
+       reason=el('correctionReason').value.trim();
+ if(!courseId||!state.reportData||!state.reportData.lectures.some(l=>l.id===lectureId)
+    ||!state.reportData.students.some(s=>s.id===studentId))return flash('اختار محاضرة وطالبة من التقرير الأول.',true);
+ if(!confirm('تأكيد تصحيح حضور الطالبة؟ العملية هتتسجل باسم حسابك في سجل المراجعة.'))return;
+ const button=event.submitter;if(button)button.disabled=true;
+ try{
+  await api('lecturer/lecture-records/'+lectureId+'/correct',{studentId,status,reason});
+  el('correctionReason').value='';
+  await refreshReports();
+  flash('تم تصحيح الحضور وتسجيل العملية للمراجعة.');
+ }catch(err){flash(err.message,true)}finally{if(button)button.disabled=false}
+});
+
 el('stopQr').addEventListener('click',()=>{state.selectedQr=null;el('qrCard').hidden=true});
 el('loginForm').addEventListener('submit',async event=>{
  event.preventDefault();
