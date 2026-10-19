@@ -117,3 +117,13 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Check-in enabled only explicitly with two separate strong secrets via private env, default OFF pending roster imports, permissions audit and operational testing.
 - Migration 002 is additive and was applied on a database with zero student and attendance records; no real data moved.
 - Keep rollout blocked until course roster management, backups, browser/mobile and live Neon tests are complete.
+
+## D-024 — Lecturer course roster and private import safeguards — 2026-10-19
+- Owner asked to implement adding/removing students per course and privately import original students to Neon.
+- Soft removal is used: remove student from **this course's active enrollment only**, never delete global student identity or historical attendance. Re-adding a previously removed student restores that course enrollment.
+- Global roll number is unique across student records; if a matching roll already exists with a different full name, return a generic conflict and do NOT rewrite identity or other courses.
+- Only a logged-in **lecturer with an ACTIVE assignment** may read/write a course's roster. Superadmin remains forbidden from academic and student data, including roster APIs.
+- Private bulk import uses an explicitly assigned lecturer UUID and course UUID, checks permissions under a locked DB transaction, dry-runs by default and writes only with `--apply`. The real roster will be imported only after course ownership/mapping is confirmed; no invented memberships.
+- Separate `ROSTER_ENABLED` flag allows setting up a lecturer roster without enabling public QR attendance. Both default OFF.
+- No student identity data, secrets, or user ZIP contents have been uploaded to public GitHub.
+- **Still pending:** mapping 172 original records to one or more courses, first private superadmin setup, lecturer account and real source backup. Real Neon data import is NOT performed.
