@@ -34,3 +34,9 @@
 - 2026-10-19: Owner expressly chose a Public GitHub repository for eventual website deployment. Private runtime student records and hosting details are still pending. Source files may be staged in the audit branch; do not deploy as production in its current audited state.
 
 - 2026-10-19: User accepted any free host. Chose Render Free + Neon Free for development/staging; no hosting accounts linked yet, so no deployment, no data import and no operational database established.
+
+## Implementation record — 2026-10-19
+- I-001: Only unequivocal low-risk security hardening has been implemented on the audit branch; the attendance/absence grade policy and student authentication design are unchanged.
+- I-002: Keep the GitHub pull request in Draft; **do not merge or deploy yet** because code remains incomplete, storage is still JSON and student identity/spoofing vulnerabilities are unresolved.
+- I-003: Render and Neon plugin installations verified from ChatGPT integration catalog; their management actions were **not accessible in this session**, so cloud services were not provisioned. No live URL available.
+- I-004: Regression checks passed locally with synthetic students; cloud CI run status has not been verified.
