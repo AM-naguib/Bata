@@ -60,3 +60,11 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Roster management is implemented, independently gated by `ROSTER_ENABLED=1`, with no QR student check-in activated by default.
 - The real 172-record roster was validated **locally** and not published. Neon remains empty of accounts/courses/rosters. No import occurred.
 - Before using the roster: bootstrap a real superadmin in a private trusted environment, create a lecturer and course, assign it, obtain consent/mapping for this private roster, then run the private JSON import with backup and dry-run. See `PRIVATE_ROSTER_IMPORT.md`.
+
+
+## Render hosting preparation and imported real student data — 2026-10-19
+- The private Neon database now contains **172 real student records, assigned solely to the first provisional course**. A private, atomic one-time import was verified against the source checksum. This corrects any older statement saying Neon has no students.
+- Public GitHub contains **no names, seat numbers, passwords or connection strings** from the imported source. Course enrollment is visible only to an authorized lecturer through v2.
+- Added `render.yaml` at repository root. It configures a free Frankfurt Node service on `feature/superadmin-accounts-courses`, checks `/healthz`, and keeps `ROSTER_ENABLED=1` / `ATTENDANCE_ENABLED=0`. `DATABASE_URL` and `PUBLIC_ORIGIN` are **private** Render environment values, not included in blueprint.
+- Render lists one available workspace `ahmed's workspace`, but workspace ownership has not been explicitly confirmed by user. Render tool explicitly refuses auto-selection; no service has been created or deployed yet. After user's choice, obtain connection URL privately, configure HTTPS origin, create Free web service, verify health and login. No live URL exists yet.
+- Do NOT enable public check-in until real mobile/GPS security, backups and operational readiness are verified. No lecturer accounts/assignments exist yet, so the 172 students are intentionally not visible to the superadmin.
