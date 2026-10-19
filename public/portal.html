@@ -116,14 +116,16 @@
         </section>
 
         <section data-page="lecturers" hidden>
-          <div class="section-heading"><div><h2>حسابات الدكاترة</h2><p class="muted">أنشئ حساب دكتور وسلّمه بيانات دخوله بشكل آمن.</p></div><span class="section-tag">إدارة المستخدمين</span></div>
+          <div class="section-heading"><div><h2>حسابات الدكاترة</h2><p class="muted">أنشئ حسابات الدكاترة، أو أعِد تعيين باسورد مؤقت لأي دكتور موجود.</p></div><span class="section-tag">إدارة المستخدمين</span></div>
           <div class="grid">
             <div class="card"><h3>إضافة دكتور جديد</h3><form id="lecturerForm">
               <label for="lecturerName">اسم الدكتور بالكامل</label><input id="lecturerName" maxlength="120" placeholder="اسم الدكتور" required>
               <label for="lecturerEmail">البريد الإلكتروني للدكتور</label><input id="lecturerEmail" type="email" maxlength="254" placeholder="doctor@example.com" dir="ltr" required>
               <button class="button" type="submit">إنشاء حساب الدكتور <span aria-hidden="true">←</span></button>
             </form><p class="muted hint">هيظهر باسورد مؤقت مرة واحدة بعد الإنشاء. الدكتور لازم يغيّره أول مرة.</p></div>
-            <div class="card"><div class="card-heading"><h3>الدكاترة المسجّلين</h3><span class="pill" id="lecturerCountChip">0 حساب</span></div><ul id="lecturerList" class="records"></ul></div>
+            <div class="card"><div class="card-heading"><h3>الدكاترة المسجّلين</h3><span class="pill" id="lecturerCountChip">0 حساب</span></div>
+              <p class="muted">اضغط «إعادة تعيين الباسورد» جنب الدكتور المطلوب. هيتولّد باسورد مؤقت جديد، وتتقفل جلساته القديمة، ولازم يغيّره عند أول دخول.</p>
+              <ul id="lecturerList" class="records"></ul></div>
           </div>
         </section>
 
@@ -223,9 +225,9 @@
       </section>
 
       <section class="card notice secret-card" id="temporaryPasswordCard" hidden>
-        <div class="card-heading"><h3>كلمة المرور المؤقتة للدكتور</h3><span class="pill pill--warning">تُعرض مرة واحدة</span></div>
+        <div class="card-heading"><h3 id="tempPasswordHeading">كلمة المرور المؤقتة للدكتور</h3><span class="pill pill--warning">تُعرض مرة واحدة</span></div>
         <p class="secret" id="tempPassword" dir="ltr"></p>
-        <p class="muted">انسخ كلمة المرور في مكان آمن وسلّمها للدكتور. لن تظهر مرة أخرى بعد الإغلاق.</p>
+        <p class="muted">انسخ كلمة المرور في مكان آمن وسلّمها للدكتور. لا يمكن استرجاعها بعد إغلاق الرسالة. لن يستطيع الدكتور استخدام حسابه إلا بعد تغيير الباسورد المؤقت.</p>
         <button id="dismissSecret" type="button" class="button button--secondary">فهمت، إخفاء كلمة المرور</button>
       </section>
     </div>
