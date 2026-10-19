@@ -45,3 +45,15 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - T-19 **partial**: synthetic regression tests and GitHub Actions CI added. Browser tests still missing; GitHub Actions run #39208681784 succeeded; browser tests still missing.
 - T-21 remains **OPEN**: original student.html could not be published; do not deploy this branch.
 - T-24 remains **OPEN**: Postgres migration not implemented. Render Free loses JSON data on restart. No live website or database connection was established.
+
+## Feature requests — 2026-10-19 (all separate from historical security backlog)
+- [ ] FR-01 P1 — Student can clear and edit cached seat number visibly without server-side unbinding; test persistent reset and change before submission. No silent history rewrite.
+- [ ] FR-02 P1 — Show matching student name safely with validated seat number and suitable privacy protections (requires identity-flow decision; guard against enumeration).
+- [ ] FR-03 P1 — Lecturer can remove mistaken lecture with safe confirmation, rollback/audit and correct absence recalculation; choose soft/hard semantics with owner.
+- [ ] FR-04 P1 — Course roster add/remove with lecturer scoping and persisted enrollment; preserve history; tests for unauthorized changes and cross-course isolation.
+- [ ] FR-05 P2 — Capture lecturer and course labels with lectures, validate and display them consistently in lecturer UI/report.
+- [ ] FR-06 P1 — Export Excel sheet (.xlsx vs existing .csv TBD) with correct Arabic names, course filter, and formula-injection defense.
+- [ ] FR-07 P0 — Per-lecturer accounts, unique IDs, secure password hashing, session ownership, course access checks, and password self-service/change; owner decision required on provisioning and recovery.
+- [ ] FR-08 P0 — Migrate students, courses, enrollments, lecturers and attendance to persistent Neon DB with synthetic migration tests and backups; **do not migrate actual student names into GitHub**.
+- [ ] FR-09 P1 — Unit/API/E2E regression tests for new workflows, especially deleted lectures and enrollment changes.
+- [ ] FR-10 P1 — Build and restore student page missing from audit branch; verify `/` works and test editable seat number.
