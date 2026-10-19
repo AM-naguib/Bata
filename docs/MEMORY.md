@@ -149,3 +149,14 @@ User explicitly authorized creating the admin account and giving them a temporar
 - Deployment preparation: added `render.yaml` for free Frankfurt Node hosting, PRIVATE env vars DATABASE_URL and PUBLIC_ORIGIN, ROSTER_ENABLED=1 and ATTENDANCE_ENABLED=0 for initial staff-only portal.
 - Render connector lists one workspace `ahmed's workspace`. **DO NOT create service there until user confirms**; Render explicitly requires owner selection, and no workspace has been selected yet. No HTTPS Render service deployed yet; cannot claim working URL.
 - The superadmin cannot access student names/enrollments through site APIs; the import was a one-time owner-directed Neon maintenance operation. Initial lecturer must be created/assigned via admin portal once hosted. QR still off pending security test and rollout approval.
+
+
+## ACTUAL STAGING/STAFF WEB PORTAL LIVE — 2026-10-19
+Owner directly asked assistant to fix Render deployment. Render connector cannot change original service runtime/branch via available actions. We left the original faulty Go/main service `Bata` (`srv-dbb1d2bbc2fs73d68900`) unchanged and created a **new Render Free Node service**:
+- ID: `srv-dbb1ehtg1s2s73dtkc1g`, name `bata-attendify-node`, dashboard `https://dashboard.render.com/web/srv-dbb1ehtg1s2s73dtkc1g`, live URL `https://bata-attendify-node.onrender.com/portal`.
+- Workspace `ahmed's workspace`; branch `feature/superadmin-accounts-courses`; Frankfurt, Node runtime, build `npm install`, start `npm start`, auto deploy OFF.
+- Transferred private DATABASE_URL directly from installed Neon connector to installed Render connector without exposing it to user logs/GitHub. `PUBLIC_ORIGIN=https://bata-attendify-node.onrender.com`, NODE_ENV=production, ROSTER_ENABLED=1, ATTENDANCE_ENABLED=0.
+- Render deployment `dep-dbb1estm14bs73cpb2s0` LIVE. External GitHub Actions smoke test `39258848867` succeeded for actual HTTPS /healthz=Neon OK, /portal login form, protected API unauth rejects, no legacy/student QR endpoints.
+- Original private 172 students remain in Neon ONE provisional course. Exactly one superadmin account previously created; no lecturer accounts/assignments yet. Admin must use already-given password to sign in and change password; don't repeat/hash/publish secrets.
+- Website NOW ONLINE for protected staff login/roster management; public QR attendance OFF. Explicitly distinguish this from prior dated 'not deployed' summaries.
+- Remaining: credentialed user login, doctor creation and assignment, backups, browser E2E/geo, attendance reports/XLSX. Keep PR #3 draft as unmerged development branch, even though deployed staging.
