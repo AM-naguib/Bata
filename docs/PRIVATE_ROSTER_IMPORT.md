@@ -61,3 +61,11 @@ Use **المقرر الأول (مؤقت)** as the first course *name* once the o
 - Real Neon now has ONE superadmin and ONE pre-created course named `المقرر الأول (مؤقت)`, established atomically with two audit events. No real student data was imported.
 - Before importing the 172 rows: create the initial lecturer under the real superadmin, assign this existing course, ensure lecturer changes their initial password, then run private dry-run and atomic import. The import script requires active lecturer-course assignment and currently that assignment does not exist.
 - The login account currently uses a placeholder identifier without an inbox. Never put any real credential, its hash, or student PII into this repository.
+
+
+## Actual owner-authorized one-time import — COMPLETED 2026-10-19
+- The 172 records from the previously uploaded, private `attendify.zip` were inserted directly into the existing private Neon database, into **only** `المقرر الأول (مؤقت)`.
+- A single atomic SQL operation validated count, uniqueness, conflicts and active course mapping and recorded an audit event without any student names or roll numbers in public GitHub.
+- Read-only verification: **172** global students, **172** active first-course enrollments, **0** other-course enrollments and **0** attendance; full ordered roster checksum matches the original file.
+- The tool `scripts/import-roster.js` remains useful for future authorized imports, but the *initial cohort is already imported*. Do NOT run the same 172-person import again unless the owner intentionally wants to restore enrollments (may re-add previously removed students).
+- Next: user confirms Render workspace, HTTPS staff portal is deployed, admin creates and assigns a real lecturer. Lecturer can then see and manage this existing roster through their authenticated course view. Superadmin must not receive roster access.
