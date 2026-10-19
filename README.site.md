@@ -44,3 +44,11 @@ Visit `/portal` (login/admin/lecturer roles). Create initial superadmin securely
 The approved original **172 private students** have now been imported into the ONE provisional course `المقرر الأول (مؤقت)` in Neon (172 unique active enrollments, 0 attendance), with a source-integrity match. Their identities are not present in public GitHub.
 
 The site is **not live yet**. `render.yaml` provides a Render Free staff-portal template, but Render workspace choice needs the owner's explicit confirmation. Initial deployment must keep public QR attendance disabled (`ATTENDANCE_ENABLED=0`) until further review. See `docs/DEPLOYMENT.md` and `docs/PRIVATE_ROSTER_IMPORT.md`.
+
+
+## LIVE HTTPS STAFF PORTAL (2026-10-19)
+The account/lecturer staff portal is now deployed at **https://bata-attendify-node.onrender.com/portal** on a **new Render Free Node service** connected to Neon PostgreSQL. The separate old Render service named Bata has a misconfigured Go runtime and must not be used. The live deployment passed a public HTTPS/Neon/database health and unauthorized-endpoint smoke test ([GitHub Actions #39258848867](https://github.com/AM-naguib/Bata/actions/runs/39258848867)).
+- `ROSTER_ENABLED=1`; real 172 students are in the private Neon database, not GitHub. Only a lecturer assigned to the first course may view their roster.
+- `ATTENDANCE_ENABLED=0` so student QR check-in remains disabled pending security/operational testing.
+- Admin should log in using the temporary password already provided privately, change it immediately, then create a lecturer account/assignment. Do not copy any credentials into repository files.
+- No automated deployment on each commit (Render autoDeploy off), no GitHub main merge. See `docs/DEPLOYMENT.md` and `docs/TASKS.md`.
