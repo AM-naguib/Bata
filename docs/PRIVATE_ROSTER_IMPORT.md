@@ -51,3 +51,7 @@ No production service exists yet. The `ROSTER_ENABLED` / `ATTENDANCE_ENABLED` fl
 
 ## Owner's initial allocation decision (2026-10-19)
 The first real import should enroll **all 172 students in ONE explicitly selected course** only. Do not automatically add these students to other courses. When a lecturer subsequently has another assigned course, the lecturer can add matching pre-existing students to that course using roll number + full name; `students` is global, while `enrollments` is per course. The superadmin has **no** permission to read names, bulk-import students or redistribute student enrollments. Superadmin creates the first course and assigns it to a lecturer, who then authorizes the private import. The real course name and lecturer identity remain unprovided; don't invent them.
+
+
+## First course label ready for setup — 2026-10-19
+Use **المقرر الأول (مؤقت)** as the first course *name* once the owner privately sets up the superadmin. The name is editable later by the superadmin and the course UUID stays fixed, so active enrollments, attendance and lecturer assignments remain linked. This is a UI default/approved plan, not an actual existing Neon course. Import the 172 records only after the first lecturer is created/assigned and source is backed up. Do not bypass the superadmin account requirement to manufacture a course.
