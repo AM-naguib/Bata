@@ -84,6 +84,17 @@ jobs:
           status=$(curl --silent --show-error --max-time 30 -o /tmp/excel-unauth.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/report.xlsx")
           test "$status" = 401
           echo "Lecturer-only reports and Excel: anonymous requests rejected (401)"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/maintenance-unauth.json -w '%{http_code}' "$BASE/api/v2/lecturer/lecture-records")
+          test "$status" = 401
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/archive-unauth.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" -d '{}' "$BASE/api/v2/lecturer/lecture-records/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/archive")
+          test "$status" = 401
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/correct-unauth.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" -d '{"studentId":"13823c35-164a-4c08-bb88-3256f584116a","status":"present","reason":"synthetic test"}' "$BASE/api/v2/lecturer/lecture-records/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/correct")
+          test "$status" = 401
+          echo "Lecture archive and corrections: anonymous access rejected (401), no data modified"
+          curl --silent --show-error --fail --max-time 30 "$BASE/lecturer" -o /tmp/maintenance-panel.html
+          grep -q 'id="lectureRecordsList"' /tmp/maintenance-panel.html
+          grep -q 'id="correctionForm"' /tmp/maintenance-panel.html
+          echo "Lecturer management: archive and correction UI available"
           curl --silent --show-error --fail --max-time 30 "$BASE/lecturer" -o /tmp/report-panel.html
           grep -q 'id="reportCourse"' /tmp/report-panel.html
           grep -q 'id="reportDownload"' /tmp/report-panel.html
