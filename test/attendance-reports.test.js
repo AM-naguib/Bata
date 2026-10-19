@@ -8,7 +8,7 @@ const s1='13823c35-164a-4c08-bb88-3256f584116a',s2='31ca620d-4d43-4adc-90fa-9b52
 const l1='a65c14c2-d9ec-4e2b-b289-2d329048fb32',l2='de01fe7b-4de5-4cd6-8ab9-207cdaf1f1fb';
 const lecturer={id:doctor,role:'lecturer',must_change_password:false};
 const admin={id:'6ac45621-6ff9-4f2c-b9fa-bea77bcd1435',role:'superadmin'};
-function fakeDb({lessons=true,assigned=true}={}){
+function fakeDb({lessons=true,assigned=true,corrections=[]}={}){
  const queries=[];
  const students=[
   {id:s1,roll_number:'0001',full_name:'آية & <اختبار>',enrolled_at:'2026-01-01T00:00:00Z'},
@@ -27,6 +27,7 @@ function fakeDb({lessons=true,assigned=true}={}){
   if(sql.startsWith('SELECT s.id,s.roll_number,s.full_name,e.enrolled_at'))return {rows:students};
   if(sql.startsWith('SELECT id,title,opened_at,closed_at FROM lectures'))return {rows:closed};
   if(sql.startsWith('SELECT a.student_id,a.lecture_id FROM attendances'))return {rows};
+  if(sql.startsWith('SELECT ac.student_id,ac.lecture_id,ac.status FROM attendance_corrections'))return {rows:corrections};
   throw Error('Unrecognized query '+sql);
  }}};
 }
@@ -90,4 +91,15 @@ test('genuine XLSX has three Arabic worksheets, preserves leading zeros and esca
  assert.match(entry['xl/worksheets/sheet1.xml'],/s="2"/,'numeric Excel percentage style');
  assert.match(entry['xl/worksheets/sheet3.xml'],/غير مقيّدة وقتها/);
  assert.ok(xlsx.length>1800,'not a fake CSV renamed as XLSX');
+});
+
+test('audited manual corrections take precedence over original QR records in report',async()=>{
+ const corrected=await reportForCourse(fakeDb({corrections:[
+  {student_id:s1,lecture_id:l1,status:'absent'},
+  {student_id:s3,lecture_id:l2,status:'present'}
+ ]}).pool,lecturer,course);
+ assert.deepEqual(corrected.students.map(s=>[s.rollNumber,s.attended,s.absent]),[
+  ['0001',1,1],['0002',1,0],['0003',1,1]
+ ]);
+ assert.deepEqual(corrected.lectures.map(l=>[l.present,l.absent]),[[0,2],[3,0]]);
 });
