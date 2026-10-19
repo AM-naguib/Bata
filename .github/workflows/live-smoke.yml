@@ -46,7 +46,10 @@ jobs:
           echo "Landing: three role entries served"
           curl --silent --show-error --fail --max-time 40 "$BASE/admin" -o /tmp/admin.html
           grep -q 'id="adminControls"' /tmp/admin.html
-          echo "Admin: dashboard interface served"
+          grep -q 'data-gateway="superadmin"' /tmp/admin.html
+          grep -q 'data-gateway="lecturer"' /tmp/admin.html
+          grep -q 'data-gateway="student"' /tmp/admin.html
+          echo "Admin: three visible entry gates and dashboard interface served"
           curl --silent --show-error --fail --max-time 40 "$BASE/lecturer" -o /tmp/lecturer.html
           grep -q 'id="lecturerControls"' /tmp/lecturer.html
           grep -q 'id="rosterSearch"' /tmp/lecturer.html
@@ -57,6 +60,12 @@ jobs:
           status=$(curl --silent --show-error --max-time 30 -o /tmp/me.json -w '%{http_code}' "$BASE/api/v2/me")
           test "$status" = 401
           echo "Session: unauthorized request rejected (401)"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/change.json -w '%{http_code}' \\
+            -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" \\
+            -d '{"currentPassword":"not-a-valid-secret","newPassword":"not-a-valid-secret-either"}' \\
+            "$BASE/api/v2/password")
+          test "$status" = 401
+          echo "Password change: unauthenticated requests rejected (401)"
           status=$(curl --silent --show-error --max-time 30 -o /tmp/roster.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/students")
           test "$status" = 401
           echo "Roster: unauthorized request rejected (401)"
