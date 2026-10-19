@@ -84,6 +84,7 @@
         <button type="button" class="nav-link is-active" data-nav="overview"><span aria-hidden="true">◫</span> نظرة عامة</button>
         <button type="button" class="nav-link" data-nav="roster"><span aria-hidden="true">▦</span> كشف الطالبات</button>
         <button type="button" class="nav-link" data-nav="lectures"><span aria-hidden="true">▣</span> المحاضرات والحضور</button>
+        <button type="button" class="nav-link" data-nav="reports"><span aria-hidden="true">▤</span> تقارير وExcel</button>
       </nav>
       <div class="sidebar__bottom">
         <button type="button" class="nav-link" data-nav="security"><span aria-hidden="true">⚿</span> أمان الحساب</button>
@@ -187,6 +188,43 @@
               <div><label for="rosterName">اسم الطالبة بالكامل</label><input id="rosterName" maxlength="200" autocomplete="off" placeholder="الاسم كما هو في الكشف" required></div>
               <button class="button" type="submit">إضافة الطالبة</button>
             </form><p class="muted hint">إلغاء القيد لا يحذف سجلات الحضور القديمة.</p>
+          </div>
+        </section>
+
+        <section data-page="reports" hidden aria-label="تقارير الحضور والغياب">
+          <div class="section-heading">
+            <div><h2>تقارير الحضور والغياب</h2><p class="muted">حساب دقيق لكل مقرر بناءً على المحاضرات المقفولة فقط.</p></div>
+            <span class="section-tag">متاح للدكتور فقط</span>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <div><label for="reportCourse">المقرر المطلوب</label><select id="reportCourse"></select></div>
+              <div><label for="reportSearch">ابحثي في نتائج الطالبات</label>
+                <input id="reportSearch" type="search" autocomplete="off" placeholder="اسم الطالبة أو رقم الجلوس" aria-controls="reportStudents"></div>
+            </div>
+            <div class="report-actions">
+              <p id="reportNotice" class="muted" role="status">اختار المقرر لعرض الحضور والغياب.</p>
+              <button id="reportDownload" class="button button--secondary" type="button" disabled>
+                تنزيل Excel (.xlsx)
+              </button>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-card"><span class="stat-card__label">الطالبات المقيدات</span><strong id="reportStudentCount">—</strong></div>
+              <div class="stat-card"><span class="stat-card__label">المحاضرات المقفولة</span><strong id="reportLectureCount">—</strong></div>
+              <div class="stat-card"><span class="stat-card__label">سجلات الحضور</span><strong id="reportPresentCount">—</strong></div>
+            </div>
+            <h3>حضور وغياب كل طالبة</h3>
+            <ul id="reportStudents" class="records"></ul>
+            <div class="pagination" id="reportPagination" hidden>
+              <button id="reportPrevious" class="button button--outline" type="button">السابق</button>
+              <span id="reportPage" aria-live="polite"></span>
+              <button id="reportNext" class="button button--outline" type="button">التالي</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>ملخص المحاضرات المقفولة</h3>
+            <ul id="reportLectures" class="records"></ul>
+            <p class="muted hint">المحاضرات المفتوحة أو المؤرشفة مش بتدخل في الغياب. الطالبة ما بتتحسبش غائبة عن المحاضرات اللي اتقفلت قبل تاريخ قيدها. الملفات تحتوي بيانات خاصة؛ احتفظ بيها في مكان آمن.</p>
           </div>
         </section>
 
