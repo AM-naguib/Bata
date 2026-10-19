@@ -36,3 +36,9 @@ The repository is **Public by owner's request (2026-10-19)**. GitHub Pages serve
 - Do not enable automatic deployment of the unremediated audit branch.
 
 Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, with each issue tracked in `docs/TASKS.md`.
+
+## Current code readiness — 2026-10-19
+- Source on audit branch includes security fixes for default password, GPS validation, corrupt JSON startup, GET mutation and admin UI injection, with partial authentication measures.
+- GitHub CI now runs the synthetic test suite; inspect Actions results before relying on branch changes.
+- **Do not deploy**: missing student.html, no Neon integration, remaining identity fraud & CSRF risks, and no private data import path.
+- The Render + Neon ChatGPT apps were installed, but provisioning actions were not exposed to the assistant in this session. No service was created.
