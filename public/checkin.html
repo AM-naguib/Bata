@@ -1,22 +1,32 @@
-<!doctype html><html lang="ar" dir="rtl"><head>
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102f40">
+<meta name="description" content="حاضر — تسجيل حضور المحاضرة">
 <title>حاضر | تسجيل حضور المحاضرة</title>
 <link rel="stylesheet" href="/app-v2.css"><script src="/checkin.js" defer></script>
 </head><body>
-<header><div class="brand">حاضر <small>تسجيل الحضور</small></div></header>
-<main style="max-width:490px">
-<section class="card">
-<h1>تسجيل حضور المحاضرة</h1>
-<p class="muted">افتحي QR المحاضرة بكاميرا الموبايل، وبعدها اكتبي رقم جلوسك واسمك بالكامل زي كشف المقرر.</p>
-<form id="checkinForm">
-<label for="roll">رقم الجلوس</label>
-<input id="roll" inputmode="numeric" autocomplete="off" maxlength="64" required placeholder="رقم الجلوس">
-<label for="fullName">اسم الطالبة بالكامل</label>
-<input id="fullName" autocomplete="name" maxlength="200" required placeholder="الاسم الكامل زي كشف المقرر">
-<button type="button" id="edit" class="secondary">تعديل رقم الجلوس والاسم المحفوظ</button>
-<button id="submitAttendance" type="submit">تسجيل الحضور باستخدام موقعي</button>
-</form>
-<p id="checkinMessage" role="status" aria-live="polite"></p>
-<p class="muted">تصحيح البيانات المحفوظة هنا لا يغيّر حضورًا سُجّل بالفعل؛ في الحالة دي راجعي الدكتور. لازم تفعّلي GPS والموقع الدقيق.</p>
+<header class="site-header"><div class="site-header__inner">
+<a class="brand" href="/" aria-label="حاضر — الرئيسية"><span class="brand__mark" aria-hidden="true">ح</span><span>حاضر <small>ATTENDIFY</small></span></a>
+<span class="pill">بوابة الطالبة</span>
+</div></header>
+<main class="student-shell" style="max-width:660px">
+<section class="card" style="padding:clamp(24px,5vw,42px)">
+  <span class="eyebrow"><span class="status-dot" aria-hidden="true"></span> تسجيل حضور المحاضرة</span>
+  <h1>سجّلي حضورك</h1>
+  <p class="muted">بعد مسح QR المحاضرة، اكتبي اسمك ورقم جلوسك زي الكشف، واسمحي باستخدام موقعك الدقيق داخل القاعة.</p>
+  <form id="checkinForm">
+    <label for="roll">رقم الجلوس</label><input id="roll" inputmode="numeric" autocomplete="off" maxlength="64" required placeholder="رقم الجلوس">
+    <label for="fullName">الاسم بالكامل</label><input id="fullName" autocomplete="name" maxlength="200" required placeholder="اسمك كما هو في كشف المقرر">
+    <button id="submitAttendance" class="button button--block" type="submit">تسجيل الحضور باستخدام موقعي <span aria-hidden="true">←</span></button>
+    <button type="button" id="edit" class="button button--outline button--block">تعديل الاسم أو رقم الجلوس المحفوظ</button>
+  </form>
+  <p id="checkinMessage" role="status" aria-live="polite" style="margin-top:18px;font-weight:800"></p>
 </section>
-</main></body></html>
+<section class="card info-card">
+  <span class="info-card__mark" aria-hidden="true">i</span>
+  <div><h3>قبل ما تسجّلي</h3><p>لازم يكون QR خاص بمحاضرة مفتوحة ومش منتهي، وتفعّلي GPS الدقيق. تصحيح البيانات المحفوظة مش بيعدل حضور اتسجّل بالفعل؛ راجعي الدكتور لو فيه خطأ.</p></div>
+</section>
+</main>
+<footer class="site-footer"><span>حاضر © 2026</span><span>تنظيم أوضح. حضور أذكى.</span></footer>
+</body></html>
