@@ -219,7 +219,7 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   assert.equal((await request('/api/v2/lecturer/courses',{cookie:newDoctorSession})).status,200);
 
   assert.equal((await request('/api/v2/assignments/revoke',{method:'POST',cookie:bossCookie,json:{lecturerId:docId,courseId:newCourse.body.id}})).status,200);
-  const afterRevoke=await request('/api/v2/lecturer/courses',{cookie:doctor});
+  const afterRevoke=await request('/api/v2/lecturer/courses',{cookie:newDoctorSession});
   assert.equal(afterRevoke.status,200);assert.equal(afterRevoke.body.items.length,0);
   assert.equal((await request('/api/v2/logout',{method:'POST',cookie:bossCookie,json:{}})).status,200);
   assert.equal((await request('/api/v2/courses',{cookie:bossCookie})).status,401);
