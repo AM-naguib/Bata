@@ -80,3 +80,12 @@ Owner explicitly limited superadmin to **creating lecturer accounts and distribu
 ## Verified course-creation regression — 2026-10-19
 - GitHub Actions run [#39215894790](https://github.com/AM-naguib/Bata/actions/runs/39215894790) completed **successfully** on this feature branch (CI run 39).
 - The tests exercise administrator-only course insertion, validation, rollback, audit log and create-then-assign workflow using synthetic data; existing security regression suite also passed. This is **not** a test of a live admin UI or production role-based HTTP endpoints.
+
+
+## Admin portal v2 progress — 2026-10-19
+- New working code on `feature/superadmin-accounts-courses`: `server-v2.js`, `lib/http-app.js`, `public/portal.html`, `public/app-v2.js`, `public/app-v2.css`, `test/http-portal.test.js`.
+- Default `npm start` points to v2 (DB-backed admin portal) to prevent accidental serving of insecure old academic APIs. Legacy `server.js` remains in source history but is not started by npm.
+- Real account API + web UI: log in/logout, admin lecturer create, course create, assignment grant/revoke, lecturer assigned-course list; password change revokes all sessions, mandatory for newly created doctor; cookie secure with Origin validation for mutations.
+- New HTTP integration tests exercise cross-role restrictions, lecturer setup and account lifecycle. GitHub Actions run #39217213315 succeeded with `pg` npm install, JavaScript syntax validation, and security suite.
+- Read-only Neon query confirmed project `wandering-mode-56487150`, DB `attendify`: 0 accounts, 0 courses, 0 students, 0 lecturer-course assignments. No real data migrated.
+- Outstanding: *every* real student/lecture/QR/check-in/report API requires v2 course-scoped implementation and backfill. No website deploy. No private admin credentials, no Render workspace confirmation. Use docs/PORTAL_V2.md for current truth; prior dated notes concern older branch stages.
