@@ -175,3 +175,9 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - A no-identity /student guidance page is public, but /checkin and POST attendance remain disabled until explicitly enabled after tests. No real student PII in public repo/static pages.
 - Optimize mobile roster UX with simple in-browser filtering and 20-row paging for authorized lecturer data; no cross-course public search API. Eliminate inline styles that conflict with CSP and use safe textContent everywhere.
 - The existing Render service uses autoDeploy OFF, so we manually deployed the successful CI-tested UI version; verified status Live and independent external HTTPS smoke.
+
+
+## D-031 — Three user gateways with server-side role authorization (2026-10-19)
+- User expressly rejected prior experience as "gate مش مقسومة 3" and reported password-change crash. We keep the same secure staff backend but visually divide entry into three role-specific choices: admin login via /admin, lecturer login via /lecturer, and student no-login QR guidance via /student. HTML role-card links and JS role intros highlight selected role. Distinct navigation does not create a student account or any new role permissions.
+- Real DB error SQLSTATE 42P08 caused prior password changes to fail entirely; fix audit bind types without manually resetting user credentials or editing existing Neon student data.
+- Critical operational limitation: GitHub Actions simulated HTTP tests and public live smoke passed; authenticated live user password-change needs user's independent browser retry. No real QR attendance is enabled.
