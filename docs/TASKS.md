@@ -227,3 +227,14 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] QA-12 — Owner refreshes live /lecturer, changes temporary/current password via security panel and verifies success + forced logout/relogin. The previous failed transaction did **not** update password. Do not claim credentialed live action verified until user confirms.
 - [ ] QA-13 — Browser visual testing at owner's viewport/mobiles to fine-tune sidebar and 3-card layout.
 - [ ] QA-14 — QR attendance flag still OFF pending safe real-world location and attendance reporting tests.
+
+
+## Owner-requested lecturer password reset (2026-10-19)
+- [x] AC-01 — Add superadmin-only `lecturer.password.reset` permission, deny lecturer and anonymous access.
+- [x] AC-02 — Secure transaction: validate active lecturer UUID, issue fresh strong one-time secret, hash scrypt, force own password change, revoke all active sessions, write typed UUID/TEXT audit without logging secret, rollback on errors.
+- [x] AC-03 — Protected same-origin `POST /api/v2/lecturers/password/reset` endpoint; no password retrieval, no superadmin target.
+- [x] AC-04 — Admin lecturer list reset button with confirmation, one-time temporary password display and dismissal; doctor account stays unchanged until explicit click.
+- [x] AC-05 — Tested role boundaries, malformed IDs, target missing, rollback, forced old session logout, old password rejection, temp login/forced password change and subsequent login. Security regression CI [#39270935273](https://github.com/AM-naguib/Bata/actions/runs/39270935273) SUCCESS.
+- [x] AC-06 — Verified Neon `app_users.updated_at` column exists; manually deployed Render `dep-dbb3p18n74is73bg2em0` **LIVE** from app commit `bcf762126514e12d0f79a076d8493fb0d7a1080c`.
+- [ ] AC-07 — Owner uses /admin → حسابات الدكاترة → إعادة تعيين الباسورد for one selected lecturer, privately delivers one-time password, confirms logged-out lecturer can sign in and change password. Do not trigger any actual account reset in automated smoke test.
+- [ ] AC-08 — Confirm first lecturer has active assignment to provisional course and can view private student roster; keep QR attendance disabled until required E2E tests.
