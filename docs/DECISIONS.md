@@ -181,3 +181,10 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - User expressly rejected prior experience as "gate مش مقسومة 3" and reported password-change crash. We keep the same secure staff backend but visually divide entry into three role-specific choices: admin login via /admin, lecturer login via /lecturer, and student no-login QR guidance via /student. HTML role-card links and JS role intros highlight selected role. Distinct navigation does not create a student account or any new role permissions.
 - Real DB error SQLSTATE 42P08 caused prior password changes to fail entirely; fix audit bind types without manually resetting user credentials or editing existing Neon student data.
 - Critical operational limitation: GitHub Actions simulated HTTP tests and public live smoke passed; authenticated live user password-change needs user's independent browser retry. No real QR attendance is enabled.
+
+
+## D-032 — Owner-authorized superadmin lecturer password resets (2026-10-19)
+- Owner approved allowing superadmin to reset a lecturer's password. This is a **one-way reset**, not retrieval or display of previous password, and never direct account impersonation.
+- Superadmin selects a specific active lecturer and confirms. Generate fresh high-entropy temporary password, store only salted scrypt hash, require lecturer to change password on next sign-in, revoke all existing lecturer sessions, log actor/target but never the password. Only superadmin can invoke. Invalid lecturer ID, missing/disabled target or admin target fail closed. No new academic access granted.
+- One-time display and clear in admin UI. The lecturer must receive the password through a trusted channel. Keep student roster and attendance data private.
+- Tested with fake PostgreSQL, including transaction rollback and typed audit parameters; manual real credentialed reset must be initiated by owner. Deployed to same Render Free Node service with Live status.
