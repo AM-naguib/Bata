@@ -258,3 +258,17 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [ ] RP-09 — Real lecturer must log in and download a 3-sheet XLSX once, confirming Excel opens it with correct Arabic/right-to-left layout. External smoke confirms protected endpoints but not authorized real student download.
 - [ ] RP-10 — Owner confirms absenteeism policy (closed unarchived lecture after enrollment; current enrolled roster only) before official academic reports; no real attendance records exist yet.
 - [ ] LT-01 — Next implementation: lecturer-scoped lecture archive/restore and correction audit. Do not enable QR prematurely.
+
+
+## LT-01 archived lectures, LT-02 corrections, OPS backup point — 2026-10-19
+- [x] LT-01 — Lecturer-only archive and restore of CLOSED lectures with row lock, course assignment check and immutable audit; archive hides lecture from reports, never deletes original attendance.
+- [x] LT-02 — Dedicated `attendance_corrections` overlay table (DB migration v3 applied to Neon) plus lecturer-only POST correction with enrolled student, closed unarchived lecture, reason 5–500, atomic old/new/status audit.
+- [x] LT-03 — Course JSON and 3-sheet XLSX reports reflect corrected effective status, not raw QR events overwritten; historical QR rows intact.
+- [x] LT-04 — UI lecture archive/restore controls and per-lecture/per-student correction form, separate from public QR feature flag.
+- [x] LT-05 — Tests verified role boundaries, cross-course denial, malformed IDs, body lecture spoofing, CSRF, concurrency locks, rollback and report overrides; [security CI passed](https://github.com/AM-naguib/Bata/actions/runs/39291403895).
+- [x] LT-06 — Deployed live Render `dep-dbb4rf49v7es73a78c4g`; [post-deploy external HTTPS smoke PASSED](https://github.com/AM-naguib/Bata/actions/runs/39291403822): new archive/correction APIs anonymous 401, public check-in off, protected staff UI present.
+- [x] OPS-02 — Created compute-free Neon internal branch `backup-pre-attendance-2026-10-19`, verified Ready, contains pre-attendance production state. NO external data shared and NO active compute; instructions `docs/BACKUP_RECOVERY.md`.
+- [ ] QA-15 — Real lecturer logs in and checks archive/correct using a synthetic/test lecture only, not legitimate class records; there are currently zero lectures/attendance.
+- [ ] OPS-03 — Make **independent encrypted offsite PG dump**, verify restore into isolated DB, check future backup schedule/cost/retention. Internal Neon branch is not independent backup.
+- [ ] OPS-04 — Real phone GPS permission, QR rotating/replay and cross-device security checks in controlled environment, user sign-off, before enabling `ATTENDANCE_ENABLED=1`.
+- [ ] OPS-05 — Approve academic policy for corrections and archived/removed students in historic reports before relying on grades.
