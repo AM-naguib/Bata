@@ -22,6 +22,8 @@ test('responsive RTL staff portal keeps every JS-dependent element reachable',()
   assert.ok(html.includes('id="'+id+'"'),'Missing lecturer report control '+id);
  assert.ok(js.includes('report.xlsx'),'Excel should be downloaded through authenticated report endpoint');
  assert.ok(html.includes('data-nav="reports"')&&html.includes('data-page="reports"'));
+ assert.ok(html.includes('id="lectureRecordsList"')&&html.includes('id="correctionForm"'));
+ assert.match(js,/lecturer\/lecture-records/,'audited maintenance UI must route through academic-scoped API');
  for(const field of ['entryEyebrow','entryTitle','entryEmphasis','entryDescription','loginTitle','loginDescription'])
   assert.ok(html.includes('id="'+field+'"'),'Missing separate gate title: '+field);
  assert.match(js,/function showEntryGate\(/,'staff routes should show dedicated admin/lecturer copy');
