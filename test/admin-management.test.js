@@ -87,7 +87,7 @@ test('superadmin can rename a course without touching assignments or attendance'
  assert.deepEqual(update.params,['اسم المقرر الجديد',id2]);
  assert.ok(queries.some(x=>x.sql.includes("'course.rename'")));
  assert.ok(queries.some(x=>x.sql==='COMMIT'));
- assert.ok(!queries.some(x=>/\\b(enrollments|students|attendances|lectures|lecturer_courses)\\b/.test(x.sql)));
+ assert.ok(!queries.some(x=>['enrollments','students','attendances','lectures','lecturer_courses'].some(table=>x.sql.includes(table))));
 });
 test('course rename validates existing ID/name and rolls back absent course',async()=>{
  const {pool,queries}=fakePool();
@@ -96,7 +96,7 @@ test('course rename validates existing ID/name and rolls back absent course',asy
   {courseId:id2,name:''},
   {courseId:id2,name:'  '},
   {courseId:id2,name:'x'.repeat(151)},
-  {courseId:id2,name:'Bad\\nName'}
+  {courseId:id2,name:'Bad'+String.fromCharCode(10)+'Name'}
  ])await assert.rejects(service.renameCourse(pool,boss,req),e=>e.status===400);
  assert.equal(queries.length,0);
  const missing=fakePool('missing-rename');
