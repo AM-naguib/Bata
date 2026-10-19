@@ -80,3 +80,12 @@ Change control: see `docs/DECISIONS.md`. Fixes require tests and reviewed PR, wi
 - Independent public-HTTPS smoke test in GitHub Actions **success**: `https://github.com/AM-naguib/Bata/actions/runs/39258848867`, `/healthz` gave `{"status":"ok"}` proving active Neon DB connection; `/portal` served login form; anonymous `/api/v2/me` and lecturer roster returned 401; `/api/v2/attendance/checkin` and legacy `/api/report` returned 404.
 - Admin can sign in with the already-provided temporary credentials and should change password immediately through the portal. No doctor accounts or assignments have been created yet, so students are not visible to superadmin.
 - **NOT FINISHED:** actual sign-in/password-change user journey has not been smoke tested with private credentials, no lecturer account has been created or assigned to the first course, no real mobile QR testing, no XLSX or backups/restore. Staff portal is live; real student attendance rollout remains disabled until confirmed safe.
+
+
+## Latest LIVE UI update (2026-10-19)
+- The existing correct FREE Node service `srv-dbb1ehtg1s2s73dtkc1g` is still canonical. Latest manual deployment `dep-dbb1v4ijnfac739j6r4g` of feature commit `72a96ed7fa606b03197c2b4fd92c7e8c0f363d9b` returned **LIVE**.
+- New public routes confirmed by independent external HTTPS smoke test [#39263443594](https://github.com/AM-naguib/Bata/actions/runs/39263443594): `/` home page with links to role dashboards; `/admin` staff admin entry; `/lecturer` staff lecturer entry; `/student` informational student QR guide. Existing `/portal` shared staff login works.
+- Smoke also validated Neon `/healthz`, anonymous API rejection and that /checkin and old academic report endpoints return 404. ATTENDANCE_ENABLED remains **0**, ROSTER_ENABLED **1**; no new lecturer permissions or real student data published.
+- Self-hosted CSS/JS, no external libraries/CDNs; UI tests validate markup JS bindings and no CSP-violating inline styles. CI security [#39263443641](https://github.com/AM-naguib/Bata/actions/runs/39263443641) success.
+- IMPORTANT Render autoDeploy is OFF. UI code commits after deployment do not go live automatically; trigger a deploy manually after future code changes and re-run external smoke.
+- Real credentialed login/new lecturer course roster/mobile QR not independently verified yet. First lecturer and course assignment still required; previously imported 172 students remain intact and private.
