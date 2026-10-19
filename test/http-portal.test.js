@@ -11,6 +11,7 @@ function fakeDatabase(bossHash){
  const courses=[],assignments=[],sessions=new Map(),audit=[];
  const query=async(sql,p=[])=>{
   if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK')return {rows:[]};
+  if(sql==='SELECT 1 AS ok')return {rows:[{ok:1}]};
   if(sql.includes('SELECT id,email,display_name,role,password_hash,must_change_password')&&sql.includes('lower(email)')){
     return {rows:users.filter(u=>u.email.toLowerCase()===p[0])};
   }
@@ -85,6 +86,7 @@ test('real HTTP role-authenticated portal: administrator creates lecturer/course
   return {status:r.status,body,cookie:r.headers.get('set-cookie'),location:r.headers.get('location')};
  };
  try{
+  const health=await request('/healthz');assert.equal(health.status,200);assert.equal(health.body.status,'ok');
   const home=await request('/portal');
   assert.equal(home.status,200);assert.match(home.body,/إنشاء مقرر/);
   assert.equal((await request('/api/report')).status,404,'old academic API must NOT be exposed');
