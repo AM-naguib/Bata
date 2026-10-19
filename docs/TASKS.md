@@ -64,3 +64,15 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - FR-06 **partial**: Excel-compatible CSV download exists; native XLSX export not implemented.
 - FR-04 / FR-07 / FR-08 **open**: per-course roster, per-doctor accounts/password management and persistent Neon database.
 - NO production deployment and NO real student records uploaded.
+
+## Superadmin implementation work
+- [x] SA-01 — Define owner-approved superadmin-managed lecturer onboarding/course assignment and document role boundaries (docs/SUPERADMIN.md).
+- [x] SA-02 — Provision empty Neon Free `bata-attendify` project and create 10-table baseline schema; verified table list. No real records inserted. SQL checked into db/001_initial.sql.
+- [ ] SA-03 — Implement first-superadmin one-time bootstrap command using a private configured credential (never hardcoded/default).
+- [ ] SA-04 — Replace single shared DOCTOR_PASSWORD and in-memory sessions with per-user salted slow password hashes and DB-backed sessions; password change/recovery and revocation.
+- [ ] SA-05 — Superadmin-only lecturer account create/disable, course creation and lecturer/course assignment API and UI.
+- [ ] SA-06 — Enforce active lecturer-course membership server-side on ALL lecturer routes, attendance reports, enrollment and lecture deletion; test cross-tenant denials.
+- [ ] SA-07 — Add audit logging, per-course student enrollment and soft removal retaining attendance.
+- [ ] SA-08 — Safely migrate existing local data into Neon after confirming legacy lecture/course mapping and backup; prohibit real roster in public git.
+- [ ] SA-09 — Security and E2E tests using synthetic users/rosters, and upgrade frontend login/account flows.
+- [ ] SA-10 — Create deployment only after readiness, initial admin credentials chosen securely and all core authorisation tests pass.
