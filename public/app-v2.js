@@ -94,7 +94,12 @@ function setView(show,who){
  if(!who){
   el('adminControls').hidden=true;el('lecturerControls').hidden=true;
   el('adminNav').hidden=true;el('lecturerNav').hidden=true;
-  document.title='حاضر | تسجيل الدخول';
+  const intent=location.pathname;
+  const kind=intent==='/admin'?'الأدمن الرئيسي':intent==='/lecturer'?'الدكتور':'';
+  el('loginTitle').textContent=kind?'تسجيل دخول '+kind:'أهلًا بيك في حاضر';
+  el('loginDescription').textContent=kind?'ادخل ببريدك الإلكتروني وكلمة المرور للمتابعة.':
+   'سجّل دخولك بحساب الأدمن أو الدكتور للمتابعة.';
+  document.title='حاضر | '+(kind?'دخول '+kind:'تسجيل الدخول');
   return;
  }
  el('welcome').textContent='أهلًا، '+who.name;
@@ -168,12 +173,14 @@ function renderRoster(){
  if(!state.rosterCourseId)empty(list,'اختار مقرر لعرض كشف الطالبات.');
  else if(!match.length)empty(list,search?'مفيش نتائج مطابقة للبحث.':'لسه مفيش طالبات في المقرر.');
  else for(const student of match.slice(start,start+PAGE_SIZE)){
+  const selectedCourse=state.rosterCourseId;
   const button=actionButton('إلغاء القيد',async()=>{
    if(!confirm('إلغاء قيد الطالبة من المقرر المختار؟ سجل حضورها القديم هيفضل محفوظ.'))return;
    button.disabled=true;
    try{
-    await api('lecturer/courses/'+state.rosterCourseId+'/students/remove',{studentId:student.id});
-    await refreshRoster();flash('تم إلغاء القيد من المقرر بدون مسح الحضور القديم.');
+    await api('lecturer/courses/'+selectedCourse+'/students/remove',{studentId:student.id});
+    if(state.rosterCourseId===selectedCourse)await refreshRoster();
+    flash('تم إلغاء القيد من المقرر بدون مسح الحضور القديم.');
    }catch(err){flash(err.message,true);button.disabled=false}
   });
   appendRow(list,labelRow(student.full_name,student.roll_number),button);
