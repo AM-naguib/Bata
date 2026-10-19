@@ -48,7 +48,7 @@
 - FR-D4 (confirmed): Lecturer and course names must be captured alongside a lecture.
 - FR-D5 (confirmed): Excel attendance sheet saving/export requested; format not specified.
 - FR-D6 (confirmed): Separate account for every lecturer with account management and password change.
-- FR-D7 (pending): Lecturer registration/onboarding and administrator rights.
+- FR-D7 (resolved): A single superadmin creates lecturers and assigns lecturer-course memberships; no lecturer self-registration.
 - FR-D8 (pending): Whether lecture deletion is recoverable and how to preserve existing recorded attendance.
 - FR-D9 (pending): Student name lookup authorization and how to handle mistaken attendance recorded under another student's ID.
 - FR-D10 (pending): Whether Excel means native XLSX or CSV compatible with Excel.
@@ -67,3 +67,10 @@ No changes to grading/absence rules authorized yet. Implement safe UI improvemen
 - Lecturer accounts must be limited to their assigned courses; users may change their own passwords after authentication.
 - SQL schema deployed to new Neon Free project `bata-attendify` (ID `wandering-mode-56487150`), with 10 tables, no student records or credentials. Database schema is not the same as working application accounts. See docs/SUPERADMIN.md.
 - Do not invent superadmin credentials, privileges outside this policy, or a legacy-course mapping; remain pending.
+
+## Final superadmin permissions — OWNER CONFIRMED 2026-10-19
+- D-012: **Superadmin only creates lecturer accounts and distributes/withdraws course assignments.** Showing the minimal names/course IDs needed for those two actions is acceptable; there is **no right** to view or modify students, course enrollments, lectures, attendance, absence calculations, lecturer reports/exports or historical records.
+- D-013: A lecturer can manage student enrollments and attendance **only within their assigned course(s)**; all enforcement must be by server-side ownership checks.
+- D-014: Superadmin does **not** inherit all lecturer permissions. Role gates must explicitly deny access, even to direct URLs/API calls.
+- D-015: Account self-service logout/profile and password change are universal identity functions, not academic/lecturer permissions. Do not assume superadmin may reset other users' passwords without explicit owner authorization.
+- Still pending: Who creates the catalog of courses if none exist? Initial superadmin credentials must be chosen privately. Superadmin account not created yet.
