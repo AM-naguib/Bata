@@ -58,3 +58,14 @@ User asked for student name + editable roll number; lecturer deletion of acciden
 
 ## October 19 2026 — owner-approved account model
 User chose **one superadmin**, who creates lecturer accounts and assigns courses. No self-registration. Separate `feature/superadmin-accounts-courses` branch with `db/001_initial.sql` and `docs/SUPERADMIN.md`. Neon Free project `bata-attendify` ID `wandering-mode-56487150` created, database `attendify` holds 10 new EMPTY tables, verified. No student data, user accounts, passwords or sessions inserted. Existing Node app not yet migrated; continue tracking SA-03..SA-10. Render workspace discovered but no workspace selected/production service created. Do not assume site is live or that role security is working.
+
+
+## Role restriction development — 2026-10-19
+Owner explicitly limited superadmin to **creating lecturer accounts and distributing/revoking lecturer-course assignments ONLY**. It cannot view or edit student rosters, attendance, reports, lectures or absences. It cannot inherit lecturer privileges; exceptions limited to personal account self-service. Course catalog creation and cross-role password reset have not been authorized.
+- `lib/permissions.js`: deny-by-default action authorization; lecturer course operations require server-side verified active membership, not client flags.
+- `lib/passwords.js`: salted scrypt password hashes with unique random salts and fixed format, no plaintext.
+- `lib/admin-management.js`: backend data-access module for admin-only lecturer creation with one-time random temporary password, minimal identity/course catalog lists, course assignment/revocation and audit events. **NOT wired to HTTP or existing server.**
+- `scripts/bootstrap-superadmin.js`: one-time private-env provisioning program. **NOT executed**, no superadmin credentials ever entered or created.
+- New permission, bootstrap, account-management and password tests passed in GitHub Actions #39213860392.
+- `package.json` pins pg v8.23.1 for future Neon connection. Database schema exists but `server.js` still uses local JSON and shared DOCTOR_PASSWORD, so there is **NO actual live multi-user security yet**.
+- Render not provisioned/deployed. Do not tell user the site is live, that admin UI works, or that permission policy protects the current server.
