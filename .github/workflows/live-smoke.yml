@@ -60,9 +60,9 @@ jobs:
           status=$(curl --silent --show-error --max-time 30 -o /tmp/me.json -w '%{http_code}' "$BASE/api/v2/me")
           test "$status" = 401
           echo "Session: unauthorized request rejected (401)"
-          status=$(curl --silent --show-error --max-time 30 -o /tmp/change.json -w '%{http_code}' \\
-            -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" \\
-            -d '{"currentPassword":"not-a-valid-secret","newPassword":"not-a-valid-secret-either"}' \\
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/change.json -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" \
+            -d '{"currentPassword":"not-a-valid-secret","newPassword":"not-a-valid-secret-either"}' \
             "$BASE/api/v2/password")
           test "$status" = 401
           echo "Password change: unauthenticated requests rejected (401)"
