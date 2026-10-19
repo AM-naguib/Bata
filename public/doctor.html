@@ -37,6 +37,7 @@ th{background:#e8f1ef;position:sticky;top:0}.bad{background:#fee2e2;color:#991b1
 <button class="alt" id="loc">📍 استخدم موقعي الحالي كمكان القاعة</button> <span id="locs">لسه ما اتحددش</span><br>
 <button id="start">ابدأ المحاضرة</button></div>
 <div class="card"><h2>المحاضرات</h2><div id="ls"></div></div>
+<div class="card"><h2>المحاضرات المحذوفة (ممكن ترجعها)</h2><div id="deleted"></div></div>
 <div class="card"><h2>تقرير الحضور والغياب <a class="btn" href="/api/report.csv">⬇ حفظ كشف CSV (يفتح في Excel)</a></h2>
 <p style="color:#64748b;font-size:13px">النسب الحالية محسوبة إجمالًا لكل المحاضرات؛ لسه ما اتعملش فصل الغياب حسب المقرر.</p><div class="scroll"><table id="rep"></table></div></div>
 </div></main>
@@ -60,11 +61,22 @@ $('#start').onclick=async()=>{if(!pos)return alert('حدد موقع القاعة
  if(!d.ok)return alert(d.error);$('#title').value='';await load();show(d.id)};
 async function load(){const L=await api('/api/lectures');
  $('#ls').innerHTML=L.map(l=>`<div class="row"><span><b>${esc(l.title)}</b> · مقرر: ${esc(l.courseName||'غير محدد')} · دكتور: ${esc(l.lecturerName||'غير محدد')} · ${esc(l.date)} · حضور: ${l.count} ${l.closed?'🔒':'🟢'}</span>
- <span><button onclick="show('${l.id}')">عرض QR</button><button class="alt" onclick="tog('${l.id}',${l.closed})">${l.closed?'فتح':'قفل'}</button></span></div>`).join('')||'مفيش محاضرات';
+ <span><button onclick="show('${l.id}')">عرض QR</button><button class="alt" onclick="tog('${l.id}',${l.closed})">${l.closed?'فتح':'قفل'}</button><button class="alt" onclick="removeLecture('${l.id}')">حذف</button></span></div>`).join('')||'مفيش محاضرات';
+ const deleted=await api('/api/lectures/deleted');
+ $('#deleted').innerHTML=deleted.map(l=>`<div class="row"><span>${esc(l.title)} · ${esc(l.courseName||'غير محدد')}</span><button class="alt" onclick="restoreLecture('${l.id}')">استعادة المحاضرة</button></div>`).join('')||'مفيش محاضرات محذوفة';
  const R=await api('/api/report');
  $('#rep').innerHTML='<tr><th>رقم الجلوس</th><th>الاسم</th><th>حضور</th><th>غياب</th><th>نسبة الغياب</th></tr>'+
  R.rows.map(r=>`<tr class="${r.pct>=R.max?'bad':''}"><td>${esc(r.id)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td>${r.abs}</td><td>${r.pct}%</td></tr>`).join('')}
-async function tog(id,closed){await api('/api/lectures/'+id+'/'+(closed?'open':'close'),{});load()}
+async function tog(id,closed){const r=await api('/api/lectures/'+id+'/'+(closed?'open':'close'),{});if(!r.ok)alert(r.error);await load()}
+async function removeLecture(id){
+ if(!confirm('حذف المحاضرة من التقارير؟ يمكن استرجاعها. لو فيها حضور مسجل مش هتتحذف.'))return;
+ const r=await api('/api/lectures/'+id+'/delete',{});
+ if(!r.ok)return alert(r.error);await load();
+}
+async function restoreLecture(id){
+ const r=await api('/api/lectures/'+id+'/restore',{});
+ if(!r.ok)return alert(r.error);await load();
+}
 function show(id){cur=id;last='';$('#proj').style.display='flex';tick()}
 $('#pc').onclick=()=>{cur=null;$('#proj').style.display='none';load()};
 function draw(text){const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),c=$('#qr'),k=8,m=2;
