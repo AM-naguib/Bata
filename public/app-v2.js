@@ -70,10 +70,76 @@ async function refreshAdmin(){
   ul.append(li(text,button));
  }
 }
+let selectedQr=null,qrUpdating=false;
+async function refreshLectures(){
+ let result;
+ try{result=await api('lecturer/lectures')}catch(e){
+  el('lectureManager').hidden=true;
+  el('lectureList').replaceChildren(li('ميزة تسجيل الحضور غير مفعلة على السيرفر حالياً'));
+  return;
+ }
+ el('lectureManager').hidden=false;
+ const ul=el('lectureList');ul.replaceChildren();
+ if(!result.items.length)ul.append(li('لسه مفيش محاضرات'));
+ for(const item of result.items){
+  const label=(item.course_name||'مقرر')+' — '+item.title+(item.closed_at?' (مقفولة)':' (مفتوحة)');
+  const show=makeButton('عرض QR',async()=>{try{selectedQr=item.id;await refreshQr()}catch(e){flash(e.message,true)}});
+  const row=li(label,item.closed_at?null:show);
+  if(!item.closed_at){
+   const close=makeButton('قفل المحاضرة',async()=>{
+    if(!confirm('تأكيد قفل المحاضرة؟ QR هيتوقف ومش هيتسجّل حضور جديد.'))return;
+    try{await api('lecturer/lectures/'+item.id+'/close',{});selectedQr=null;
+      el('qrCard').hidden=true;await refreshLectures();flash('تم قفل المحاضرة');}
+    catch(e){flash(e.message,true)}
+   });
+   row.append(close);
+  }
+  ul.append(row);
+ }
+}
 async function refreshLecturer(){
  const data=await api('lecturer/courses');
  entries(el('myCourses'),data.items,c=>c.name);
+ const selector=el('lectureCourse');selector.replaceChildren();
+ option(selector,'','اختار المقرر');
+ data.items.forEach(c=>option(selector,c.id,c.name));
+ await refreshLectures();
 }
+async function refreshQr(){
+ if(!selectedQr||qrUpdating)return;
+ qrUpdating=true;
+ try{
+  const item=await api('lecturer/lectures/'+selectedQr+'/live');
+  el('qrCard').hidden=false;
+  el('qrTitle').textContent=item.courseName+' — '+item.title;
+  el('qrStats').textContent='تم تسجيل حضور '+item.attendees+' طالبة — تحديث بعد '+item.secondsLeft+' ثانية';
+  el('qrImage').hidden=item.closed;
+  if(item.closed){selectedQr=null;el('qrStats').textContent='المحاضرة مقفولة';}
+  else if(item.qr)el('qrImage').src=item.qr;
+ }catch(e){flash(e.message,true);selectedQr=null;el('qrCard').hidden=true}
+ finally{qrUpdating=false}
+}
+window.setInterval(()=>{if(selectedQr&&!el('qrCard').hidden)refreshQr()},10000);
+el('stopQr').addEventListener('click',()=>{selectedQr=null;el('qrCard').hidden=true});
+el('lectureForm').addEventListener('submit',async e=>{
+ e.preventDefault();flash('');
+ const courseId=el('lectureCourse').value,title=el('lectureTitle').value;
+ const radius=Number(el('lectureRadius').value);
+ if(!courseId)return flash('اختار المقرر',true);
+ if(!navigator.geolocation)return flash('المتصفح مش بيدعم GPS',true);
+ const btn=e.submitter;if(btn)btn.disabled=true;
+ navigator.geolocation.getCurrentPosition(async ({coords})=>{
+  try{
+   const item=await api('lecturer/lectures',{courseId,title,radius,lat:coords.latitude,
+     lng:coords.longitude,accuracy:coords.accuracy});
+   el('lectureTitle').value='';
+   await refreshLectures();selectedQr=item.id;await refreshQr();
+   flash('تم إنشاء المحاضرة. اعرض QR للطالبات.');
+  }catch(err){flash(err.message,true)}
+  finally{if(btn)btn.disabled=false}
+ },()=>{flash('اسمحي للمتصفح باستخدام GPS من داخل القاعة',true);if(btn)btn.disabled=false},
+ {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+});
 async function refreshPortal(){
  let me;
  try{me=await api('me')}catch{setView(false);return}
@@ -91,6 +157,7 @@ el('loginForm').addEventListener('submit',async e=>{
  }catch(err){flash(err.message,true)}
 });
 el('logoutButton').addEventListener('click',async()=>{
+ selectedQr=null;el('qrCard').hidden=true;
  try{await api('logout',{})}catch{}
  el('temporaryPasswordCard').hidden=true;el('tempPassword').textContent='';
  flash('تم تسجيل الخروج');setView(false);
