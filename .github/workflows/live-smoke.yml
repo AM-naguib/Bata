@@ -1,0 +1,48 @@
+name: Attendify live deployment smoke check
+on:
+  push:
+    branches:
+      - feature/superadmin-accounts-courses
+    paths:
+      - .github/workflows/live-smoke.yml
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check deployed Neon DB readiness, public login page and private API boundaries
+        shell: bash
+        env:
+          BASE: https://bata-attendify-node.onrender.com
+        run: |
+          set -euo pipefail
+          echo "Waiting for Render Free service to wake and become ready..."
+          for attempt in $(seq 1 12); do
+            if curl --silent --show-error --fail --max-time 30 "$BASE/healthz" -o /tmp/health.json; then
+              break
+            fi
+            sleep 10
+          done
+          python3 - <<'PY'
+          import json
+          with open('/tmp/health.json',encoding='utf-8') as f:
+              data=json.load(f)
+          assert data.get('status')=='ok', 'Private Neon connection not ready'
+          print('Health check: database reachable')
+          PY
+          curl --silent --show-error --fail --max-time 40 "$BASE/portal" -o /tmp/portal.html
+          grep -q 'id="loginForm"' /tmp/portal.html
+          echo "Portal: login form served"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/me.json -w '%{http_code}' "$BASE/api/v2/me")
+          test "$status" = 401
+          echo "Session: unauthorized request rejected (401)"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/roster.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/students")
+          test "$status" = 401
+          echo "Roster: unauthorized request rejected (401)"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/attendance.json -w '%{http_code}' "$BASE/api/v2/attendance/checkin")
+          test "$status" = 404
+          echo "Student check-in: feature disabled as configured"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/old.json -w '%{http_code}' "$BASE/api/report")
+          test "$status" = 404
+          echo "Legacy attendance report: disabled"
