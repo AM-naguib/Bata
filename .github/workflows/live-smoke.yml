@@ -66,6 +66,16 @@ jobs:
             "$BASE/api/v2/password")
           test "$status" = 401
           echo "Password change: unauthenticated requests rejected (401)"
+          curl --silent --show-error --fail --max-time 30 "$BASE/app-v2.js" -o /tmp/staff-ui.js
+          grep -q 'lecturers/password/reset' /tmp/staff-ui.js
+          grep -q 'إعادة تعيين الباسورد' /tmp/staff-ui.js
+          echo "Lecturer reset: button and API call in deployed staff UI"
+          status=$(curl --silent --show-error --max-time 30 -o /tmp/reset-unauth.json -w '%{http_code}' \
+            -X POST -H 'Content-Type: application/json' -H "Origin: $BASE" \
+            -d '{"lecturerId":"00000000-0000-4000-8000-000000000001"}' \
+            "$BASE/api/v2/lecturers/password/reset")
+          test "$status" = 401
+          echo "Lecturer reset: unauthorized requests rejected (401); no credentials modified"
           status=$(curl --silent --show-error --max-time 30 -o /tmp/roster.json -w '%{http_code}' "$BASE/api/v2/lecturer/courses/ced5eb59-87cc-4286-a8ec-8a08d4d5a7b1/students")
           test "$status" = 401
           echo "Roster: unauthorized request rejected (401)"
