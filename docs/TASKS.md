@@ -170,3 +170,13 @@ All remediation tasks are OPEN. [ ] means not implemented. Priority P0 blocks sa
 - [x] CO-03 — Add `POST /api/v2/courses/rename` and RTL admin rename form. Creation form prefilled with the temporary name; renaming refreshes list/assignment labels.
 - [ ] CO-04 — Bootstrap owner-controlled superadmin privately and CREATE the first course in Neon. As of last read-only verification, Neon had zero superadmin accounts/courses; never bypass created_by audit FK or invent an admin identity.
 - [ ] CO-05 — Verify real Neon database rename and end-to-end browser UI once account exists. Import of real 172 students remains blocked until assigned lecturer and private backup exist.
+
+
+## First real Neon bootstrap verified — 2026-10-19
+- [x] BO-01 — Create exactly one real superadmin with generated strong temporary password stored only as a salted scrypt hash. Login details provided privately to user via chat, **never committed to GitHub**.
+- [x] BO-02 — Create `المقرر الأول (مؤقت)` in Neon owned by initial admin; audit both creation events. Verified 1 superadmin, 1 course and 2 audit events. Name can later be edited in admin UI without changing course UUID.
+- [ ] BO-03 — Deploy private/controlled HTTPS admin portal and verify actual sign-in and password change against Neon. **NOT done**, no live URL.
+- [ ] BO-04 — Create first lecturer account through authorized admin page and assign the existing temporary course; current Neon still has 0 lecturers / 0 lecturer-course assignments.
+- [ ] BO-05 — Back up real roster privately, have lecturer approve assignment, dry-run and import 172 students into this one course; current Neon still has 0 students.
+- [ ] BO-06 — Setup usable account recovery/email migration for placeholder login. Do not advertise the placeholder as a deliverable real email address.
+- Previous RO-11 / CO-04 / SA-03 are **partially/resolved regarding account and course provisioning** but full portal security and live deployment tests remain open.
