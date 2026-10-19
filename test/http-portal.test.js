@@ -30,7 +30,9 @@ function fakeDatabase(bossHash){
    return {rows:users.filter(u=>u.id===p[0]).map(u=>({password_hash:u.password_hash}))};
   }
   if(sql.startsWith('UPDATE app_users SET password_hash=')){
-   const user=users.find(u=>u.id===p[1]);user.password_hash=p[0];user.must_change_password=false;return {rows:[]};
+   const user=users.find(u=>u.id===p[1]);if(!user)throw Error('Missing user');
+   user.password_hash=p[0];user.must_change_password=sql.includes('must_change_password=true');
+   return {rows:[]};
   }
   if(sql.startsWith('SELECT id,email,display_name,disabled_at,created_at FROM app_users')){
    return {rows:users.filter(u=>u.role==='lecturer').map(u=>({id:u.id,email:u.email,display_name:u.display_name,disabled_at:u.disabled_at,created_at:new Date()}))};
@@ -56,11 +58,6 @@ function fakeDatabase(bossHash){
   if(sql.startsWith('SELECT id,display_name,email FROM app_users WHERE id=')){
    return {rows:users.filter(u=>u.id===p[0]&&u.role==='lecturer'&&!u.disabled_at)
      .map(u=>({id:u.id,display_name:u.display_name,email:u.email}))};
-  }
-  if(sql.startsWith('UPDATE app_users SET password_hash=')&&sql.includes('must_change_password=true')){
-   const user=users.find(u=>u.id===p[1]&&u.role==='lecturer');
-   if(user){user.password_hash=p[0];user.must_change_password=true}
-   return {rows:[]};
   }
   if(sql.startsWith('SELECT id FROM app_users WHERE id=')){
    return {rows:users.filter(u=>u.id===p[0]&&u.role==='lecturer'&&!u.disabled_at).map(u=>({id:u.id}))};
