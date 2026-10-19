@@ -55,3 +55,9 @@ The first real import should enroll **all 172 students in ONE explicitly selecte
 
 ## First course label ready for setup — 2026-10-19
 Use **المقرر الأول (مؤقت)** as the first course *name* once the owner privately sets up the superadmin. The name is editable later by the superadmin and the course UUID stays fixed, so active enrollments, attendance and lecturer assignments remain linked. This is a UI default/approved plan, not an actual existing Neon course. Import the 172 records only after the first lecturer is created/assigned and source is backed up. Do not bypass the superadmin account requirement to manufacture a course.
+
+
+## Database setup progress — 2026-10-19
+- Real Neon now has ONE superadmin and ONE pre-created course named `المقرر الأول (مؤقت)`, established atomically with two audit events. No real student data was imported.
+- Before importing the 172 rows: create the initial lecturer under the real superadmin, assign this existing course, ensure lecturer changes their initial password, then run private dry-run and atomic import. The import script requires active lecturer-course assignment and currently that assignment does not exist.
+- The login account currently uses a placeholder identifier without an inbox. Never put any real credential, its hash, or student PII into this repository.
