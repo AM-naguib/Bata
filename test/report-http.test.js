@@ -23,6 +23,7 @@ test('actual HTTP academic report and Excel routes deny admin/anonymous/unassign
   ]};
   if(sql.startsWith('SELECT id,title,opened_at,closed_at FROM lectures'))return {rows:[]};
   if(sql.startsWith('SELECT a.student_id,a.lecture_id FROM attendances'))return {rows:[]};
+  if(sql.startsWith('SELECT ac.student_id,ac.lecture_id,ac.status FROM attendance_corrections'))return {rows:[]};
   throw Error('Unexpected SQL '+sql);
  }};
  const server=http.createServer(createHandler(pool,{production:false,attendanceEnabled:false,rosterEnabled:false}));
