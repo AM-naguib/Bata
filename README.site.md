@@ -33,3 +33,8 @@ npm start
 Visit `/portal` (login/admin/lecturer roles). Create initial superadmin securely with `npm run bootstrap:superadmin` using `INIT_ADMIN_EMAIL`, `INIT_ADMIN_NAME`, `INIT_ADMIN_PASSWORD` and `DATABASE_URL` configured privately. Never check those environment values into Git, paste them into issues, or put student data in public web assets.
 
 [Portal architecture](docs/PORTAL_V2.md) · [Review tasks](docs/TASKS.md) · [Owner decisions](docs/DECISIONS.md) · [Privacy/deployment](docs/DEPLOYMENT.md).
+
+## V2 QR attendance development note (2026-10-19)
+- New mobile page: `/checkin?t=<signed-QR-token>` (when `ATTENDANCE_ENABLED=1`).
+- Lecturer dashboard can create a class lecture, show auto-updating QR and close it. Student must type **seat number and full name**, with GPS. No student PIN.
+- This new feature is **OFF by default** and unprovisioned. Neon student roster is still empty, so it is NOT a deployable live class app. Documentation and required private environment variables are in [ATTENDANCE_V2.md](docs/ATTENDANCE_V2.md).
