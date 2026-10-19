@@ -52,3 +52,12 @@ The account/lecturer staff portal is now deployed at **https://bata-attendify-no
 - `ATTENDANCE_ENABLED=0` so student QR check-in remains disabled pending security/operational testing.
 - Admin should log in using the temporary password already provided privately, change it immediately, then create a lecturer account/assignment. Do not copy any credentials into repository files.
 - No automated deployment on each commit (Render autoDeploy off), no GitHub main merge. See `docs/DEPLOYMENT.md` and `docs/TASKS.md`.
+
+
+## Updated Arabic RTL interface — LIVE 2026-10-19
+- **Homepage:** https://bata-attendify-node.onrender.com/
+- **Superadmin:** https://bata-attendify-node.onrender.com/admin
+- **Lecturer:** https://bata-attendify-node.onrender.com/lecturer
+- **Student guidance:** https://bata-attendify-node.onrender.com/student
+The staff portal includes role-based navigation, admin lecturer/course/assignment workflows, security/password change and lecturer-only searchable paginated roster (20/page). The student page is a safe informational guide only; QR attendance/check-in are still OFF. **Never put student data or temporary passwords in the public repo.**
+This release passed both [security CI](https://github.com/AM-naguib/Bata/actions/runs/39263443641) and [live HTTPS smoke test](https://github.com/AM-naguib/Bata/actions/runs/39263443594). Render service deployment is LIVE, but real-user account sign-in and lecturer/student use still need manual acceptance testing.
