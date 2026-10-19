@@ -38,3 +38,9 @@ Visit `/portal` (login/admin/lecturer roles). Create initial superadmin securely
 - New mobile page: `/checkin?t=<signed-QR-token>` (when `ATTENDANCE_ENABLED=1`).
 - Lecturer dashboard can create a class lecture, show auto-updating QR and close it. Student must type **seat number and full name**, with GPS. No student PIN.
 - This new feature is **OFF by default** and unprovisioned. Neon student roster is still empty, so it is NOT a deployable live class app. Documentation and required private environment variables are in [ATTENDANCE_V2.md](docs/ATTENDANCE_V2.md).
+
+
+## Verified cohort import and current deployment status
+The approved original **172 private students** have now been imported into the ONE provisional course `المقرر الأول (مؤقت)` in Neon (172 unique active enrollments, 0 attendance), with a source-integrity match. Their identities are not present in public GitHub.
+
+The site is **not live yet**. `render.yaml` provides a Render Free staff-portal template, but Render workspace choice needs the owner's explicit confirmation. Initial deployment must keep public QR attendance disabled (`ATTENDANCE_ENABLED=0`) until further review. See `docs/DEPLOYMENT.md` and `docs/PRIVATE_ROSTER_IMPORT.md`.
